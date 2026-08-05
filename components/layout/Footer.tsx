@@ -18,12 +18,12 @@ export function Footer() {
           <a href="#home" className="transition-colors hover:text-brand-deep">
             Home
           </a>
-          <a
-            href="#simulations"
+          <Link
+            href="/simulation"
             className="transition-colors hover:text-brand-deep"
           >
             Simulation
-          </a>
+          </Link>
           <a
             href="#pricing"
             className="transition-colors hover:text-brand-deep"

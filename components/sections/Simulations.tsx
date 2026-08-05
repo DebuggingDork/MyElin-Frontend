@@ -1,6 +1,8 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { Container } from "@/components/ui/Container";
 import { DataTimeline } from "@/components/ui/DataViews";
@@ -87,6 +89,18 @@ export function Simulations() {
           Walk the trap line. Each node is a cognitive pattern students meet
           while they think they are only running a business.
         </p>
+
+        <Link
+          href="/simulation"
+          className="mt-7 inline-flex items-center gap-2 rounded-full bg-brand-ink px-5 py-3 text-[11px] font-medium uppercase tracking-[0.16em] text-white transition-colors hover:bg-brand-deep"
+        >
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-bright opacity-80" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-brand-bright" />
+          </span>
+          Run a live simulation
+          <ArrowRight className="h-3.5 w-3.5" />
+        </Link>
 
         <div className="mt-12 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
           <div className="rounded-[1.75rem] border border-border bg-white p-3 sm:p-4">

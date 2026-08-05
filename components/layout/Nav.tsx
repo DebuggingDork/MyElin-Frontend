@@ -7,10 +7,10 @@ import { Container } from "@/components/ui/Container";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { href: "#home", label: "Home" },
-  { href: "#simulations", label: "Simulation" },
-  { href: "#pricing", label: "Pricing" },
-  { href: "#faq", label: "FAQ" },
+  { href: "#home", label: "Home", live: false },
+  { href: "/simulation", label: "Simulation", live: true },
+  { href: "#pricing", label: "Pricing", live: false },
+  { href: "#faq", label: "FAQ", live: false },
 ];
 
 export function Nav() {
@@ -57,8 +57,19 @@ export function Nav() {
             <Link
               key={link.href}
               href={link.href}
-              className="rounded-full px-3.5 py-2 text-sm text-muted transition-colors hover:text-charcoal"
+              className={cn(
+                "flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm transition-colors",
+                link.live
+                  ? "text-brand-deep hover:text-brand"
+                  : "text-muted hover:text-charcoal",
+              )}
             >
+              {link.live && (
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand opacity-70" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-brand" />
+                </span>
+              )}
               {link.label}
             </Link>
           ))}
