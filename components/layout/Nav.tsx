@@ -1,133 +1,114 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { ArrowRight, Menu, X } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
-import { Container } from "@/components/ui/Container";
+import { Action, Container } from "@/components/ui/Kit";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { href: "#home", label: "Home", live: false },
-  { href: "/simulation", label: "Simulation", live: true },
-  { href: "#pricing", label: "Pricing", live: false },
-  { href: "#faq", label: "FAQ", live: false },
+  { href: "/", label: "Home" },
+  { href: "/simulations", label: "Simulations" },
+  { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/pricing", label: "Pricing" },
+  { href: "/manifesto", label: "Manifesto" },
+  { href: "/faq", label: "FAQ" },
 ];
 
 export function Nav() {
-  const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  useEffect(() => {
-    if (!open) return;
-    const close = () => setOpen(false);
-    window.addEventListener("hashchange", close);
-    return () => window.removeEventListener("hashchange", close);
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [open]);
 
   return (
-    <header
-      className={cn(
-        "fixed inset-x-0 top-0 z-50 transition-all duration-300",
-        scrolled || open
-          ? "border-b border-border/80 bg-bg/92 backdrop-blur-md"
-          : "bg-transparent",
-      )}
-    >
-      <Container className="flex h-16 items-center justify-between sm:h-[4.25rem]">
-        <Link
-          href="#home"
-          className="flex items-center gap-2.5"
-          aria-label="Myelin home"
-        >
-          <Logo
-            priority
-            className="h-9 w-auto max-w-[7rem] object-contain object-left sm:h-10 sm:max-w-[8rem]"
-          />
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-void/80 backdrop-blur-xl">
+      {/* Height locked at 68px — never grows or shrinks on scroll. */}
+      <Container wide className="relative flex h-[68px] items-center justify-between gap-4">
+        <Link href="/" aria-label="Myelin home" className="relative z-10 flex shrink-0 items-center">
+          <Logo priority />
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex">
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                "flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm transition-colors",
-                link.live
-                  ? "text-brand-deep hover:text-brand"
-                  : "text-muted hover:text-charcoal",
-              )}
-            >
-              {link.live && (
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand opacity-70" />
-                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-brand" />
-                </span>
-              )}
-              {link.label}
-            </Link>
-          ))}
+        <nav className="absolute left-1/2 top-1/2 z-10 hidden -translate-x-1/2 -translate-y-1/2 items-center rounded-full border border-line bg-white/[0.03] p-1 min-[880px]:flex">
+          {links.map((link) => {
+            const active =
+              link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  "relative rounded-full px-3.5 py-1.5 text-[13px] transition-colors",
+                  active ? "text-ink" : "text-dim hover:text-ink",
+                )}
+              >
+                {active && (
+                  <span
+                    className="absolute inset-0 rounded-full border border-white/10"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, rgba(124,92,255,0.28), rgba(34,211,238,0.16))",
+                    }}
+                  />
+                )}
+                <span className="relative">{link.label}</span>
+              </Link>
+            );
+          })}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="relative z-10 flex shrink-0 items-center gap-2">
           <Link
-            href="#request-access"
-            className="rounded-full bg-brand-ink px-4 py-2 text-[11px] font-medium uppercase tracking-[0.14em] text-white transition-colors hover:bg-brand-deep sm:px-5"
+            href="/login"
+            className="hidden rounded-full px-4 py-2 text-[13px] text-dim transition-colors hover:text-ink sm:block"
           >
-            Request Access
+            Log in
           </Link>
+          <Action href="/signup" className="hidden sm:inline-flex">
+            Sign up
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+          </Action>
           <button
             type="button"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border md:hidden"
+            onClick={() => setOpen((v) => !v)}
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
-            onClick={() => setOpen((v) => !v)}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-line text-ink min-[880px]:hidden"
           >
-            <span className="sr-only">Menu</span>
-            <span className="flex w-4 flex-col gap-1">
-              <span
-                className={cn(
-                  "h-px w-full bg-charcoal transition-transform",
-                  open && "translate-y-[2.5px] rotate-45",
-                )}
-              />
-              <span
-                className={cn(
-                  "h-px w-full bg-charcoal transition-opacity",
-                  open && "opacity-0",
-                )}
-              />
-              <span
-                className={cn(
-                  "h-px w-full bg-charcoal transition-transform",
-                  open && "-translate-y-[2.5px] -rotate-45",
-                )}
-              />
-            </span>
+            {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
         </div>
       </Container>
 
       {open && (
-        <div className="border-t border-border bg-bg/95 px-6 py-4 backdrop-blur-md md:hidden">
+        <div className="border-t border-line bg-void/97 px-5 py-5 backdrop-blur-xl min-[880px]:hidden">
           <nav className="flex flex-col gap-1">
             {links.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 onClick={() => setOpen(false)}
-                className="rounded-lg px-3 py-3 text-sm text-graphite hover:bg-bg-soft"
+                className="rounded-xl px-3 py-3 text-[15px] text-dim transition-colors hover:bg-white/5 hover:text-ink"
               >
                 {link.label}
               </Link>
             ))}
           </nav>
+          <div className="mt-4 flex items-center gap-3 border-t border-line pt-4">
+            <Action href="/login" variant="outline" className="flex-1">
+              Log in
+            </Action>
+            <Action href="/signup" className="flex-1">
+              Sign up
+            </Action>
+          </div>
         </div>
       )}
     </header>

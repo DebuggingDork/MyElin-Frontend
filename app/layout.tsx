@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Geist, Geist_Mono, Sora } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -7,15 +7,26 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+const sora = Sora({
+  variable: "--font-sora",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
 export const metadata: Metadata = {
-  title: "Myelin — Learn by Experiencing Decisions",
+  title: "Myelin — Decision Intelligence Platform",
   description:
-    "Universities teach students what to think. Myelin builds environments where they discover how professionals think — through judgment, consequence, and reflection.",
+    "Myelin compresses 24 months of running a startup into 30 minutes of consequential choices. No videos. No quizzes. Just judgment — measured across seven cognitive dimensions.",
   metadataBase: new URL("https://myelin.app"),
   openGraph: {
-    title: "Myelin — Learn by Experiencing Decisions",
+    title: "Myelin — Decision Intelligence Platform",
     description:
-      "A new discipline of learning. Decision environments that hide cognitive traps and reveal judgment.",
+      "Make decisions. Not notes. Judgment measured across seven cognitive dimensions.",
     type: "website",
     images: [
       {
@@ -28,9 +39,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: "Myelin — Learn by Experiencing Decisions",
-    description:
-      "Learn by Experiencing Decisions. Judgment built through consequence—not lectures.",
+    title: "Myelin — Decision Intelligence Platform",
+    description: "Make decisions. Not notes.",
     images: ["/brand/myelin-logo.png"],
   },
   icons: {
@@ -45,8 +55,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-bg font-sans text-foreground">
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${geistMono.variable} ${sora.variable} h-full antialiased`}
+    >
+      <body className="flex min-h-full flex-col bg-void font-sans text-ink">
         {children}
       </body>
     </html>
