@@ -172,6 +172,7 @@ type ActionProps = {
   size?: "md" | "lg";
   className?: string;
   disabled?: boolean;
+  type?: "button" | "submit" | "reset";
 };
 
 export function Action({
@@ -182,6 +183,7 @@ export function Action({
   size = "md",
   className,
   disabled,
+  type = "button",
 }: ActionProps) {
   const base = cn(
     "sweep group relative inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-45",
@@ -207,7 +209,7 @@ export function Action({
 
   return (
     <button
-      type="button"
+      type={type}
       onClick={onClick}
       disabled={disabled}
       className={base}

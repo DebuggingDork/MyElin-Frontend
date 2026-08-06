@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowRight, Menu, X } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { Action, Container } from "@/components/ui/Kit";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +20,7 @@ const links = [
 
 export function Nav() {
   const pathname = usePathname();
+  const { user, logout, ready } = useAuth();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -30,16 +32,24 @@ export function Nav() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-void/80 backdrop-blur-xl">
-      {/* Height locked at 68px — never grows or shrinks on scroll. */}
-      <Container wide className="relative flex h-[68px] items-center justify-between gap-4">
-        <Link href="/" aria-label="Myelin home" className="relative z-10 flex shrink-0 items-center">
+      <Container
+        wide
+        className="relative flex h-[68px] items-center justify-between gap-4"
+      >
+        <Link
+          href="/"
+          aria-label="Myelin home"
+          className="relative z-10 flex shrink-0 items-center"
+        >
           <Logo priority />
         </Link>
 
         <nav className="absolute left-1/2 top-1/2 z-10 hidden -translate-x-1/2 -translate-y-1/2 items-center rounded-full border border-line bg-white/[0.03] p-1 min-[880px]:flex">
           {links.map((link) => {
             const active =
-              link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
+              link.href === "/"
+                ? pathname === "/"
+                : pathname.startsWith(link.href);
             return (
               <Link
                 key={link.href}
@@ -65,16 +75,33 @@ export function Nav() {
         </nav>
 
         <div className="relative z-10 flex shrink-0 items-center gap-2">
-          <Link
-            href="/login"
-            className="hidden rounded-full px-4 py-2 text-[13px] text-dim transition-colors hover:text-ink sm:block"
-          >
-            Log in
-          </Link>
-          <Action href="/signup" className="hidden sm:inline-flex">
-            Sign up
-            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-          </Action>
+          {ready && user ? (
+            <>
+              <span className="hidden max-w-[140px] truncate text-[12px] text-faint sm:inline">
+                {user.email}
+              </span>
+              <Action
+                variant="outline"
+                onClick={logout}
+                className="hidden sm:inline-flex"
+              >
+                Log out
+              </Action>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="hidden rounded-full px-4 py-2 text-[13px] text-dim transition-colors hover:text-ink sm:block"
+              >
+                Log in
+              </Link>
+              <Action href="/signup" className="hidden sm:inline-flex">
+                Sign up
+                <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+              </Action>
+            </>
+          )}
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
@@ -100,15 +127,36 @@ export function Nav() {
                 {link.label}
               </Link>
             ))}
+            {user ? (
+              <button
+                type="button"
+                onClick={() => {
+                  logout();
+                  setOpen(false);
+                }}
+                className="rounded-xl px-3 py-3 text-left text-[15px] text-dim"
+              >
+                Log out
+              </button>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  onClick={() => setOpen(false)}
+                  className="rounded-xl px-3 py-3 text-[15px] text-dim"
+                >
+                  Log in
+                </Link>
+                <Link
+                  href="/signup"
+                  onClick={() => setOpen(false)}
+                  className="rounded-xl px-3 py-3 text-[15px] text-dim"
+                >
+                  Sign up
+                </Link>
+              </>
+            )}
           </nav>
-          <div className="mt-4 flex items-center gap-3 border-t border-line pt-4">
-            <Action href="/login" variant="outline" className="flex-1">
-              Log in
-            </Action>
-            <Action href="/signup" className="flex-1">
-              Sign up
-            </Action>
-          </div>
         </div>
       )}
     </header>
