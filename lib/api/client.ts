@@ -10,15 +10,18 @@ import type {
   EndgameDecisionSubmit,
   EndgamePreviewResponse,
   FinanceAdminAllocationSubmit,
+  ForgotPasswordRequest,
   HrAllocationSubmit,
   LeaderboardResponse,
   LoginRequest,
   MarketingAllocationSubmit,
+  MessageResponse,
   OperationsAllocationSubmit,
   QuarterAllocationResponse,
   QuarterDetailResponse,
   QuarterReportResponse,
   RegisterRequest,
+  ResetPasswordRequest,
   RndAllocationSubmit,
   RunStateResponse,
   SalesAllocationSubmit,
@@ -152,6 +155,20 @@ export const api = {
   login: (body: LoginRequest) =>
     request<AuthResponse>(
       "/auth/login",
+      { method: "POST", body: JSON.stringify(body) },
+      false,
+    ),
+
+  forgotPassword: (body: ForgotPasswordRequest) =>
+    request<MessageResponse>(
+      "/auth/forgot-password",
+      { method: "POST", body: JSON.stringify(body) },
+      false,
+    ),
+
+  resetPassword: (body: ResetPasswordRequest) =>
+    request<MessageResponse>(
+      "/auth/reset-password",
       { method: "POST", body: JSON.stringify(body) },
       false,
     ),

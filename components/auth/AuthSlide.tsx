@@ -27,6 +27,7 @@ export function AuthSlide({ initialMode }: { initialMode: Mode }) {
   const [mode, setMode] = useState<Mode>(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -42,6 +43,7 @@ export function AuthSlide({ initialMode }: { initialMode: Mode }) {
   function switchMode(nextMode: Mode) {
     setMode(nextMode);
     setError(null);
+    setConfirmPassword("");
     router.replace(`/${nextMode}?next=${encodeURIComponent(next)}`, {
       scroll: false,
     });
@@ -53,6 +55,11 @@ export function AuthSlide({ initialMode }: { initialMode: Mode }) {
 
     if (mode === "signup" && password.length < 8) {
       setError("Password must be at least 8 characters.");
+      return;
+    }
+
+    if (mode === "signup" && password !== confirmPassword) {
+      setError("Passwords do not match.");
       return;
     }
 
@@ -110,10 +117,12 @@ export function AuthSlide({ initialMode }: { initialMode: Mode }) {
                 mode={mode}
                 email={email}
                 password={password}
+                confirmPassword={confirmPassword}
                 error={error}
                 pending={pending}
                 onEmail={setEmail}
                 onPassword={setPassword}
+                onConfirmPassword={setConfirmPassword}
                 onSubmit={onSubmit}
                 onSwitch={switchMode}
                 next={next}
@@ -139,10 +148,12 @@ export function AuthSlide({ initialMode }: { initialMode: Mode }) {
                     mode="login"
                     email={email}
                     password={password}
+                    confirmPassword={confirmPassword}
                     error={mode === "login" ? error : null}
                     pending={pending && mode === "login"}
                     onEmail={setEmail}
                     onPassword={setPassword}
+                    onConfirmPassword={setConfirmPassword}
                     onSubmit={onSubmit}
                     onSwitch={switchMode}
                     next={next}
@@ -164,10 +175,12 @@ export function AuthSlide({ initialMode }: { initialMode: Mode }) {
                     mode="signup"
                     email={email}
                     password={password}
+                    confirmPassword={confirmPassword}
                     error={mode === "signup" ? error : null}
                     pending={pending && mode === "signup"}
                     onEmail={setEmail}
                     onPassword={setPassword}
+                    onConfirmPassword={setConfirmPassword}
                     onSubmit={onSubmit}
                     onSwitch={switchMode}
                     next={next}
@@ -187,10 +200,12 @@ function AuthForm({
   mode,
   email,
   password,
+  confirmPassword,
   error,
   pending,
   onEmail,
   onPassword,
+  onConfirmPassword,
   onSubmit,
   onSwitch,
   next,
@@ -199,10 +214,12 @@ function AuthForm({
   mode: Mode;
   email: string;
   password: string;
+  confirmPassword: string;
   error: string | null;
   pending: boolean;
   onEmail: (v: string) => void;
   onPassword: (v: string) => void;
+  onConfirmPassword: (v: string) => void;
   onSubmit: (e: React.FormEvent) => void;
   onSwitch: (m: Mode) => void;
   next: string;
@@ -254,9 +271,19 @@ function AuthForm({
         </div>
 
         <div>
-          <label className="eyebrow text-faint" htmlFor={`${mode}-password`}>
-            Password <span className="text-rose">*</span>
-          </label>
+          <div className="flex items-baseline justify-between">
+            <label className="eyebrow text-faint" htmlFor={`${mode}-password`}>
+              Password <span className="text-rose">*</span>
+            </label>
+            {isLogin && (
+              <Link
+                href="/forgot-password"
+                className="text-[12.5px] text-dim underline decoration-line-2 underline-offset-4 transition-colors hover:text-ink hover:decoration-violet"
+              >
+                Forgot password?
+              </Link>
+            )}
+          </div>
           <div className="relative mt-3">
             <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
             <input
@@ -273,6 +300,29 @@ function AuthForm({
             />
           </div>
         </div>
+
+        {!isLogin && (
+          <div>
+            <label className="eyebrow text-faint" htmlFor={`${mode}-confirm-password`}>
+              Confirm password <span className="text-rose">*</span>
+            </label>
+            <div className="relative mt-3">
+              <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
+              <input
+                id={`${mode}-confirm-password`}
+                name="confirm-password"
+                type="password"
+                required
+                minLength={8}
+                autoComplete="new-password"
+                value={confirmPassword}
+                onChange={(e) => onConfirmPassword(e.target.value)}
+                placeholder="Re-enter your password"
+                className="w-full rounded-full border border-line bg-white/[0.04] py-3.5 pl-11 pr-5 text-[14.5px] text-ink outline-none transition-colors placeholder:text-faint focus:border-violet/60"
+              />
+            </div>
+          </div>
+        )}
 
         {error && (
           <p className="rounded-xl border border-rose/30 bg-rose/[0.07] px-4 py-3 text-[13px] text-rose">
