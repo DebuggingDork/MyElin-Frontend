@@ -265,7 +265,7 @@ function AuthForm({
               value={email}
               onChange={(e) => onEmail(e.target.value)}
               placeholder="you@university.edu"
-              className="w-full rounded-full border border-line bg-white/[0.04] py-3.5 pl-11 pr-5 text-[14.5px] text-ink outline-none transition-colors placeholder:text-faint focus:border-violet/60"
+              className="w-full rounded-full border border-line bg-white/[0.04] py-3.5 pl-11 pr-5 text-[14.5px] text-ink outline-none transition-colors placeholder:text-faint focus:border-teal/60"
             />
           </div>
         </div>
@@ -278,7 +278,7 @@ function AuthForm({
             {isLogin && (
               <Link
                 href="/forgot-password"
-                className="text-[12.5px] text-dim underline decoration-line-2 underline-offset-4 transition-colors hover:text-ink hover:decoration-violet"
+                className="text-[12.5px] text-dim underline decoration-line-2 underline-offset-4 transition-colors hover:text-ink hover:decoration-teal"
               >
                 Forgot password?
               </Link>
@@ -296,7 +296,7 @@ function AuthForm({
               value={password}
               onChange={(e) => onPassword(e.target.value)}
               placeholder={isLogin ? "••••••••" : "At least 8 characters"}
-              className="w-full rounded-full border border-line bg-white/[0.04] py-3.5 pl-11 pr-5 text-[14.5px] text-ink outline-none transition-colors placeholder:text-faint focus:border-violet/60"
+              className="w-full rounded-full border border-line bg-white/[0.04] py-3.5 pl-11 pr-5 text-[14.5px] text-ink outline-none transition-colors placeholder:text-faint focus:border-teal/60"
             />
           </div>
         </div>
@@ -318,7 +318,7 @@ function AuthForm({
                 value={confirmPassword}
                 onChange={(e) => onConfirmPassword(e.target.value)}
                 placeholder="Re-enter your password"
-                className="w-full rounded-full border border-line bg-white/[0.04] py-3.5 pl-11 pr-5 text-[14.5px] text-ink outline-none transition-colors placeholder:text-faint focus:border-violet/60"
+                className="w-full rounded-full border border-line bg-white/[0.04] py-3.5 pl-11 pr-5 text-[14.5px] text-ink outline-none transition-colors placeholder:text-faint focus:border-teal/60"
               />
             </div>
           </div>
@@ -350,7 +350,7 @@ function AuthForm({
               <button
                 type="button"
                 onClick={() => onSwitch("signup")}
-                className="text-ink underline decoration-line-2 underline-offset-4 transition-colors hover:decoration-violet"
+                className="text-ink underline decoration-line-2 underline-offset-4 transition-colors hover:decoration-teal"
               >
                 Create an account
               </button>
@@ -361,7 +361,7 @@ function AuthForm({
               <button
                 type="button"
                 onClick={() => onSwitch("login")}
-                className="text-ink underline decoration-line-2 underline-offset-4 transition-colors hover:decoration-violet"
+                className="text-ink underline decoration-line-2 underline-offset-4 transition-colors hover:decoration-teal"
               >
                 Log in
               </button>

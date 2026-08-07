@@ -50,7 +50,7 @@ export function Hero() {
       <Container wide className="relative z-10 pt-16 sm:pt-24">
         <div className="grid gap-14 lg:grid-cols-[1.06fr_0.94fr] lg:items-center">
           <div>
-            <Eyebrow accent="cyan">
+            <Eyebrow accent="teal">
               The Decision Intelligence Platform — S-25 Cohort
             </Eyebrow>
 

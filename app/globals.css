@@ -1,45 +1,53 @@
 @import "tailwindcss";
 
 /* ──────────────────────────────────────────────────────────────
-   Myelin — dark decision-intelligence surface.
-   Gradient-led palette: violet → cyan primary, with per-domain
-   accents. Deliberately not limited to the logo teal.
+   Myelin — professional triad: charcoal grey · teal · white.
+   One brand accent (teal). Greys for structure. White for type.
+   Legacy accent names alias into teal / grey so components keep working.
    ────────────────────────────────────────────────────────────── */
 
 :root {
-  --void: #04050b;
-  --base: #070911;
-  --raise: #0c0f1b;
-  --raise-2: #121627;
+  /* Grey surfaces — cool charcoal, no purple cast */
+  --void: #0a0e11;
+  --base: #0f1418;
+  --raise: #161c21;
+  --raise-2: #1e262c;
 
-  --panel: rgba(255, 255, 255, 0.035);
-  --panel-2: rgba(255, 255, 255, 0.06);
-  --line: rgba(255, 255, 255, 0.08);
-  --line-2: rgba(255, 255, 255, 0.14);
+  --panel: rgba(255, 255, 255, 0.04);
+  --panel-2: rgba(255, 255, 255, 0.07);
+  --line: rgba(255, 255, 255, 0.1);
+  --line-2: rgba(255, 255, 255, 0.18);
 
-  --text: #eaeefb;
-  --dim: #99a2bb;
-  --faint: #69728a;
+  /* White / grey type */
+  --text: #ffffff;
+  --dim: #9aa3ab;
+  --faint: #6a737c;
 
-  --violet: #7c5cff;
-  --violet-2: #a78bfa;
-  --indigo: #4f6bff;
-  --cyan: #22d3ee;
-  --teal: #12c2b4;
-  --emerald: #34d399;
-  --amber: #f5a524;
-  --orange: #fb923c;
-  --rose: #f4547a;
-  --pink: #e879f9;
+  /* Teal brand */
+  --teal: #14b8a6;
+  --teal-bright: #2dd4bf;
+  --teal-deep: #0f766e;
+  --teal-soft: #5eead4;
 
-  --grad-primary: linear-gradient(135deg, #7c5cff 0%, #4f6bff 45%, #22d3ee 100%);
-  --grad-cool: linear-gradient(135deg, #4f6bff 0%, #12c2b4 100%);
-  --grad-warm: linear-gradient(135deg, #f5a524 0%, #f4547a 100%);
-  --grad-iris: linear-gradient(135deg, #a78bfa 0%, #e879f9 55%, #22d3ee 100%);
+  /* Legacy accent names → teal / grey scale (3-color system) */
+  --violet: #14b8a6;
+  --violet-2: #5eead4;
+  --indigo: #0f766e;
+  --cyan: #2dd4bf;
+  --emerald: #2dd4bf;
+  --amber: #a8b2ba;
+  --orange: #8b969e;
+  --rose: #e8eef0;
+  --pink: #5eead4;
 
-  --focus-ring: 0 0 0 3px rgba(124, 92, 255, 0.4);
+  --grad-primary: linear-gradient(135deg, #0f766e 0%, #14b8a6 48%, #2dd4bf 100%);
+  --grad-cool: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+  --grad-warm: linear-gradient(135deg, #6a737c 0%, #9aa3ab 55%, #e8eef0 100%);
+  --grad-iris: linear-gradient(135deg, #0f766e 0%, #14b8a6 50%, #5eead4 100%);
+
+  --focus-ring: 0 0 0 3px rgba(20, 184, 166, 0.4);
   --shadow-lift: 0 1px 0 rgba(255, 255, 255, 0.04) inset,
-    0 24px 60px -30px rgba(4, 5, 11, 0.9);
+    0 24px 60px -30px rgba(10, 14, 17, 0.9);
 }
 
 @theme inline {
@@ -60,21 +68,24 @@
   --color-indigo: var(--indigo);
   --color-cyan: var(--cyan);
   --color-teal: var(--teal);
+  --color-teal-bright: var(--teal-bright);
+  --color-teal-deep: var(--teal-deep);
+  --color-teal-soft: var(--teal-soft);
   --color-emerald: var(--emerald);
   --color-amber: var(--amber);
   --color-orange: var(--orange);
   --color-rose: var(--rose);
   --color-pink: var(--pink);
 
-  /* Legacy aliases so older components keep resolving. */
+  /* Brand aliases → teal */
   --color-bg: var(--base);
   --color-bg-soft: var(--raise);
   --color-foreground: var(--text);
   --color-muted: var(--dim);
   --color-border: var(--line);
-  --color-brand: var(--violet);
-  --color-brand-bright: var(--cyan);
-  --color-brand-deep: var(--indigo);
+  --color-brand: var(--teal);
+  --color-brand-bright: var(--teal-bright);
+  --color-brand-deep: var(--teal-deep);
   --color-brand-ink: var(--text);
   --color-brand-muted: var(--dim);
   --color-charcoal: var(--text);
@@ -109,7 +120,7 @@ body {
 }
 
 ::selection {
-  background: rgba(124, 92, 255, 0.35);
+  background: rgba(20, 184, 166, 0.35);
   color: #fff;
 }
 
@@ -126,12 +137,12 @@ body {
   background: var(--void);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.12);
   border-radius: 999px;
   border: 2px solid var(--void);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 /* ───────────────────────── typography ───────────────────────── */
@@ -182,7 +193,7 @@ body {
 .panel {
   position: relative;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.015)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015)),
     var(--raise);
   border: 1px solid var(--line);
   box-shadow: var(--shadow-lift);
@@ -193,7 +204,6 @@ body {
   border: 1px solid var(--line);
 }
 
-/* Gradient hairline border that survives rounded corners. */
 .ring-grad {
   position: relative;
 }
@@ -209,7 +219,7 @@ body {
     linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
-  opacity: 0.38;
+  opacity: 0.42;
   pointer-events: none;
 }
 
@@ -226,7 +236,6 @@ body {
 
 /* ───────────────────────── backdrops ───────────────────────── */
 
-/* Still gradient wash — depth without drawing attention to itself. */
 .aurora {
   position: absolute;
   inset: 0;
@@ -242,14 +251,14 @@ body {
   height: 58vw;
   border-radius: 50%;
   filter: blur(120px);
-  opacity: 0.28;
+  opacity: 0.22;
 }
 .aurora::before {
   top: -28vw;
   left: -16vw;
   background: radial-gradient(
     circle at 50% 50%,
-    rgba(124, 92, 255, 0.42),
+    rgba(20, 184, 166, 0.38),
     transparent 64%
   );
 }
@@ -258,7 +267,7 @@ body {
   right: -18vw;
   background: radial-gradient(
     circle at 50% 50%,
-    rgba(34, 211, 238, 0.26),
+    rgba(255, 255, 255, 0.06),
     transparent 64%
   );
 }
@@ -270,8 +279,8 @@ body {
   pointer-events: none;
   z-index: 0;
   background-image:
-    linear-gradient(to right, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+    linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
   background-size: 64px 64px;
   mask-image: radial-gradient(80% 60% at 50% 30%, #000 10%, transparent 75%);
 }
@@ -283,7 +292,7 @@ body {
   pointer-events: none;
   z-index: 0;
   background-image: radial-gradient(
-    rgba(255, 255, 255, 0.11) 1px,
+    rgba(255, 255, 255, 0.1) 1px,
     transparent 1px
   );
   background-size: 22px 22px;
@@ -296,7 +305,7 @@ body {
   position: absolute;
   inset: 0;
   z-index: 0;
-  opacity: 0.035;
+  opacity: 0.03;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 180px 180px;
 }
@@ -318,7 +327,7 @@ body {
   background: linear-gradient(
     110deg,
     transparent 20%,
-    rgba(255, 255, 255, 0.13) 48%,
+    rgba(255, 255, 255, 0.14) 48%,
     transparent 72%
   );
   transform: translateX(-120%);
@@ -364,7 +373,7 @@ body {
   margin-left: 0.14em;
   vertical-align: -0.14em;
   border-radius: 1px;
-  background: var(--cyan);
+  background: var(--teal);
   animation: blink 1.05s steps(1) infinite;
 }
 @keyframes blink {

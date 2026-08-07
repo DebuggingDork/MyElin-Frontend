@@ -31,7 +31,7 @@ export function LockScreen({ quarterId }: { quarterId: string }) {
   return (
     <div className="space-y-6">
       <header>
-        <Eyebrow accent="violet">POST …/lock · irreversible compute</Eyebrow>
+        <Eyebrow accent="teal">POST …/lock · irreversible compute</Eyebrow>
         <h1 className="display mt-3 text-[clamp(1.6rem,3.2vw,2.3rem)] text-ink">
           Lock Q{run?.current_quarter_number ?? "—"}
         </h1>

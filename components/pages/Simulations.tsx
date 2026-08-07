@@ -141,7 +141,7 @@ export function Simulations() {
         <Container wide className="relative z-10 pt-16 sm:pt-24">
           <div className="grid gap-12 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
             <div>
-              <Eyebrow accent="cyan">MYELIN — SIMULATIONS / MARKETPLACE</Eyebrow>
+              <Eyebrow accent="teal">MYELIN — SIMULATIONS / MARKETPLACE</Eyebrow>
               <motion.h1
                 initial={{ opacity: 0, y: 22 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -190,7 +190,7 @@ export function Simulations() {
                     <Signal className="h-3.5 w-3.5 text-emerald" />
                     Catalogue status
                   </span>
-                  <Pill accent="pink">S-25</Pill>
+                  <Pill accent="teal">S-25</Pill>
                 </div>
                 <div className="mt-5 space-y-3.5">
                   {scenarios.map((s) => (
@@ -254,7 +254,7 @@ export function Simulations() {
           <SectionHead
             index="001"
             kicker="The catalogue"
-            accent="violet"
+            accent="teal"
             title={
               <>
                 Six cases. <span className="text-grad-iris">One scorecard.</span>
@@ -315,10 +315,10 @@ export function Simulations() {
       <section className="relative overflow-hidden bg-void">
         <div className="aurora opacity-70" />
         <Container wide className="relative z-10 section-pad">
-          <Panel gradientRing glow accent="violet" className="overflow-hidden p-0">
+          <Panel gradientRing glow accent="teal" className="overflow-hidden p-0">
             <div className="grid gap-0 lg:grid-cols-[1.4fr_1fr]">
               <div className="p-8 sm:p-11">
-                <Eyebrow accent="pink">Publish with us</Eyebrow>
+                <Eyebrow accent="teal">Publish with us</Eyebrow>
                 <p className="display mt-6 max-w-lg text-[clamp(1.6rem,3vw,2.4rem)] leading-[1.1] text-ink">
                   Bring your own case.{" "}
                   <span className="text-grad-warm">We run the consequences.</span>
@@ -341,7 +341,7 @@ export function Simulations() {
                 className="grid divide-y divide-line border-line lg:border-l"
                 style={{
                   background:
-                    "linear-gradient(160deg, rgba(124,92,255,0.14), transparent 72%)",
+                    "linear-gradient(160deg, rgba(20,184,166,0.14), transparent 72%)",
                 }}
               >
                 {[

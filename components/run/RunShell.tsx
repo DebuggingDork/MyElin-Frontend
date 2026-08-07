@@ -150,7 +150,7 @@ export function RunShell({ children }: { children: React.ReactNode }) {
                 className={cn(
                   "block rounded-lg px-3 py-2.5 text-[13.5px] transition-colors",
                   active
-                    ? "border border-violet/30 bg-violet/[0.08] font-medium text-ink"
+                    ? "border border-teal/30 bg-teal/[0.08] font-medium text-ink"
                     : "border border-transparent text-dim hover:bg-white/[0.04]",
                 )}
               >
@@ -207,7 +207,7 @@ export function RunShell({ children }: { children: React.ReactNode }) {
                   className={cn(
                     "shrink-0 rounded-full border px-3 py-1.5 text-[12px]",
                     active
-                      ? "border-violet/40 bg-violet/10 text-ink"
+                      ? "border-teal/40 bg-teal/10 text-ink"
                       : "border-line text-dim",
                   )}
                 >

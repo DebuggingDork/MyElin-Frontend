@@ -60,7 +60,7 @@ export function ProcessingScreen({ quarterId }: { quarterId: string }) {
     <div className="flex min-h-[60vh] items-center justify-center">
       <div className="w-full max-w-md rounded-2xl border border-line bg-raise/60 p-7">
         <div className="flex items-center gap-3">
-          <Loader2 className="h-5 w-5 animate-spin text-violet-2" />
+          <Loader2 className="h-5 w-5 animate-spin text-teal-bright" />
           <p className="text-[15px] font-medium text-ink">
             Locking quarter…
           </p>

@@ -127,7 +127,7 @@ export function Institutions() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@university.edu"
-                  className="flex-1 rounded-full border border-line bg-white/[0.04] px-5 py-3.5 text-[14.5px] text-ink outline-none transition-colors placeholder:text-faint focus:border-violet/60"
+                  className="flex-1 rounded-full border border-line bg-white/[0.04] px-5 py-3.5 text-[14.5px] text-ink outline-none transition-colors placeholder:text-faint focus:border-teal/60"
                 />
                 <Action onClick={() => email.includes("@") && setSent(true)}>
                   {sent ? (

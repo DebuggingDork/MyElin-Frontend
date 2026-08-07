@@ -93,7 +93,7 @@ export function ResetPassword() {
 
       <div className="relative z-10 flex flex-1 items-center justify-center px-4 py-10 sm:px-8">
         <div className="w-full max-w-md rounded-[1.75rem] border border-line bg-void/60 p-8 shadow-[0_30px_80px_rgba(0,0,0,0.45)] sm:p-10">
-          <Eyebrow accent="violet">Set a new password</Eyebrow>
+          <Eyebrow accent="teal">Set a new password</Eyebrow>
           <h1 className="display mt-5 text-[clamp(1.6rem,3vw,2.1rem)] leading-[1.05] text-ink">
             Choose a <span className="text-grad">new password.</span>
           </h1>
@@ -110,7 +110,7 @@ export function ResetPassword() {
               <p className="mt-7 text-center text-[14px] text-dim">
                 <Link
                   href="/forgot-password"
-                  className="text-ink underline decoration-line-2 underline-offset-4 transition-colors hover:decoration-violet"
+                  className="text-ink underline decoration-line-2 underline-offset-4 transition-colors hover:decoration-teal"
                 >
                   Request a new reset link
                 </Link>
@@ -134,7 +134,7 @@ export function ResetPassword() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="At least 8 characters"
-                    className="w-full rounded-full border border-line bg-white/[0.04] py-3.5 pl-11 pr-5 text-[14.5px] text-ink outline-none transition-colors placeholder:text-faint focus:border-violet/60"
+                    className="w-full rounded-full border border-line bg-white/[0.04] py-3.5 pl-11 pr-5 text-[14.5px] text-ink outline-none transition-colors placeholder:text-faint focus:border-teal/60"
                   />
                 </div>
               </div>
@@ -155,7 +155,7 @@ export function ResetPassword() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Re-enter your new password"
-                    className="w-full rounded-full border border-line bg-white/[0.04] py-3.5 pl-11 pr-5 text-[14.5px] text-ink outline-none transition-colors placeholder:text-faint focus:border-violet/60"
+                    className="w-full rounded-full border border-line bg-white/[0.04] py-3.5 pl-11 pr-5 text-[14.5px] text-ink outline-none transition-colors placeholder:text-faint focus:border-teal/60"
                   />
                 </div>
               </div>

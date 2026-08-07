@@ -107,7 +107,7 @@ export function Manifesto() {
             className="relative mt-12 max-w-3xl overflow-hidden rounded-2xl border border-line p-7 sm:p-9"
             style={{
               background:
-                "linear-gradient(135deg, rgba(124,92,255,0.18), rgba(244,84,122,0.1) 55%, rgba(34,211,238,0.08))",
+                "linear-gradient(135deg, rgba(20,184,166,0.18), rgba(255,255,255,0.06) 55%, rgba(15,118,110,0.12))",
             }}
           >
             <Quote
@@ -127,7 +127,7 @@ export function Manifesto() {
         <Container wide className="relative z-10 section-pad">
           <div className="mb-14 flex flex-wrap items-end justify-between gap-6">
             <div>
-              <Eyebrow accent="violet">Five principles</Eyebrow>
+              <Eyebrow accent="teal">Five principles</Eyebrow>
               <h2 className="display mt-5 max-w-xl text-[clamp(1.8rem,3.6vw,2.8rem)] leading-[1.05] text-ink">
                 How we build{" "}
                 <span className="text-grad-iris">Decision Intelligence.</span>
@@ -232,11 +232,11 @@ export function Manifesto() {
               className="flex flex-col items-start justify-between gap-8 p-8 sm:p-11 lg:flex-row lg:items-center"
               style={{
                 background:
-                  "linear-gradient(120deg, rgba(124,92,255,0.22), rgba(34,211,238,0.1))",
+                  "linear-gradient(120deg, rgba(20,184,166,0.22), rgba(255,255,255,0.06))",
               }}
             >
               <div>
-                <Eyebrow accent="cyan">Start practicing</Eyebrow>
+                <Eyebrow accent="teal">Start practicing</Eyebrow>
                 <p className="display mt-5 max-w-xl text-[clamp(1.5rem,2.8vw,2.2rem)] leading-[1.1] text-ink">
                   Theory is cheap.{" "}
                   <span className="text-grad">Judgment isn&apos;t.</span>

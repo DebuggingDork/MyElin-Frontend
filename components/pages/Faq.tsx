@@ -69,7 +69,7 @@ export function Faq() {
         <Container wide className="relative z-10 pt-16 sm:pt-24">
           <div className="grid gap-12 lg:grid-cols-[1fr_0.9fr] lg:items-end">
             <div>
-              <Eyebrow accent="cyan">MYELIN — FAQ</Eyebrow>
+              <Eyebrow accent="teal">MYELIN — FAQ</Eyebrow>
               <motion.h1
                 initial={{ opacity: 0, y: 22 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -207,18 +207,18 @@ export function Faq() {
           <Panel
             gradientRing
             glow
-            accent="violet"
+            accent="teal"
             className="mt-12 overflow-hidden p-0"
           >
             <div
               className="flex flex-col items-start justify-between gap-6 p-7 sm:p-9 lg:flex-row lg:items-center"
               style={{
                 background:
-                  "linear-gradient(120deg, rgba(124,92,255,0.18), rgba(34,211,238,0.08))",
+                  "linear-gradient(120deg, rgba(20,184,166,0.18), rgba(255,255,255,0.06))",
               }}
             >
               <div>
-                <Eyebrow accent="pink">Still curious?</Eyebrow>
+                <Eyebrow accent="teal">Still curious?</Eyebrow>
                 <p className="display mt-4 text-[22px] text-ink">
                   Talk to the team — or just run a case.
                 </p>

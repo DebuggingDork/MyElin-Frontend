@@ -16,7 +16,7 @@ export function BriefingScreen({ quarterId }: { quarterId: string }) {
   return (
     <div className="space-y-8">
       <header>
-        <Eyebrow accent="violet">
+        <Eyebrow accent="teal">
           Quarter {q?.number ?? run?.current_quarter_number ?? "—"} briefing
         </Eyebrow>
         <h1 className="display mt-3 text-[clamp(1.6rem,3.2vw,2.4rem)] text-ink">

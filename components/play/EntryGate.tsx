@@ -104,8 +104,8 @@ export function EntryGate({
                 />
                 <defs>
                   <linearGradient id="clock-grad" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="#7c5cff" />
-                    <stop offset="100%" stopColor="#22d3ee" />
+                    <stop offset="0%" stopColor="#0f766e" />
+                    <stop offset="100%" stopColor="#2dd4bf" />
                   </linearGradient>
                 </defs>
               </svg>
@@ -134,8 +134,8 @@ export function EntryGate({
               <Pill accent="emerald" solid>
                 Live
               </Pill>
-              <Pill accent="violet">{scenario.company.stage}</Pill>
-              <Pill accent="cyan">{scenario.quarterLabel}</Pill>
+              <Pill accent="teal">{scenario.company.stage}</Pill>
+              <Pill accent="teal">{scenario.quarterLabel}</Pill>
             </div>
 
             <h1 className="display mt-5 text-[clamp(1.9rem,4vw,2.8rem)] leading-[1.05] text-ink">

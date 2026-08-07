@@ -54,7 +54,7 @@ export function Container({
 export function Eyebrow({
   children,
   className,
-  accent = "cyan",
+  accent = "teal",
 }: {
   children: React.ReactNode;
   className?: string;
@@ -133,7 +133,7 @@ export function Panel({
 
 export function Pill({
   children,
-  accent = "violet",
+  accent = "teal",
   solid = false,
   className,
 }: {
@@ -151,7 +151,7 @@ export function Pill({
       )}
       style={
         solid
-          ? { background: color, borderColor: "transparent", color: "#05060c" }
+          ? { background: color, borderColor: "transparent", color: "#0a0e11" }
           : {
               background: `color-mix(in srgb, ${color} 12%, transparent)`,
               borderColor: `color-mix(in srgb, ${color} 35%, transparent)`,
@@ -189,7 +189,7 @@ export function Action({
     "sweep group relative inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-45",
     size === "lg" ? "px-7 py-4 text-[15px]" : "px-5 py-3 text-[13.5px]",
     variant === "primary" &&
-      "text-white shadow-[0_10px_40px_-12px_rgba(124,92,255,0.7)] hover:shadow-[0_14px_50px_-10px_rgba(124,92,255,0.85)]",
+      "text-white shadow-[0_10px_40px_-12px_rgba(20,184,166,0.55)] hover:shadow-[0_14px_50px_-10px_rgba(20,184,166,0.7)]",
     variant === "outline" &&
       "border border-line-2 text-ink hover:border-white/30 hover:bg-white/[0.06]",
     variant === "ghost" && "text-dim hover:text-ink",
@@ -227,7 +227,7 @@ export function SectionHead({
   copy,
   action,
   className,
-  accent = "violet",
+  accent = "teal",
 }: {
   index?: string;
   kicker: string;
@@ -275,7 +275,7 @@ export function SectionHead({
 /** Thin progress meter used inside panels. */
 export function Meter({
   value,
-  accent = "violet",
+  accent = "teal",
   className,
   height = 4,
 }: {
@@ -292,7 +292,7 @@ export function Meter({
       <motion.div
         className="h-full rounded-full"
         style={{
-          background: `linear-gradient(90deg, ${accentVar[accent]}, color-mix(in srgb, ${accentVar[accent]} 45%, var(--cyan)))`,
+          background: `linear-gradient(90deg, ${accentVar[accent]}, color-mix(in srgb, ${accentVar[accent]} 40%, var(--teal-bright)))`,
         }}
         initial={{ width: 0 }}
         whileInView={{ width: `${Math.max(0, Math.min(100, value))}%` }}

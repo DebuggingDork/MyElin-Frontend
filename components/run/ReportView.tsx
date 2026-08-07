@@ -48,7 +48,7 @@ export function ReportView({ report }: { report: QuarterReportResponse }) {
     <div className="space-y-8">
       <header>
         <div className="flex flex-wrap items-center gap-3">
-          <p className="eyebrow text-violet-2">
+          <p className="eyebrow text-teal-bright">
             Quarter {report.quarter_number} · Report
           </p>
           <span className="eyebrow rounded-full border border-emerald/30 bg-emerald/10 px-2.5 py-1 text-emerald">

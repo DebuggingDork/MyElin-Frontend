@@ -115,7 +115,7 @@ export function Pricing() {
         <div className="grid-lines absolute inset-0" />
 
         <Container wide className="relative z-10 pt-16 sm:pt-24">
-          <Eyebrow accent="pink">MYELIN — PRICING</Eyebrow>
+          <Eyebrow accent="teal">MYELIN — PRICING</Eyebrow>
           <motion.h1
             initial={{ opacity: 0, y: 22 }}
             animate={{ opacity: 1, y: 0 }}
@@ -142,12 +142,12 @@ export function Pricing() {
             transition={{ duration: 0.55, delay: 0.18, ease: easeOut }}
             className="mt-8 flex flex-wrap items-center gap-3"
           >
-            <Pill accent="violet">
+            <Pill accent="teal">
               <Sparkles className="h-3 w-3" />
               14-day Pro trial
             </Pill>
             <Pill accent="emerald">No card for Practice</Pill>
-            <Pill accent="cyan">Cancel anytime</Pill>
+            <Pill accent="teal">Cancel anytime</Pill>
           </motion.div>
         </Container>
       </section>
@@ -222,7 +222,7 @@ export function Pricing() {
               className="flex flex-col items-start justify-between gap-8 p-8 sm:p-11 lg:flex-row lg:items-center"
               style={{
                 background:
-                  "linear-gradient(120deg, rgba(52,211,153,0.14), rgba(124,92,255,0.1))",
+                  "linear-gradient(120deg, rgba(20,184,166,0.16), rgba(255,255,255,0.06))",
               }}
             >
               <div>

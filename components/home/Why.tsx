@@ -103,7 +103,7 @@ export function Why() {
         <SectionHead
           index="001"
           kicker="Why"
-          accent="cyan"
+          accent="teal"
           title={
             <>
               <span className="text-grad-iris">LeetCode</span> for judgment.
@@ -145,7 +145,7 @@ export function Why() {
                       ? "color-mix(in srgb, var(--violet) 45%, transparent)"
                       : "var(--line)",
                     background: isMyelin
-                      ? "linear-gradient(120deg, rgba(124,92,255,0.16), rgba(34,211,238,0.07))"
+                      ? "linear-gradient(120deg, rgba(20,184,166,0.16), rgba(255,255,255,0.05))"
                       : "rgba(255,255,255,0.02)",
                   }}
                 >
@@ -233,9 +233,9 @@ function ConsequenceChain() {
         </p>
       </div>
 
-      <div className="mt-6 flex items-center gap-3 rounded-xl border border-violet/25 bg-violet/[0.08] px-4 py-3.5">
+      <div className="mt-6 flex items-center gap-3 rounded-xl border border-teal/25 bg-teal/[0.08] px-4 py-3.5">
         <span className="num text-[11px] text-faint">M+0</span>
-        <span className="h-px flex-1 bg-violet/40" />
+        <span className="h-px flex-1 bg-teal/40" />
         <span className="text-[13.5px] font-medium text-ink">
           You fund growth over runway
         </span>

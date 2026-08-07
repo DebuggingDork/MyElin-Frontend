@@ -58,7 +58,7 @@ export function Dimensions() {
         <SectionHead
           index="002"
           kicker="What we measure"
-          accent="violet"
+          accent="teal"
           title={
             <>
               Seven <span className="text-grad">cognitive dimensions.</span>
@@ -80,8 +80,8 @@ export function Dimensions() {
             <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="w-full max-w-[380px]">
               <defs>
                 <linearGradient id="radar-fill" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#7c5cff" stopOpacity="0.42" />
-                  <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.18" />
+                  <stop offset="0%" stopColor="#14b8a6" stopOpacity="0.42" />
+                  <stop offset="100%" stopColor="#2dd4bf" stopOpacity="0.18" />
                 </linearGradient>
               </defs>
 
@@ -128,7 +128,7 @@ export function Dimensions() {
               <motion.polygon
                 points={polygon}
                 fill="url(#radar-fill)"
-                stroke="#7c5cff"
+                stroke="#14b8a6"
                 strokeWidth={1.6}
                 initial={{ opacity: 0, scale: 0.7 }}
                 whileInView={{ opacity: 1, scale: 1 }}
@@ -235,7 +235,7 @@ export function Dimensions() {
                 className="px-6 py-6"
                 style={{
                   background:
-                    "linear-gradient(120deg, rgba(124,92,255,0.22), rgba(34,211,238,0.1))",
+                    "linear-gradient(120deg, rgba(20,184,166,0.22), rgba(255,255,255,0.06))",
                 }}
               >
                 <div className="flex items-center justify-between gap-5">
