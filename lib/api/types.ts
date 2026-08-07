@@ -65,6 +65,53 @@ export type CompanyDetailResponse = {
   quarters: QuarterSummary[];
 };
 
+/** One row of `GET /companies` -- everything needed to render a "resume a run" card. */
+export type CompanyListItem = {
+  id: string;
+  name: string;
+  created_at: string;
+  run_status: RunStatus;
+  scenario_id: string;
+  total_quarters: number;
+  crisis_quarter: number | null;
+  current_quarter_number: number | null;
+  current_quarter_status: QuarterStatus | null;
+  quarters_locked: number;
+  /** Most recently *locked* quarter's score, so an in-progress run still shows where you left off. */
+  latest_ceo_score: Money | null;
+  latest_band: string | null;
+};
+
+export type CompanyListResponse = { entries: CompanyListItem[] };
+
+/* ── crisis briefing (docs/11: narrative and choices only, never constants) ── */
+
+export type CrisisChoiceBriefing = {
+  /** The value to send as `crisis_choice`. A different letter axis than `scenario_code`. */
+  code: CrisisChoice;
+  label: string;
+  effect: string;
+};
+
+export type CrisisResponseLine = {
+  /** Field name on `CrisisAllocationSubmit`. */
+  field: string;
+  label: string;
+};
+
+export type CrisisBriefingResponse = {
+  /** Which event fired: A Price Warrior / B Marketing Blitz / C Feature Leapfrog / D Supply Shock. */
+  scenario_code: CrisisChoice;
+  title: string;
+  category: "competitive" | "operational" | string;
+  narrative: string;
+  choices: CrisisChoiceBriefing[];
+  /** Only the spend lines this scenario's recovery formulas actually read. Funding anything
+   *  else is inert -- drive the crisis form from this, not from the full five-field shape. */
+  response_lines: CrisisResponseLine[];
+  ignoring_is_legal: boolean;
+};
+
 export type MetricSchema = {
   value: Money;
   delta: Money | null;
@@ -304,7 +351,10 @@ export type LeaderboardEntry = {
   company_id: string;
   quarter_id: string;
   quarter_number: number;
-  overall_score: number | null;
+  /** Same number `score_trajectory` and `decision_quality.ceo_score` carry. Only quarters that
+   *  have locked appear at all -- an open quarter is absent, not present with a null score. */
+  ceo_score: Money | null;
+  band: string | null;
 };
 
 export type LeaderboardResponse = {

@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useSyncExternalStore,
 } from "react";
@@ -12,6 +13,7 @@ import {
   clearSession,
   getStoredUser,
   getToken,
+  onUnauthorized,
   persistSession,
   type StoredUser,
 } from "@/lib/api/client";
@@ -69,6 +71,15 @@ function getServerSnapshot(): AuthState {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const state = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
+  // An expired token otherwise leaves the UI signed-in-looking while every request 401s.
+  // Registered at module scope inside an effect so it runs once, not per render.
+  useEffect(() => {
+    onUnauthorized(() => {
+      clearSession();
+      emit({ user: null, token: null, ready: true });
+    });
+  }, []);
+
   const login = useCallback(async (body: LoginRequest) => {
     const auth = await api.login(body);
     persistSession(auth);
@@ -87,9 +98,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       return auth;
     } catch (err) {
-      // Supabase may rate-limit email confirmation; fall back to login if the
-      // account already exists from a prior attempt.
-      if (err instanceof ApiError && (err.status === 400 || err.status === 500)) {
+      // Supabase rejects a signup for an address that already has an account, which the
+      // backend surfaces as a 422 (see backend `routes/auth.py`). Someone re-submitting the
+      // signup form for an account they already own almost certainly meant "log me in", so
+      // try that before surfacing the error. Any *other* 422 (invalid address, weak password)
+      // fails login too, and the original -- more accurate -- reason is what gets rethrown.
+      //
+      // Previously this matched 400/500: before the backend normalized Supabase's rejections,
+      // every one of them arrived as an unhandled 500. Those codes no longer reach here.
+      if (err instanceof ApiError && err.status === 422) {
         try {
           return await login(body);
         } catch {

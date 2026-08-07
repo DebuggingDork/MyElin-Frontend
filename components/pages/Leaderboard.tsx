@@ -7,6 +7,7 @@ import { ArrowRight, Trophy } from "lucide-react";
 import { easeOut } from "@/lib/media";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { api, getActiveCompanyId } from "@/lib/api/client";
+import { asNumber } from "@/lib/api/catalog";
 import type { LeaderboardEntry } from "@/lib/api/types";
 import { ApiError } from "@/lib/api/types";
 import {
@@ -23,36 +24,47 @@ import {
 export function Leaderboard() {
   const { user, ready } = useAuth();
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
-  const [companyId] = useState<string | null>(() =>
-    typeof window === "undefined" ? null : getActiveCompanyId(),
-  );
+  const [companyId, setCompanyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!ready) return;
-    if (!user || !companyId) {
+    if (!user) {
       queueMicrotask(() => setLoading(false));
       return;
     }
     let cancelled = false;
-    void api
-      .getLeaderboard(companyId)
-      .then((res) => {
+
+    void (async () => {
+      try {
+        // The stored id is only a hint about which run you were last looking at. If it's
+        // missing -- cleared site data, a different machine -- ask the server which runs this
+        // user owns rather than telling someone with four locked quarters to "start a run".
+        let target = getActiveCompanyId();
+        if (!target) {
+          const { entries: runs } = await api.listCompanies();
+          target = runs[0]?.id ?? null;
+        }
+        if (cancelled) return;
+        setCompanyId(target);
+        if (!target) return;
+
+        const res = await api.getLeaderboard(target);
         if (!cancelled) setEntries(res.entries);
-      })
-      .catch((err) => {
+      } catch (err) {
         if (!cancelled) {
           setError(err instanceof ApiError ? err.message : "Failed to load");
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+    })();
+
     return () => {
       cancelled = true;
     };
-  }, [ready, user, companyId]);
+  }, [ready, user]);
 
   return (
     <>
@@ -132,16 +144,16 @@ export function Leaderboard() {
               )}
               {entries.length > 0 && (
                 <div className="overflow-hidden rounded-2xl border border-line">
-                  <div className="grid grid-cols-[64px_1fr_1fr_100px] gap-3 border-b border-line bg-raise/60 px-5 py-3 text-[11px] uppercase tracking-wider text-faint">
-                    <span>Q</span>
-                    <span>Company</span>
+                  <div className="grid grid-cols-[64px_1fr_1fr_110px] gap-3 border-b border-line bg-raise/60 px-5 py-3 text-[11px] uppercase tracking-wider text-faint">
+                    <span>#</span>
                     <span>Quarter</span>
-                    <span className="text-right">Score</span>
+                    <span>Band</span>
+                    <span className="text-right">CEO score</span>
                   </div>
                   {entries.map((row, i) => (
                     <div
                       key={`${row.quarter_id}-${i}`}
-                      className="grid grid-cols-[64px_1fr_1fr_100px] gap-3 border-b border-white/[0.04] px-5 py-4 last:border-0"
+                      className="grid grid-cols-[64px_1fr_1fr_110px] gap-3 border-b border-white/[0.04] px-5 py-4 last:border-0"
                     >
                       <span className="flex items-center gap-2 num text-[13px] text-ink">
                         {i === 0 && (
@@ -149,15 +161,15 @@ export function Leaderboard() {
                         )}
                         {String(i + 1).padStart(2, "0")}
                       </span>
-                      <span className="truncate text-[13px] text-dim">
-                        {row.company_id.slice(0, 8)}…
-                      </span>
                       <span className="text-[13px] text-dim">
                         Q{row.quarter_number}
                       </span>
+                      <span className="text-[13px] text-dim">
+                        {row.band ?? "—"}
+                      </span>
                       <span className="num text-right text-[14px] font-semibold text-ink">
-                        {row.overall_score != null
-                          ? row.overall_score.toFixed(1)
+                        {row.ceo_score != null
+                          ? asNumber(row.ceo_score).toFixed(1)
                           : "—"}
                       </span>
                     </div>

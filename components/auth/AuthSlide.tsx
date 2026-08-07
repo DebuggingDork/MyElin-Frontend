@@ -65,9 +65,13 @@ export function AuthSlide({ initialMode }: { initialMode: Mode }) {
       }
       router.replace(next);
     } catch (err) {
-      if (mode === "signup" && err instanceof ApiError && err.status === 500) {
+      // 429 is the only auth failure whose own message ("email rate limit exceeded") reads as
+      // jargon rather than an instruction, so it gets replacement copy. Every other rejection
+      // now arrives with Supabase's real, already-human reason in `detail` (bad address, weak
+      // password, invalid credentials) and is shown verbatim by the branch below.
+      if (err instanceof ApiError && err.status === 429) {
         setError(
-          "Signup is temporarily rate-limited. Try logging in if you already registered, or wait a minute and retry.",
+          "Too many attempts right now. Wait a minute and try again — if you already registered, log in instead.",
         );
       } else {
         setError(

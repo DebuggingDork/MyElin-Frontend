@@ -3,7 +3,9 @@ import type {
   AuthResponse,
   CompanyCreate,
   CompanyDetailResponse,
+  CompanyListResponse,
   CrisisAllocationSubmit,
+  CrisisBriefingResponse,
   EndgameDecisionResponse,
   EndgameDecisionSubmit,
   EndgamePreviewResponse,
@@ -82,6 +84,18 @@ export function clearSession() {
   window.localStorage.removeItem(COMPANY_KEY);
 }
 
+let unauthorizedHandler: (() => void) | null = null;
+
+/**
+ * The single app-wide reaction to a 401. Supabase access tokens expire (~1h), and without this
+ * an expired session left the UI *looking* signed in -- the nav still rendered the stored email
+ * -- while every request failed with a raw `not_authenticated` string. Registered once by
+ * `AuthProvider`; see the integration guide's error table ("send the user to login").
+ */
+export function onUnauthorized(handler: () => void): void {
+  unauthorizedHandler = handler;
+}
+
 async function request<T>(
   path: string,
   init: RequestInit = {},
@@ -110,6 +124,9 @@ async function request<T>(
   }
 
   if (!res.ok) {
+    // `auth` is false for register/login themselves -- a 401 there means "those credentials are
+    // wrong", not "your session expired", and must not clear a session or bounce the page.
+    if (res.status === 401 && auth) unauthorizedHandler?.();
     throw new ApiError(res.status, (body ?? {}) as ApiErrorBody);
   }
   return body as T;
@@ -146,6 +163,9 @@ export const api = {
       method: "POST",
       body: JSON.stringify(body),
     }),
+
+  /** Runs this user owns. Server-side truth -- replaces trusting a localStorage company id. */
+  listCompanies: () => request<CompanyListResponse>("/companies"),
 
   getCompany: (companyId: string) =>
     request<CompanyDetailResponse>(`/companies/${companyId}`),
@@ -242,6 +262,13 @@ export const api = {
   getReport: (companyId: string, quarterId: string) =>
     request<QuarterReportResponse>(
       `/companies/${companyId}/quarters/${quarterId}/report`,
+    ),
+
+  /** The crisis briefing. 404s on any quarter that isn't the scenario's crisis quarter, which
+   *  is a normal answer ("no crisis here"), not an error worth surfacing to the student. */
+  getCrisisBriefing: (companyId: string, quarterId: string) =>
+    request<CrisisBriefingResponse>(
+      `/companies/${companyId}/quarters/${quarterId}/crisis`,
     ),
 
   getLeaderboard: (companyId: string) =>
