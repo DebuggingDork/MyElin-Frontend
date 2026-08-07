@@ -31,8 +31,12 @@ export function AuthSlide({ initialMode }: { initialMode: Mode }) {
   const [pending, setPending] = useState(false);
 
   useEffect(() => {
-    setMode(initialMode);
-    setError(null);
+    // Deferred a tick so this lands via a callback rather than synchronously in the effect
+    // body (react-hooks/set-state-in-effect) -- resolves before the next paint regardless.
+    queueMicrotask(() => {
+      setMode(initialMode);
+      setError(null);
+    });
   }, [initialMode]);
 
   function switchMode(nextMode: Mode) {

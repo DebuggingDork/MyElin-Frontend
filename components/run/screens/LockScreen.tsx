@@ -20,6 +20,14 @@ export function LockScreen({ quarterId }: { quarterId: string }) {
       )
     : [];
 
+  const isCrisisQuarter =
+    run?.crisis_quarter != null && run.crisis_quarter === run.current_quarter_number;
+  const crisis = quarter?.crisis;
+  const crisisChoice = crisis?.crisis_choice ?? null;
+  const crisisLines = crisis
+    ? Object.entries(crisis).filter(([k, v]) => k !== "crisis_choice" && asNumber(v) > 0)
+    : [];
+
   return (
     <div className="space-y-6">
       <header>
@@ -62,6 +70,35 @@ export function LockScreen({ quarterId }: { quarterId: string }) {
         )}
       </div>
 
+      {isCrisisQuarter && (
+        <div className="rounded-xl border border-rose/30 bg-rose/[0.06] p-5">
+          <p className="eyebrow text-rose">Crisis response · Q{run?.crisis_quarter}</p>
+          {crisisLines.length === 0 && !crisisChoice ? (
+            <p className="mt-3 text-[13px] text-dim">
+              No crisis response submitted yet — this is legal, but the report will
+              show a fired <span className="text-ink">crisis_ignored</span> modifier (−4).
+            </p>
+          ) : (
+            <>
+              <p className="mt-3 text-[12.5px] text-dim">
+                crisis_choice:{" "}
+                <span className="text-ink">{crisisChoice ? String(crisisChoice) : "null (ignored)"}</span>
+              </p>
+              {crisisLines.length > 0 && (
+                <ul className="mt-2 space-y-1.5">
+                  {crisisLines.map(([key, val]) => (
+                    <li key={key} className="flex justify-between text-[12.5px] text-dim">
+                      <span>{key}</span>
+                      <span className="num text-ink">{formatLakhs(val)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
       <div className="flex flex-wrap gap-2">
         {DEPARTMENTS.map((d) => (
           <Action
@@ -72,6 +109,11 @@ export function LockScreen({ quarterId }: { quarterId: string }) {
             Edit {d.name}
           </Action>
         ))}
+        {isCrisisQuarter && (
+          <Action variant="ghost" href={`/run/${companyId}/quarter/${quarterId}/crisis`}>
+            Edit Crisis response
+          </Action>
+        )}
       </div>
 
       {!armed ? (

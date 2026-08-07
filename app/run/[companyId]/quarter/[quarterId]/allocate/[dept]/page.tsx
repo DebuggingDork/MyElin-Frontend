@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { AllocationWorkspace } from "@/components/run/AllocationForm";
+import { NextAfterAllocationLink } from "@/components/run/NextAfterAllocationLink";
 import { DEPARTMENTS, type DeptId } from "@/lib/api/catalog";
 import { Action } from "@/components/ui/Kit";
 
@@ -41,9 +42,7 @@ export default async function AllocateDeptPage({ params }: Props) {
             {next.name} →
           </Action>
         ) : (
-          <Action href={`/run/${companyId}/quarter/${quarterId}/lock`}>
-            Lock quarter →
-          </Action>
+          <NextAfterAllocationLink companyId={companyId} quarterId={quarterId} />
         )}
       </footer>
     </div>
