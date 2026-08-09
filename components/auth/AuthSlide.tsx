@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Lock, Mail } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { easeOut, photos } from "@/lib/media";
@@ -226,6 +226,8 @@ function AuthForm({
   hideSwitch?: boolean;
 }) {
   const isLogin = mode === "login";
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   return (
     <div className="w-full">
@@ -289,15 +291,29 @@ function AuthForm({
             <input
               id={`${mode}-password`}
               name="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               required
               minLength={isLogin ? undefined : 8}
               autoComplete={isLogin ? "current-password" : "new-password"}
               value={password}
               onChange={(e) => onPassword(e.target.value)}
               placeholder={isLogin ? "••••••••" : "At least 8 characters"}
-              className="w-full rounded-full border border-line bg-white/[0.04] py-3.5 pl-11 pr-5 text-[14.5px] text-ink outline-none transition-colors placeholder:text-faint focus:border-teal/60"
+              className="w-full rounded-full border border-line bg-white/[0.04] py-3.5 pl-11 pr-11 text-[14.5px] text-ink outline-none transition-colors placeholder:text-faint focus:border-teal/60"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-pressed={showPassword}
+              tabIndex={-1}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-faint transition-colors hover:text-ink"
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </button>
           </div>
         </div>
 
@@ -311,15 +327,29 @@ function AuthForm({
               <input
                 id={`${mode}-confirm-password`}
                 name="confirm-password"
-                type="password"
+                type={showConfirmPassword ? "text" : "password"}
                 required
                 minLength={8}
                 autoComplete="new-password"
                 value={confirmPassword}
                 onChange={(e) => onConfirmPassword(e.target.value)}
                 placeholder="Re-enter your password"
-                className="w-full rounded-full border border-line bg-white/[0.04] py-3.5 pl-11 pr-5 text-[14.5px] text-ink outline-none transition-colors placeholder:text-faint focus:border-teal/60"
+                className="w-full rounded-full border border-line bg-white/[0.04] py-3.5 pl-11 pr-11 text-[14.5px] text-ink outline-none transition-colors placeholder:text-faint focus:border-teal/60"
               />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((v) => !v)}
+                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                aria-pressed={showConfirmPassword}
+                tabIndex={-1}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-faint transition-colors hover:text-ink"
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
             </div>
           </div>
         )}
