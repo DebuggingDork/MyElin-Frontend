@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { ArrowRight, Menu, X } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { ProfileMenu } from "@/components/layout/ProfileMenu";
 import { Action, Container } from "@/components/ui/Kit";
 import { cn } from "@/lib/utils";
 
@@ -76,18 +77,9 @@ export function Nav() {
 
         <div className="relative z-10 flex shrink-0 items-center gap-2">
           {ready && user ? (
-            <>
-              <span className="hidden max-w-[140px] truncate text-[12px] text-faint sm:inline">
-                {user.email}
-              </span>
-              <Action
-                variant="outline"
-                onClick={logout}
-                className="hidden sm:inline-flex"
-              >
-                Log out
-              </Action>
-            </>
+            <div className="hidden sm:block">
+              <ProfileMenu />
+            </div>
           ) : (
             <>
               <Link
@@ -128,16 +120,21 @@ export function Nav() {
               </Link>
             ))}
             {user ? (
-              <button
-                type="button"
-                onClick={() => {
-                  logout();
-                  setOpen(false);
-                }}
-                className="rounded-xl px-3 py-3 text-left text-[15px] text-dim"
-              >
-                Log out
-              </button>
+              <>
+                <div className="mt-2 border-t border-line px-3 pb-1 pt-4 text-[12px] text-faint">
+                  Signed in as {user.email}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    logout();
+                    setOpen(false);
+                  }}
+                  className="rounded-xl px-3 py-3 text-left text-[15px] text-dim"
+                >
+                  Log out
+                </button>
+              </>
             ) : (
               <>
                 <Link
