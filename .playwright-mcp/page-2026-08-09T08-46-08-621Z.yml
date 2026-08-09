@@ -1,0 +1,14 @@
+- generic [active] [ref=f2e1]:
+  - button "Open Next.js Dev Tools" [ref=f2e66] [cursor=pointer]
+  - alert [ref=f2e70]
+  - generic [ref=f2e71]:
+    - generic [ref=f2e72]:
+      - paragraph [ref=f2e73]: Startup Survival
+      - heading "Start your run" [level=1] [ref=f2e74]
+      - paragraph [ref=f2e75]: Each run is a company you own, played over four quarters. Your runs live on the server, not in this browser.
+    - generic [ref=f2e76]:
+      - button "Start a new run" [ref=f2e77]
+      - paragraph [ref=f2e79]:
+        - text: Creates a company you own via
+        - code [ref=f2e80]: POST /companies
+        - text: .

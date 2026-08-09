@@ -1,0 +1,307 @@
+- generic [ref=f3e1]:
+  - banner [ref=f3e2]:
+    - generic [ref=f3e3]:
+      - link "Myelin home" [ref=f3e4] [cursor=pointer]:
+        - /url: /
+        - generic [ref=f3e5]: Myelin
+      - navigation [ref=f3e9]:
+        - link "Home" [ref=f3e10] [cursor=pointer]:
+          - /url: /
+        - link "Simulations" [ref=f3e11] [cursor=pointer]:
+          - /url: /simulations
+        - link "Leaderboard" [ref=f3e13] [cursor=pointer]:
+          - /url: /leaderboard
+        - link "Pricing" [ref=f3e14] [cursor=pointer]:
+          - /url: /pricing
+        - link "Manifesto" [ref=f3e15] [cursor=pointer]:
+          - /url: /manifesto
+        - link "FAQ" [ref=f3e16] [cursor=pointer]:
+          - /url: /faq
+      - generic [ref=f3e442]:
+        - button "NT navcheck.test.claude@example.com" [expanded] [active] [ref=f3e443]:
+          - generic [ref=f3e444]: NT
+          - generic [ref=f3e445]: navcheck.test.claude@example.com
+        - generic [ref=f3e455]:
+          - generic [ref=f3e456]:
+            - generic [ref=f3e457]: NT
+            - generic [ref=f3e458]:
+              - paragraph [ref=f3e459]: navcheck.test.claude@example.com
+              - paragraph [ref=f3e460]: ID 0a1dda6e
+          - generic [ref=f3e461]:
+            - paragraph [ref=f3e462]: Usage
+            - generic [ref=f3e463]:
+              - generic [ref=f3e464]:
+                - generic [ref=f3e465]: Nimbus Labs · navcheck.test.claude
+                - generic [ref=f3e466]: Active
+              - generic [ref=f3e468]:
+                - generic [ref=f3e469]: Quarters locked
+                - generic [ref=f3e470]: 0 / 4
+              - paragraph [ref=f3e472]: 1 run total
+          - button "Log out" [ref=f3e474]
+  - main [ref=f3e22]:
+    - generic [ref=f3e23]:
+      - generic [ref=f3e26]:
+        - generic [ref=f3e27]:
+          - paragraph [ref=f3e28]: MYELIN — SIMULATIONS / MARKETPLACE
+          - heading "Pick your weight class." [level=1] [ref=f3e30]
+          - paragraph [ref=f3e31]: Scenarios published by Myelin Labs and partner institutions. New cases every month.
+          - generic [ref=f3e32]:
+            - link "Run the live case" [ref=f3e33] [cursor=pointer]:
+              - /url: /play/startup-survival
+            - generic [ref=f3e38]: 6 scenarios in the catalogue
+        - generic [ref=f3e43]:
+          - generic [ref=f3e44]:
+            - generic [ref=f3e45]: Catalogue status
+            - generic [ref=f3e47]: S-25
+          - generic [ref=f3e48]:
+            - generic [ref=f3e49]:
+              - generic [ref=f3e50]: "01"
+              - generic [ref=f3e51]: Startup Survival
+              - generic [ref=f3e54]: "62"
+            - generic [ref=f3e55]:
+              - generic [ref=f3e56]: "02"
+              - generic [ref=f3e57]: M&A War Room
+              - generic [ref=f3e60]: "84"
+            - generic [ref=f3e61]:
+              - generic [ref=f3e62]: "03"
+              - generic [ref=f3e63]: Crisis Comms
+              - generic [ref=f3e66]: "78"
+            - generic [ref=f3e67]:
+              - generic [ref=f3e68]: "04"
+              - generic [ref=f3e69]: Turnaround
+              - generic [ref=f3e72]: "96"
+            - generic [ref=f3e73]:
+              - generic [ref=f3e74]: "05"
+              - generic [ref=f3e75]: Fundraise
+              - generic [ref=f3e78]: "34"
+            - generic [ref=f3e79]:
+              - generic [ref=f3e80]: "06"
+              - generic [ref=f3e81]: Product Pivot
+              - generic [ref=f3e84]: "58"
+          - generic [ref=f3e85]:
+            - generic [ref=f3e86]: Difficulty index
+            - generic [ref=f3e87]: avg 68
+      - generic [ref=f3e89]:
+        - generic [ref=f3e90]:
+          - paragraph [ref=f3e91]: "1"
+          - paragraph [ref=f3e92]: live now
+        - generic [ref=f3e93]:
+          - paragraph [ref=f3e94]: "1"
+          - paragraph [ref=f3e95]: in beta
+        - generic [ref=f3e96]:
+          - paragraph [ref=f3e97]: "4"
+          - paragraph [ref=f3e98]: shipping soon
+        - generic [ref=f3e99]:
+          - paragraph [ref=f3e100]: "7"
+          - paragraph [ref=f3e101]: dimensions scored
+    - generic [ref=f3e104]:
+      - generic [ref=f3e105]:
+        - generic [ref=f3e106]:
+          - generic [ref=f3e107]: "001"
+          - paragraph [ref=f3e108]: The catalogue
+        - heading "Six cases. One scorecard." [level=2] [ref=f3e111]
+        - paragraph [ref=f3e113]: Every scenario runs on the same deterministic engine and grades the same seven dimensions — so a Turnaround run is comparable to a Fundraise run.
+      - generic [ref=f3e114]:
+        - button "All" [ref=f3e115]
+        - button "Founder" [ref=f3e117]
+        - button "Strategy" [ref=f3e118]
+        - button "Leadership" [ref=f3e119]
+        - button "Operator" [ref=f3e120]
+        - button "PM" [ref=f3e121]
+      - generic [ref=f3e122]:
+        - generic [ref=f3e124]:
+          - generic [ref=f3e126]:
+            - generic [ref=f3e127]: "01"
+            - generic [ref=f3e129]: LIVE
+          - generic [ref=f3e131]:
+            - generic [ref=f3e132]: Founder
+            - paragraph [ref=f3e138]: Startup Survival
+            - paragraph [ref=f3e139]: "Run a seed-stage SaaS for 24 simulated months. Pressure: cash, crisis, co-founder, competitor."
+          - generic [ref=f3e141]:
+            - generic [ref=f3e142]: Intensity
+            - generic [ref=f3e143]: 62/100
+          - generic [ref=f3e145]:
+            - generic [ref=f3e146]:
+              - generic [ref=f3e147]: Duration
+              - paragraph [ref=f3e151]: 30 min
+            - generic [ref=f3e152]:
+              - generic [ref=f3e153]: Level
+              - paragraph [ref=f3e157]: Beginner → Pro
+          - link "Play →" [ref=f3e159] [cursor=pointer]:
+            - /url: /play/startup-survival
+        - generic [ref=f3e161]:
+          - generic [ref=f3e163]:
+            - generic [ref=f3e164]: "02"
+            - generic [ref=f3e166]: BETA
+          - generic [ref=f3e167]:
+            - generic [ref=f3e168]: Strategy
+            - paragraph [ref=f3e174]: M&A War Room
+            - paragraph [ref=f3e175]: You're the acquirer. Diligence, deal structure, integration. Hidden liabilities mature post-close.
+          - generic [ref=f3e177]:
+            - generic [ref=f3e178]: Intensity
+            - generic [ref=f3e179]: 84/100
+          - generic [ref=f3e181]:
+            - generic [ref=f3e182]:
+              - generic [ref=f3e183]: Duration
+              - paragraph [ref=f3e187]: 45 min
+            - generic [ref=f3e188]:
+              - generic [ref=f3e189]: Level
+              - paragraph [ref=f3e193]: Pro
+          - button "Notify me" [disabled] [ref=f3e195]
+        - generic [ref=f3e200]:
+          - generic [ref=f3e202]:
+            - generic [ref=f3e203]: "03"
+            - generic [ref=f3e205]: COMING
+          - generic [ref=f3e206]:
+            - generic [ref=f3e207]: Leadership
+            - paragraph [ref=f3e213]: Crisis Comms
+            - paragraph [ref=f3e214]: A safety incident just hit Twitter. Your CEO is offline. You have 90 minutes.
+          - generic [ref=f3e216]:
+            - generic [ref=f3e217]: Intensity
+            - generic [ref=f3e218]: 78/100
+          - generic [ref=f3e220]:
+            - generic [ref=f3e221]:
+              - generic [ref=f3e222]: Duration
+              - paragraph [ref=f3e226]: 20 min
+            - generic [ref=f3e227]:
+              - generic [ref=f3e228]: Level
+              - paragraph [ref=f3e232]: Pro
+          - button "Notify me" [disabled] [ref=f3e234]
+        - generic [ref=f3e239]:
+          - generic [ref=f3e241]:
+            - generic [ref=f3e242]: "04"
+            - generic [ref=f3e244]: COMING
+          - generic [ref=f3e245]:
+            - generic [ref=f3e246]: Operator
+            - paragraph [ref=f3e252]: Turnaround
+            - paragraph [ref=f3e253]: You inherited a Series C company at ₹4M burn and 5 months runway. Save it or wind it down.
+          - generic [ref=f3e255]:
+            - generic [ref=f3e256]: Intensity
+            - generic [ref=f3e257]: 96/100
+          - generic [ref=f3e259]:
+            - generic [ref=f3e260]:
+              - generic [ref=f3e261]: Duration
+              - paragraph [ref=f3e265]: 40 min
+            - generic [ref=f3e266]:
+              - generic [ref=f3e267]: Level
+              - paragraph [ref=f3e271]: Expert
+          - button "Notify me" [disabled] [ref=f3e273]
+        - generic [ref=f3e278]:
+          - generic [ref=f3e280]:
+            - generic [ref=f3e281]: "05"
+            - generic [ref=f3e283]: COMING
+          - generic [ref=f3e284]:
+            - generic [ref=f3e285]: Founder
+            - paragraph [ref=f3e291]: Fundraise
+            - paragraph [ref=f3e292]: Pitch 12 VCs, negotiate term sheets, choose your lead. Dilution vs. control.
+          - generic [ref=f3e294]:
+            - generic [ref=f3e295]: Intensity
+            - generic [ref=f3e296]: 34/100
+          - generic [ref=f3e298]:
+            - generic [ref=f3e299]:
+              - generic [ref=f3e300]: Duration
+              - paragraph [ref=f3e304]: 25 min
+            - generic [ref=f3e305]:
+              - generic [ref=f3e306]: Level
+              - paragraph [ref=f3e310]: Beginner
+          - button "Notify me" [disabled] [ref=f3e312]
+        - generic [ref=f3e317]:
+          - generic [ref=f3e319]:
+            - generic [ref=f3e320]: "06"
+            - generic [ref=f3e322]: COMING
+          - generic [ref=f3e323]:
+            - generic [ref=f3e324]: PM
+            - paragraph [ref=f3e330]: Product Pivot
+            - paragraph [ref=f3e331]: Growth has flatlined. Pivot, pivot-and-bridge, or persevere?
+          - generic [ref=f3e333]:
+            - generic [ref=f3e334]: Intensity
+            - generic [ref=f3e335]: 58/100
+          - generic [ref=f3e337]:
+            - generic [ref=f3e338]:
+              - generic [ref=f3e339]: Duration
+              - paragraph [ref=f3e343]: 30 min
+            - generic [ref=f3e344]:
+              - generic [ref=f3e345]: Level
+              - paragraph [ref=f3e349]: Intermediate
+          - button "Notify me" [disabled] [ref=f3e351]
+    - generic [ref=f3e359]:
+      - generic [ref=f3e360]:
+        - paragraph [ref=f3e361]: Publish with us
+        - paragraph [ref=f3e363]: Bring your own case. We run the consequences.
+        - paragraph [ref=f3e364]: Faculty and accelerator partners author scenarios on the Myelin engine — same telemetry, same DI Report, your curriculum.
+        - generic [ref=f3e365]:
+          - link "See institution plans" [ref=f3e366] [cursor=pointer]:
+            - /url: /pricing
+          - link "Read the blueprint" [ref=f3e369] [cursor=pointer]:
+            - /url: /manifesto
+      - generic [ref=f3e370]:
+        - generic [ref=f3e371]:
+          - generic [ref=f3e372]: Authoring time
+          - generic [ref=f3e373]: ~2 weeks
+        - generic [ref=f3e374]:
+          - generic [ref=f3e375]: Engine
+          - generic [ref=f3e376]: deterministic
+        - generic [ref=f3e377]:
+          - generic [ref=f3e378]: Narrative layer
+          - generic [ref=f3e379]: AI voiced
+        - generic [ref=f3e380]:
+          - generic [ref=f3e381]: Cohort analytics
+          - generic [ref=f3e382]: included
+  - contentinfo [ref=f3e383]:
+    - generic [ref=f3e384]:
+      - generic [ref=f3e385]:
+        - generic [ref=f3e386]:
+          - generic [ref=f3e387]: Myelin
+          - paragraph [ref=f3e391]: The world's first Decision Intelligence Platform.
+          - paragraph [ref=f3e392]: Judgment is a skill. Train it.
+        - generic [ref=f3e393]:
+          - generic [ref=f3e394]:
+            - paragraph [ref=f3e395]: Product
+            - list [ref=f3e396]:
+              - listitem [ref=f3e397]:
+                - link "Simulations" [ref=f3e398] [cursor=pointer]:
+                  - /url: /simulations
+              - listitem [ref=f3e399]:
+                - link "Pricing" [ref=f3e400] [cursor=pointer]:
+                  - /url: /pricing
+              - listitem [ref=f3e401]:
+                - link "Leaderboard" [ref=f3e402] [cursor=pointer]:
+                  - /url: /leaderboard
+              - listitem [ref=f3e403]:
+                - link "Play now" [ref=f3e404] [cursor=pointer]:
+                  - /url: /play/startup-survival
+          - generic [ref=f3e405]:
+            - paragraph [ref=f3e406]: For
+            - list [ref=f3e407]:
+              - listitem [ref=f3e408]:
+                - link "Students" [ref=f3e409] [cursor=pointer]:
+                  - /url: /pricing
+              - listitem [ref=f3e410]:
+                - link "Faculty" [ref=f3e411] [cursor=pointer]:
+                  - /url: /pricing
+              - listitem [ref=f3e412]:
+                - link "Recruiters" [ref=f3e413] [cursor=pointer]:
+                  - /url: /pricing
+              - listitem [ref=f3e414]:
+                - link "Admins" [ref=f3e415] [cursor=pointer]:
+                  - /url: /pricing
+          - generic [ref=f3e416]:
+            - paragraph [ref=f3e417]: Company
+            - list [ref=f3e418]:
+              - listitem [ref=f3e419]:
+                - link "Manifesto" [ref=f3e420] [cursor=pointer]:
+                  - /url: /manifesto
+              - listitem [ref=f3e421]:
+                - link "FAQ" [ref=f3e422] [cursor=pointer]:
+                  - /url: /faq
+              - listitem [ref=f3e423]:
+                - link "Blueprint" [ref=f3e424] [cursor=pointer]:
+                  - /url: /manifesto
+              - listitem [ref=f3e425]:
+                - link "Contact" [ref=f3e426] [cursor=pointer]:
+                  - /url: /#institutions
+      - generic [ref=f3e427]:
+        - paragraph [ref=f3e428]: © 2025 Myelin Labs · Built for judgment
+        - generic [ref=f3e429]: S-25 cohort open
+  - button "Open Next.js Dev Tools" [ref=f3e437] [cursor=pointer]
+  - alert [ref=f3e454]

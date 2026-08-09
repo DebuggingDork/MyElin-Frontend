@@ -1,0 +1,36 @@
+- generic [ref=f2e1]:
+  - generic [ref=f2e5]:
+    - generic [ref=f2e6]:
+      - generic [ref=f2e13]:
+        - paragraph [ref=f2e17]: "30"
+        - paragraph [ref=f2e18]: minutes
+      - paragraph [ref=f2e19]: One sitting. No pause. The quarter runs once you enter the workspace.
+    - generic [ref=f2e20]:
+      - generic [ref=f2e21]:
+        - generic [ref=f2e22]: Live
+        - generic [ref=f2e23]: Seed
+        - generic [ref=f2e24]: Quarter 1
+      - heading "Startup Survival" [level=1] [ref=f2e25]
+      - paragraph [ref=f2e26]: Nimbus Labs · Workflow automation SaaS. You will run 7 workspaces and commit every discretionary rupee before the quarter resolves.
+      - generic [ref=f2e27]:
+        - button "I have 30 uninterrupted minutes. Pausing mid-quarter resets the run. Treat it like a meeting." [ref=f2e28]:
+          - generic [ref=f2e32]:
+            - generic [ref=f2e33]: I have 30 uninterrupted minutes.
+            - generic [ref=f2e34]: Pausing mid-quarter resets the run. Treat it like a meeting.
+        - button "I understand decisions have irreversible consequences. Cash, morale, and stakeholders move the moment you commit." [active] [ref=f2e35]:
+          - generic [ref=f2e39]:
+            - generic [ref=f2e40]: I understand decisions have irreversible consequences.
+            - generic [ref=f2e41]: Cash, morale, and stakeholders move the moment you commit.
+        - button "I accept that hidden variables stay sealed until resolution. You will not see every variable while you decide. That is the point." [ref=f2e42]:
+          - generic [ref=f2e46]:
+            - generic [ref=f2e47]: I accept that hidden variables stay sealed until resolution.
+            - generic [ref=f2e48]: You will not see every variable while you decide. That is the point.
+        - button "I want a Decision Intelligence Report at the end. Your score is a composite across seven cognitive dimensions." [ref=f2e49]:
+          - generic [ref=f2e53]:
+            - generic [ref=f2e54]: I want a Decision Intelligence Report at the end.
+            - generic [ref=f2e55]: Your score is a composite across seven cognitive dimensions.
+      - generic [ref=f2e56]:
+        - button "Enter the workspace" [disabled] [ref=f2e57]
+        - paragraph [ref=f2e60]: Accept all four to proceed.
+  - button "Open Next.js Dev Tools" [ref=f2e66] [cursor=pointer]
+  - alert [ref=f2e70]

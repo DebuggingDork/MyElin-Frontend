@@ -1,0 +1,67 @@
+- generic [active] [ref=f1e1]:
+  - generic [ref=f1e2]:
+    - link "Myelin home" [ref=f1e5] [cursor=pointer]:
+      - /url: /
+      - generic [ref=f1e6]: Myelin
+    - generic [ref=f1e13]:
+      - generic [ref=f1e14]:
+        - generic [ref=f1e16]:
+          - paragraph [ref=f1e17]: Welcome back
+          - heading [level=1] [ref=f1e19]: Log in to Myelin
+          - paragraph [ref=f1e20]: Pick up where you left your last decision.
+          - generic [ref=f1e21]:
+            - generic [ref=f1e22]:
+              - generic [ref=f1e23]: Email *
+              - textbox [ref=f1e25]:
+                - /placeholder: you@university.edu
+            - generic [ref=f1e26]:
+              - generic [ref=f1e27]:
+                - generic [ref=f1e28]: Password *
+                - link [ref=f1e29] [cursor=pointer]:
+                  - /url: /forgot-password
+                  - text: Forgot password?
+              - textbox [ref=f1e31]:
+                - /placeholder: ••••••••
+            - button [ref=f1e32]: Log in
+          - paragraph [ref=f1e35]:
+            - link [ref=f1e36] [cursor=pointer]:
+              - /url: /login?next=%2Fsimulations
+              - text: Log in
+            - link [ref=f1e37] [cursor=pointer]:
+              - /url: /signup?next=%2Fsimulations
+              - text: Sign up
+        - generic [ref=f1e41]:
+          - paragraph [ref=f1e42]: New operator?
+          - paragraph [ref=f1e44]: Create an account and open Q1.
+          - paragraph [ref=f1e45]: Twenty-four months of company pressure, compressed into consequential choices.
+          - button [ref=f1e46]: Sign up
+      - generic [ref=f1e49]:
+        - generic [ref=f1e50]:
+          - img "Team planning strategy on a whiteboard" [ref=f1e51]
+          - generic [ref=f1e53]:
+            - paragraph [ref=f1e54]: Already running?
+            - paragraph [ref=f1e56]: Welcome back — resume the run.
+            - paragraph [ref=f1e57]: Your allocations, crisis, and lock state wait where you left them.
+            - button "Log in" [ref=f1e58]
+        - generic [ref=f1e62]:
+          - paragraph [ref=f1e63]: Join the S-25 cohort
+          - heading "Create your Myelin account" [level=1] [ref=f1e65]
+          - paragraph [ref=f1e66]: Email and password only — then start your first company.
+          - generic [ref=f1e67]:
+            - generic [ref=f1e68]:
+              - generic [ref=f1e69]: Email *
+              - textbox "you@university.edu" [ref=f1e71]
+            - generic [ref=f1e72]:
+              - generic [ref=f1e73]: Password *
+              - textbox "At least 8 characters" [ref=f1e76]
+            - generic [ref=f1e77]:
+              - generic [ref=f1e78]: Confirm password *
+              - textbox "Re-enter your password" [ref=f1e80]
+            - button "Create account" [ref=f1e81]
+          - paragraph [ref=f1e84]:
+            - link "Log in" [ref=f1e85] [cursor=pointer]:
+              - /url: /login?next=%2Fsimulations
+            - link "Sign up" [ref=f1e86] [cursor=pointer]:
+              - /url: /signup?next=%2Fsimulations
+  - button "Open Next.js Dev Tools" [ref=f1e92] [cursor=pointer]
+  - alert [ref=f1e96]

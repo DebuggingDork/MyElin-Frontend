@@ -1,0 +1,4 @@
+- generic [active] [ref=f2e1]:
+  - button "Open Next.js Dev Tools" [ref=f2e66] [cursor=pointer]
+  - alert [ref=f2e70]: Myelin — Decision Intelligence Platform
+  - generic [ref=f2e81]: Loading run state…

@@ -1,0 +1,66 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - link "Myelin home" [ref=e5] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e6]: Myelin
+    - generic [ref=e13]:
+      - generic [ref=e14]:
+        - generic [ref=e16]:
+          - paragraph [ref=e17]: Welcome back
+          - heading "Log in to Myelin" [level=1] [ref=e19]
+          - paragraph [ref=e20]: Pick up where you left your last decision.
+          - generic [ref=e21]:
+            - generic [ref=e22]:
+              - generic [ref=e23]: Email *
+              - textbox "you@university.edu" [ref=e25]
+            - generic [ref=e26]:
+              - generic [ref=e27]:
+                - generic [ref=e28]: Password *
+                - link "Forgot password?" [ref=e29] [cursor=pointer]:
+                  - /url: /forgot-password
+              - textbox "••••••••" [ref=e31]
+            - button "Log in" [ref=e32]
+          - paragraph [ref=e35]:
+            - link "Log in" [ref=e36] [cursor=pointer]:
+              - /url: /login?next=%2Fsimulations
+            - link "Sign up" [ref=e37] [cursor=pointer]:
+              - /url: /signup?next=%2Fsimulations
+        - generic [ref=e38]:
+          - img "Operators deciding around a table" [ref=e39]
+          - generic [ref=e41]:
+            - paragraph [ref=e42]: New operator?
+            - paragraph [ref=e44]: Create an account and open Q1.
+            - paragraph [ref=e45]: Twenty-four months of company pressure, compressed into consequential choices.
+            - button "Sign up" [ref=e46]
+      - generic [ref=e49]:
+        - generic [ref=e53]:
+          - paragraph [ref=e54]: Already running?
+          - paragraph [ref=e56]: Welcome back — resume the run.
+          - paragraph [ref=e57]: Your allocations, crisis, and lock state wait where you left them.
+          - button [ref=e58]: Log in
+        - generic [ref=e62]:
+          - paragraph [ref=e63]: Join the S-25 cohort
+          - heading [level=1] [ref=e65]: Create your Myelin account
+          - paragraph [ref=e66]: Email and password only — then start your first company.
+          - generic [ref=e67]:
+            - generic [ref=e68]:
+              - generic [ref=e69]: Email *
+              - textbox [ref=e71]:
+                - /placeholder: you@university.edu
+            - generic [ref=e72]:
+              - generic [ref=e73]: Password *
+              - textbox [ref=e76]:
+                - /placeholder: At least 8 characters
+            - generic [ref=e77]:
+              - generic [ref=e78]: Confirm password *
+              - textbox [ref=e80]:
+                - /placeholder: Re-enter your password
+            - button [ref=e81]: Create account
+          - paragraph [ref=e84]:
+            - link [ref=e85] [cursor=pointer]:
+              - /url: /login?next=%2Fsimulations
+              - text: Log in
+            - link [ref=e86] [cursor=pointer]:
+              - /url: /signup?next=%2Fsimulations
+              - text: Sign up
+  - button "Open Next.js Dev Tools" [ref=e92] [cursor=pointer]
