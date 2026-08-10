@@ -49,7 +49,7 @@ export function ReportView({ report }: { report: QuarterReportResponse }) {
         {/* decision quality */}
         <section className="min-w-0 space-y-4">
           <h3 className="eyebrow text-faint">B · Decision quality</h3>
-          <div className="rounded-2xl border border-line bg-raise/60 px-5 py-6 text-center">
+          <div className="glass-card px-5 py-6 text-center">
             <p className="display text-[48px] leading-none text-grad">
               {asNumber(dq.ceo_score).toFixed(1)}
             </p>
@@ -68,7 +68,7 @@ export function ReportView({ report }: { report: QuarterReportResponse }) {
       <EvidencePanel evidence={report.evidence} />
 
       {report.run_summary && (
-        <div className="rounded-xl border border-line bg-raise/50 p-4">
+        <div className="glass-card p-4">
           <p className="eyebrow text-faint">Run summary · terminal quarter</p>
           <p className="mt-2 text-[13px] text-dim">
             Terminal status:{" "}
@@ -120,7 +120,7 @@ function GateList({ gates }: { gates: BindingConstraintSchema[] }) {
 function QualityPanel({ dq }: { dq: DecisionQualitySchema }) {
   return (
     <div className="space-y-3">
-      <div className="rounded-xl border border-line bg-raise/50 p-4">
+      <div className="glass-card p-4">
         <p className="eyebrow text-faint">Modifiers</p>
         <ul className="mt-3 space-y-2">
           {dq.modifiers.map((m) => (
@@ -172,10 +172,7 @@ function QualityPanel({ dq }: { dq: DecisionQualitySchema }) {
         </p>
         <div className="space-y-2">
           {dq.unscored_criteria.map((c) => (
-            <div
-              key={c.id}
-              className="rounded-xl border border-line bg-raise/40 px-4 py-3"
-            >
+            <div key={c.id} className="glass-card-flat px-4 py-3">
               <p className="text-[12.5px] text-ink">
                 {c.trait} · {c.id}
               </p>
@@ -215,7 +212,7 @@ function CriterionRow({
   const Icon = meta.icon;
 
   return (
-    <div className="overflow-hidden rounded-xl border border-line bg-raise/50">
+    <div className="glass-card overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -262,10 +259,7 @@ function EvidencePanel({
       <h3 className="eyebrow text-faint">Evidence · observations, not grades</h3>
       <div className="mt-3 grid gap-3 md:grid-cols-2">
         {entries.map(([trait, rows]) => (
-          <div
-            key={trait}
-            className="rounded-xl border border-line bg-raise/40 p-4"
-          >
+          <div key={trait} className="glass-card-flat p-4">
             <p className="text-[13px] font-medium text-ink">{trait}</p>
             <ul className="mt-2 space-y-2">
               {rows.map((row) => (
