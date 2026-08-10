@@ -35,7 +35,7 @@ function initials(email: string) {
 function Avatar({ email, size = 28 }: { email: string; size?: number }) {
   return (
     <span
-      className="flex shrink-0 items-center justify-center rounded-full font-semibold text-[#0a0e11]"
+      className="flex shrink-0 items-center justify-center rounded-full font-semibold text-[#071a16]"
       style={{
         width: size,
         height: size,

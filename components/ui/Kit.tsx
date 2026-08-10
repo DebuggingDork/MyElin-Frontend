@@ -151,7 +151,7 @@ export function Pill({
       )}
       style={
         solid
-          ? { background: color, borderColor: "transparent", color: "#0a0e11" }
+          ? { background: color, borderColor: "transparent", color: "#071a16" }
           : {
               background: `color-mix(in srgb, ${color} 12%, transparent)`,
               borderColor: `color-mix(in srgb, ${color} 35%, transparent)`,

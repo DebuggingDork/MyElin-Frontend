@@ -1,27 +1,33 @@
 @import "tailwindcss";
 
 /* ──────────────────────────────────────────────────────────────
-   Myelin — professional triad: charcoal grey · teal · white.
-   One brand accent (teal). Greys for structure. White for type.
+   Myelin — professional triad: teal · grey · white, weighted
+   ~60 / 30 / 10 by visual coverage. Teal now carries the surfaces
+   themselves (void/base/raise/panel/line), not just accents -- the
+   old charcoal was neutral grey everywhere with teal only showing up
+   in buttons and highlights, which reads closer to 90/8/2. Grey is
+   the structural 30% (secondary text, borders, muted states). White
+   stays reserved for the ~10% that needs the most weight: headline
+   type and the "failed" status state.
    Legacy accent names alias into teal / grey so components keep working.
    ────────────────────────────────────────────────────────────── */
 
 :root {
-  /* Grey surfaces — cool charcoal, no purple cast */
-  --void: #0a0e11;
-  --base: #0f1418;
-  --raise: #161c21;
-  --raise-2: #1e262c;
+  /* Teal-tinted surfaces — the dominant 60% */
+  --void: #071a16;
+  --base: #0a221c;
+  --raise: #12362c;
+  --raise-2: #1a4738;
 
-  --panel: rgba(255, 255, 255, 0.04);
-  --panel-2: rgba(255, 255, 255, 0.07);
-  --line: rgba(255, 255, 255, 0.1);
-  --line-2: rgba(255, 255, 255, 0.18);
+  --panel: rgba(45, 212, 191, 0.05);
+  --panel-2: rgba(45, 212, 191, 0.09);
+  --line: rgba(94, 234, 212, 0.14);
+  --line-2: rgba(94, 234, 212, 0.22);
 
-  /* White / grey type */
+  /* White / grey type — the 30% structural grey + 10% white accent */
   --text: #ffffff;
-  --dim: #9aa3ab;
-  --faint: #6a737c;
+  --dim: #9fb3ac;
+  --faint: #71847d;
 
   /* Teal brand */
   --teal: #14b8a6;
@@ -42,12 +48,12 @@
 
   --grad-primary: linear-gradient(135deg, #0f766e 0%, #14b8a6 48%, #2dd4bf 100%);
   --grad-cool: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
-  --grad-warm: linear-gradient(135deg, #6a737c 0%, #9aa3ab 55%, #e8eef0 100%);
+  --grad-warm: linear-gradient(135deg, #71847d 0%, #9fb3ac 55%, #e8eef0 100%);
   --grad-iris: linear-gradient(135deg, #0f766e 0%, #14b8a6 50%, #5eead4 100%);
 
   --focus-ring: 0 0 0 3px rgba(20, 184, 166, 0.4);
   --shadow-lift: 0 1px 0 rgba(255, 255, 255, 0.04) inset,
-    0 24px 60px -30px rgba(10, 14, 17, 0.9);
+    0 24px 60px -30px rgba(7, 26, 22, 0.9);
 }
 
 @theme inline {
