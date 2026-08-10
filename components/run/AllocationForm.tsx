@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, Minus, Plus } from "lucide-react";
+import { Check } from "lucide-react";
 import { api } from "@/lib/api/client";
 import {
   asNumber,
@@ -21,6 +21,7 @@ import type {
 import { accentVar } from "@/components/ui/Kit";
 import { Action } from "@/components/ui/Kit";
 import { useRun } from "@/components/run/RunProvider";
+import { SpendDial } from "@/components/run/SpendDial";
 
 type SpendMap = Record<string, number>;
 
@@ -61,15 +62,7 @@ export function AllocationWorkspace({ deptId }: { deptId: DeptId }) {
   const quarterId = run?.current_quarter_id;
   const locked = deptId !== "finance_admin" && !financeUnlocked;
 
-  const bump = (key: string, dir: 1 | -1) => {
-    setSpend((prev) => {
-      const next = Math.max(0, Number((prev[key] + dir * 0.5).toFixed(2)));
-      return { ...prev, [key]: next };
-    });
-    setSaved(false);
-  };
-
-  const setBlock = (key: string, value: number) => {
+  const setField = (key: string, value: number) => {
     setSpend((prev) => ({ ...prev, [key]: value }));
     setSaved(false);
   };
@@ -190,15 +183,14 @@ export function AllocationWorkspace({ deptId }: { deptId: DeptId }) {
 
       <div className="grid gap-3 sm:grid-cols-2">
         {catalog.fields.map((field) => (
-          <SpendCard
+          <SpendDial
             key={field.key}
             label={field.label}
             hint={field.hint}
             value={spend[field.key] ?? 0}
             color={color}
             disabled={!enabled}
-            onBump={(d) => bump(field.key, d)}
-            onSet={(v) => setBlock(field.key, v)}
+            onChange={(v) => setField(field.key, v)}
           />
         ))}
       </div>
@@ -408,20 +400,14 @@ export function CrisisWorkspace() {
         </p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           {fields.map((field) => (
-            <SpendCard
+            <SpendDial
               key={field.key}
               label={field.label}
               hint={field.hint}
               value={spend[field.key] ?? 0}
               color="var(--rose)"
               disabled={!enabled}
-              onBump={(d) =>
-                setSpend((p) => ({
-                  ...p,
-                  [field.key]: Math.max(0, Number(((p[field.key] ?? 0) + d * 0.5).toFixed(2))),
-                }))
-              }
-              onSet={(v) => setSpend((p) => ({ ...p, [field.key]: v }))}
+              onChange={(v) => setSpend((p) => ({ ...p, [field.key]: v }))}
             />
           ))}
         </div>
@@ -437,80 +423,6 @@ export function CrisisWorkspace() {
         {saving ? "Saving…" : saved ? "Saved — upsert again anytime" : "Save crisis allocation"}
         {saved && <Check className="h-4 w-4" />}
       </Action>
-    </div>
-  );
-}
-
-
-
-function SpendCard({
-  label,
-  hint,
-  value,
-  color,
-  disabled,
-  onBump,
-  onSet,
-}: {
-  label: string;
-  hint?: string;
-  value: number;
-  color: string;
-  disabled?: boolean;
-  onBump: (dir: 1 | -1) => void;
-  onSet: (v: number) => void;
-}) {
-  const max = 20;
-  const blocks = 20;
-  const filled = Math.round((value / max) * blocks);
-
-  return (
-    <div className="rounded-xl border border-line bg-raise/50 p-4">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <p className="text-[13.5px] font-medium text-ink">{label}</p>
-          {hint && <p className="mt-0.5 text-[11.5px] text-faint">{hint}</p>}
-        </div>
-        <span className="num text-[13px] font-semibold text-ink">
-          {formatLakhs(value)}
-        </span>
-      </div>
-      <div className="mt-3 flex items-center gap-2">
-        <div className="flex flex-1 gap-[2px]">
-          {Array.from({ length: blocks }).map((_, i) => (
-            <button
-              key={i}
-              type="button"
-              disabled={disabled}
-              aria-label={`Set to ${(((i + 1) / blocks) * max).toFixed(1)}`}
-              onClick={() => onSet(Number((((i + 1) / blocks) * max).toFixed(2)))}
-              className="h-[18px] flex-1 rounded-[2px] disabled:opacity-40"
-              style={{
-                background:
-                  i < filled
-                    ? `color-mix(in srgb, ${color} 70%, transparent)`
-                    : "rgba(255,255,255,0.06)",
-              }}
-            />
-          ))}
-        </div>
-        <button
-          type="button"
-          disabled={disabled || value <= 0}
-          onClick={() => onBump(-1)}
-          className="flex h-6 w-6 items-center justify-center rounded-md border border-line text-dim disabled:opacity-30"
-        >
-          <Minus className="h-3 w-3" />
-        </button>
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={() => onBump(1)}
-          className="flex h-6 w-6 items-center justify-center rounded-md border border-line text-dim disabled:opacity-30"
-        >
-          <Plus className="h-3 w-3" />
-        </button>
-      </div>
     </div>
   );
 }
