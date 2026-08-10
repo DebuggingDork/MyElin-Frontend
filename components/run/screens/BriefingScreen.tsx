@@ -1,9 +1,29 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
-import { Action, Eyebrow } from "@/components/ui/Kit";
-import { DEPARTMENTS, formatLakhs, asNumber } from "@/lib/api/catalog";
+import Link from "next/link";
+import {
+  ArrowRight,
+  Factory,
+  FlaskConical,
+  Landmark,
+  Lock,
+  Megaphone,
+  TrendingUp,
+  Users,
+} from "lucide-react";
+import { Action, Eyebrow, Pill, accentVar } from "@/components/ui/Kit";
+import { DEPARTMENTS, formatLakhs, asNumber, type DeptIcon } from "@/lib/api/catalog";
 import { useRun } from "@/components/run/RunProvider";
+import { cn } from "@/lib/utils";
+
+const DEPT_ICON: Record<DeptIcon, React.ComponentType<{ className?: string }>> = {
+  landmark: Landmark,
+  megaphone: Megaphone,
+  "trending-up": TrendingUp,
+  "flask-conical": FlaskConical,
+  factory: Factory,
+  users: Users,
+};
 
 /**
  * Screen after POST /companies/{id}/quarters — orients from
@@ -93,26 +113,68 @@ export function BriefingScreen({ quarterId }: { quarterId: string }) {
         <p className="eyebrow text-faint">
           Finance & Admin first, then five departments · any order
         </p>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
           {DEPARTMENTS.map((d) => {
             const locked = !financeUnlocked && d.id !== "finance_admin";
-            return (
-              <Action
-                key={d.id}
-                variant="outline"
-                href={`/run/${companyId}/quarter/${quarterId}/allocate/${d.id}`}
-                disabled={locked}
-                className="!justify-between"
+            const startHere = d.id === "finance_admin" && !financeUnlocked;
+            const Icon = DEPT_ICON[d.icon];
+            const color = accentVar[d.accent];
+
+            const card = (
+              <div
+                className={cn(
+                  "glass-card flex h-full flex-col gap-3 p-4",
+                  locked && "opacity-55",
+                )}
               >
-                {d.name}
-                <span className="num text-[11px] text-faint">
-                  {locked
-                    ? "unlocks after Finance & Admin"
-                    : d.id === "finance_admin"
-                      ? "start here"
-                      : `${d.fields.length} lines`}
-                </span>
-              </Action>
+                <div className="flex items-start justify-between gap-2">
+                  <span
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+                    style={{
+                      background: `color-mix(in srgb, ${color} 16%, transparent)`,
+                      color,
+                    }}
+                  >
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  {locked && (
+                    <Pill accent="amber">
+                      <Lock className="h-3 w-3" />
+                      Locked
+                    </Pill>
+                  )}
+                  {startHere && (
+                    <Pill accent="teal" solid>
+                      Start here
+                    </Pill>
+                  )}
+                </div>
+
+                <div>
+                  <p className="text-[14px] font-medium text-ink">{d.name}</p>
+                  <p className="mt-0.5 text-[11.5px] text-faint">
+                    {locked ? "Unlocks after Finance & Admin" : d.tagline}
+                  </p>
+                </div>
+
+                <p className="mt-auto rounded-lg bg-[var(--panel-2)] px-3 py-2 text-[12px] italic leading-snug text-dim">
+                  &ldquo;{d.quote}&rdquo;
+                </p>
+              </div>
+            );
+
+            return locked ? (
+              <div key={d.id} className="cursor-not-allowed">
+                {card}
+              </div>
+            ) : (
+              <Link
+                key={d.id}
+                href={`/run/${companyId}/quarter/${quarterId}/allocate/${d.id}`}
+                className="hover-lift block"
+              >
+                {card}
+              </Link>
             );
           })}
         </div>

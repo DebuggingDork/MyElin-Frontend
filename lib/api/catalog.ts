@@ -14,12 +14,24 @@ export type SpendField = {
   hint?: string;
 };
 
+export type DeptIcon =
+  | "landmark"
+  | "megaphone"
+  | "trending-up"
+  | "flask-conical"
+  | "factory"
+  | "users";
+
 export type DeptCatalog = {
   id: DeptId;
   name: string;
   owner: string;
   tagline: string;
+  /** In the department's own voice -- grounded in how its numbers actually feed the chain
+   *  (docs/12-quarter-1-reference.md §8), not generic flavor text. */
+  quote: string;
   accent: "cyan" | "teal" | "violet" | "amber" | "emerald" | "indigo";
+  icon: DeptIcon;
   fields: SpendField[];
   /** R&D only — warranty is a strategic choice, not spend. */
   warranty?: boolean;
@@ -31,7 +43,9 @@ export const DEPARTMENTS: DeptCatalog[] = [
     name: "Finance & Admin",
     owner: "CFO desk",
     tagline: "Set this first — every other department is spent against it",
+    quote: "We don't sell a single unit. Skip us, and next quarter's risk catches up with you.",
     accent: "indigo",
+    icon: "landmark",
     fields: [
       { key: "compliance_legal", label: "Compliance & Legal" },
       { key: "financial_planning", label: "Financial Planning" },
@@ -43,7 +57,9 @@ export const DEPARTMENTS: DeptCatalog[] = [
     name: "Marketing",
     owner: "Growth desk",
     tagline: "8 channel spend lines · power-law lead formulas",
+    quote: "Every rupee here buys leads. Whether Sales can use them is someone else's problem.",
     accent: "cyan",
+    icon: "megaphone",
     fields: [
       { key: "google_ads", label: "Google Ads" },
       { key: "meta_ads", label: "Meta Ads" },
@@ -60,7 +76,9 @@ export const DEPARTMENTS: DeptCatalog[] = [
     name: "Sales",
     owner: "Revenue desk",
     tagline: "Rep capacity is a hard gate on marketing leads",
+    quote: "Give us more leads than we can handle, and the extra ones just evaporate.",
     accent: "teal",
+    icon: "trending-up",
     fields: [
       { key: "reps", label: "Sales Reps & Commissions", hint: "Sets capacity · 500 leads / ₹1 L" },
       { key: "crm_tools", label: "CRM & Sales Tools" },
@@ -72,7 +90,9 @@ export const DEPARTMENTS: DeptCatalog[] = [
     name: "R&D",
     owner: "Product / Engineering",
     tagline: "Quality & innovation · subject to conversion ceiling",
+    quote: "No amount of marketing spend fixes a product that isn't good enough to convert.",
     accent: "violet",
+    icon: "flask-conical",
     warranty: true,
     fields: [
       { key: "quality_qa", label: "Quality & QA" },
@@ -84,7 +104,9 @@ export const DEPARTMENTS: DeptCatalog[] = [
     name: "Operations",
     owner: "Ops desk",
     tagline: "Manufacturing, supplier QC, logistics",
+    quote: "We can build it, but we can't sell what isn't in stock.",
     accent: "amber",
+    icon: "factory",
     fields: [
       { key: "manufacturing", label: "Manufacturing" },
       { key: "supplier_qc", label: "Supplier QC" },
@@ -96,7 +118,9 @@ export const DEPARTMENTS: DeptCatalog[] = [
     name: "HR & People",
     owner: "People desk",
     tagline: "Culture, training, and the CX team",
+    quote: "A tired team closes fewer deals, no matter how good the leads are.",
     accent: "emerald",
+    icon: "users",
     fields: [
       { key: "culture_benefits", label: "Culture & Benefits" },
       { key: "training_development", label: "Training & Development" },
