@@ -8,11 +8,31 @@ import { usePrefersReducedMotion } from "@/lib/play/use-reduced-motion";
  * gaps, not a steady per-character typewriter. Click/tap skips straight to the full paragraph;
  * reduced-motion shows it complete on first paint.
  */
-export function ChunkReveal({ text, className }: { text: string; className?: string }) {
+export function ChunkReveal({
+  text,
+  className,
+  onDone,
+}: {
+  text: string;
+  className?: string;
+  onDone?: () => void;
+}) {
   const reduced = usePrefersReducedMotion();
   const words = text.split(" ");
   const [shown, setShown] = useState(() => (reduced ? words.length : 0));
   const skippedRef = useRef(false);
+  const doneFiredRef = useRef(false);
+
+  useEffect(() => {
+    doneFiredRef.current = false;
+  }, [text]);
+
+  useEffect(() => {
+    if (shown >= words.length && !doneFiredRef.current) {
+      doneFiredRef.current = true;
+      onDone?.();
+    }
+  }, [shown, words.length, onDone]);
 
   useEffect(() => {
     if (reduced) return;
