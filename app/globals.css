@@ -235,25 +235,21 @@ body {
   letter-spacing: 0.22em;
 }
 
+/* Emphasis inside a headline: one solid accent colour, not gradient-filled text.
+   `background-clip: text` over a gradient costs real legibility -- the glyph's own colour varies
+   across its width, so contrast is only ever guaranteed at one end of the sweep, and thin serif
+   strokes are exactly where that shows. The names are kept because ~23 call sites use them; only
+   what they render changed. */
 .text-grad {
-  background: var(--grad-primary);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--teal-bright);
 }
 
 .text-grad-iris {
-  background: var(--grad-iris);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--teal);
 }
 
 .text-grad-warm {
-  background: var(--grad-warm);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--dim);
 }
 
 /* ────────────────────────── surfaces ────────────────────────── */
