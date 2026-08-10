@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import { api, setActiveCompanyId } from "@/lib/api/client";
+import { asNumber } from "@/lib/api/catalog";
 import type {
   CompanyDetailResponse,
   Move,
@@ -34,6 +35,14 @@ type RunContextValue = {
   lockQuarter: () => Promise<QuarterReportResponse | null>;
   loadReport: (quarterId?: string) => Promise<QuarterReportResponse | null>;
   setAllocations: (a: QuarterAllocationResponse) => void;
+  /** True once `quarter.allocations` exists -- the backend only creates that row on the first
+   *  department POST, and Finance & Admin is the only department enabled before it exists, so
+   *  this doubles as "the CEO has set finance for this quarter" without a dedicated flag. */
+  financeUnlocked: boolean;
+  /** Sum of all 22 saved spend lines (Rs lakhs) for the open quarter, straight off
+   *  `quarter.allocations` -- the KPI bar's "allocated so far" and each department's
+   *  remaining-cash reference both read this. */
+  allocatedLakhs: number;
 };
 
 const RunContext = createContext<RunContextValue | null>(null);
@@ -140,6 +149,13 @@ export function RunProvider({
     [run],
   );
 
+  const financeUnlocked = quarter?.allocations != null;
+  const allocatedLakhs = useMemo(() => {
+    const alloc = quarter?.allocations;
+    if (!alloc) return 0;
+    return Object.values(alloc).reduce<number>((sum, v) => sum + asNumber(v), 0);
+  }, [quarter]);
+
   const value = useMemo(
     () => ({
       companyId,
@@ -156,6 +172,8 @@ export function RunProvider({
       lockQuarter,
       loadReport,
       setAllocations,
+      financeUnlocked,
+      allocatedLakhs,
     }),
     [
       companyId,
@@ -171,6 +189,8 @@ export function RunProvider({
       openQuarter,
       lockQuarter,
       loadReport,
+      financeUnlocked,
+      allocatedLakhs,
     ],
   );
 

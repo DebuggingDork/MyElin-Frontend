@@ -8,6 +8,7 @@ import {
   CRISIS_CHOICES,
   CRISIS_FIELDS,
   DEPARTMENTS,
+  formatInr,
   formatLakhs,
   type DeptId,
 } from "@/lib/api/catalog";
@@ -27,30 +28,38 @@ function emptySpend(keys: string[]): SpendMap {
   return Object.fromEntries(keys.map((k) => [k, 0]));
 }
 
+/** Reads either a fresh submit response or `quarter.allocations` -- both are a flat
+ *  field-name -> Money map for the same 22 columns, just typed differently. */
 function fromAlloc(
-  alloc: QuarterAllocationResponse | null,
+  alloc: Record<string, unknown> | null | undefined,
   keys: string[],
 ): SpendMap {
   if (!alloc) return emptySpend(keys);
   const out: SpendMap = {};
   for (const k of keys) {
-    out[k] = asNumber((alloc as unknown as Record<string, unknown>)[k] as string | number);
+    out[k] = asNumber(alloc[k] as string | number | undefined);
   }
   return out;
 }
 
 export function AllocationWorkspace({ deptId }: { deptId: DeptId }) {
-  const { companyId, run, can, setAllocations, refresh } = useRun();
+  const { companyId, run, quarter, can, setAllocations, refresh, financeUnlocked, allocatedLakhs } =
+    useRun();
   const catalog = DEPARTMENTS.find((d) => d.id === deptId)!;
   const keys = catalog.fields.map((f) => f.key);
-  const [spend, setSpend] = useState<SpendMap>(() => emptySpend(keys));
-  const [warranty, setWarranty] = useState(0);
+  // Seeded from `quarter.allocations` so reopening a department after saving elsewhere shows
+  // what's actually on the server instead of resetting every field to ₹0.
+  const [spend, setSpend] = useState<SpendMap>(() =>
+    fromAlloc(quarter?.allocations, keys),
+  );
+  const [warranty, setWarranty] = useState(() => quarter?.warranty_years ?? 0);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const color = accentVar[catalog.accent];
   const enabled = can("submit_allocation");
   const quarterId = run?.current_quarter_id;
+  const locked = deptId !== "finance_admin" && !financeUnlocked;
 
   const bump = (key: string, dir: 1 | -1) => {
     setSpend((prev) => {
@@ -109,6 +118,51 @@ export function AllocationWorkspace({ deptId }: { deptId: DeptId }) {
 
   const total = Object.values(spend).reduce((a, b) => a + b, 0);
 
+  // What every *other* department already has saved (server truth), so the live figure below
+  // reacts to this department's in-progress edits without double-counting its own persisted
+  // values -- `allocatedLakhs` still includes this department's last-saved amount until submit.
+  const persistedDeptTotal = keys.reduce(
+    (s, k) => s + asNumber(quarter?.allocations?.[k]),
+    0,
+  );
+  const cash = asNumber(quarter?.cash_balance);
+  const otherDeptsInr = (allocatedLakhs - persistedDeptTotal) * 100_000;
+  const projectedRemaining = cash - otherDeptsInr - total * 100_000;
+
+  if (locked) {
+    return (
+      <div className="space-y-5">
+        <header>
+          <p className="eyebrow" style={{ color }}>
+            {catalog.owner}
+          </p>
+          <h2 className="display mt-2 text-[28px] text-ink">{catalog.name}</h2>
+          <p className="mt-1 text-[13.5px] text-dim">{catalog.tagline}</p>
+        </header>
+        <div className="rounded-xl border border-amber/30 bg-amber/[0.07] p-5">
+          <p className="text-[13.5px] font-medium text-amber">
+            Set your Finance & Admin plan first
+          </p>
+          <p className="mt-2 max-w-md text-[12.5px] leading-relaxed text-dim">
+            Every other department is spent against the cash picture Finance &
+            Admin establishes for the quarter. Save that allocation once,
+            then this and the remaining departments unlock.
+          </p>
+          <Action
+            className="mt-4"
+            href={
+              quarterId
+                ? `/run/${companyId}/quarter/${quarterId}/allocate/finance_admin`
+                : "#"
+            }
+          >
+            Go to Finance & Admin
+          </Action>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5">
       <header>
@@ -119,6 +173,11 @@ export function AllocationWorkspace({ deptId }: { deptId: DeptId }) {
         <p className="mt-1 text-[13.5px] text-dim">{catalog.tagline}</p>
         <p className="num mt-3 text-[12px] text-faint">
           Department total · {formatLakhs(total)} · all fields optional (default 0)
+        </p>
+        <p
+          className={`num mt-1 text-[12px] ${projectedRemaining < 0 ? "text-rose" : "text-faint"}`}
+        >
+          Cash remaining if saved as-is · {formatInr(projectedRemaining)}
         </p>
       </header>
 

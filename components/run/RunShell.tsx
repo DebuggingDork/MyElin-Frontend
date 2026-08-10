@@ -9,6 +9,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { Pill } from "@/components/ui/Kit";
 import { DEPARTMENTS } from "@/lib/api/catalog";
 import { useRun } from "@/components/run/RunProvider";
+import { RunKpiBar } from "@/components/run/RunKpiBar";
 import { cn } from "@/lib/utils";
 
 /**
@@ -19,7 +20,8 @@ export function RunShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, ready } = useAuth();
-  const { companyId, company, run, report, loading, error, can } = useRun();
+  const { companyId, company, run, report, loading, error, can, financeUnlocked } =
+    useRun();
 
   useEffect(() => {
     if (ready && !user) {
@@ -69,7 +71,13 @@ export function RunShell({ children }: { children: React.ReactNode }) {
     ...DEPARTMENTS.map((d, i) => ({
       href: qBase ? `${qBase}/allocate/${d.id}` : "#",
       label: `${i + 3} · ${d.name}`,
-      enabled: Boolean(qid) && (can("submit_allocation") || Boolean(report)),
+      // Finance & Admin (index 0) is always the first legal stop in a fresh quarter -- the other
+      // five stay locked in the nav until `financeUnlocked`, mirroring the gate in
+      // `AllocationWorkspace` and `BriefingScreen` so a direct nav click can't skip it either.
+      enabled:
+        Boolean(qid) &&
+        (can("submit_allocation") || Boolean(report)) &&
+        (financeUnlocked || d.id === "finance_admin" || Boolean(report)),
     })),
     {
       href: qBase ? `${qBase}/crisis` : "#",
@@ -194,6 +202,8 @@ export function RunShell({ children }: { children: React.ReactNode }) {
             ))}
           </div>
         </header>
+
+        <RunKpiBar />
 
         <div className="flex shrink-0 gap-1.5 overflow-x-auto border-b border-line px-3 py-2 lg:hidden">
           {links

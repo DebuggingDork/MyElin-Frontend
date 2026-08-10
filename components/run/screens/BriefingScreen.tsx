@@ -10,8 +10,9 @@ import { useRun } from "@/components/run/RunProvider";
  * GET company + GET quarter + GET run before any allocation is staged.
  */
 export function BriefingScreen({ quarterId }: { quarterId: string }) {
-  const { companyId, company, run, quarter } = useRun();
+  const { companyId, company, run, quarter, financeUnlocked } = useRun();
   const q = quarter?.id === quarterId ? quarter : quarter;
+  const financeDept = DEPARTMENTS[0];
 
   return (
     <div className="space-y-8">
@@ -25,6 +26,11 @@ export function BriefingScreen({ quarterId }: { quarterId: string }) {
         <p className="mt-3 max-w-2xl text-[14.5px] leading-relaxed text-dim">
           Decisions are staged as department allocations (upserts). Nothing
           executes until you lock the quarter. Unsubmitted lines default to ₹0.
+        </p>
+        <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-dim">
+          {financeUnlocked
+            ? "Finance & Admin is set for this quarter — the other five departments are open, in any order."
+            : "Set Finance & Admin first. The other five departments unlock the moment it's saved."}
         </p>
       </header>
 
@@ -84,29 +90,39 @@ export function BriefingScreen({ quarterId }: { quarterId: string }) {
       )}
 
       <div>
-        <p className="eyebrow text-faint">Six departments · any order</p>
+        <p className="eyebrow text-faint">
+          Finance & Admin first, then five departments · any order
+        </p>
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          {DEPARTMENTS.map((d) => (
-            <Action
-              key={d.id}
-              variant="outline"
-              href={`/run/${companyId}/quarter/${quarterId}/allocate/${d.id}`}
-              className="!justify-between"
-            >
-              {d.name}
-              <span className="num text-[11px] text-faint">
-                {d.fields.length} lines
-              </span>
-            </Action>
-          ))}
+          {DEPARTMENTS.map((d) => {
+            const locked = !financeUnlocked && d.id !== "finance_admin";
+            return (
+              <Action
+                key={d.id}
+                variant="outline"
+                href={`/run/${companyId}/quarter/${quarterId}/allocate/${d.id}`}
+                disabled={locked}
+                className="!justify-between"
+              >
+                {d.name}
+                <span className="num text-[11px] text-faint">
+                  {locked
+                    ? "unlocks after Finance & Admin"
+                    : d.id === "finance_admin"
+                      ? "start here"
+                      : `${d.fields.length} lines`}
+                </span>
+              </Action>
+            );
+          })}
         </div>
       </div>
 
       <div className="flex flex-wrap gap-3 border-t border-line pt-6">
         <Action
-          href={`/run/${companyId}/quarter/${quarterId}/allocate/marketing`}
+          href={`/run/${companyId}/quarter/${quarterId}/allocate/${financeDept.id}`}
         >
-          Start with Marketing
+          Start with {financeDept.name}
           <ArrowRight className="h-4 w-4" />
         </Action>
         <Action

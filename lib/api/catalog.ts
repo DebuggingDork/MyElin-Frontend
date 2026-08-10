@@ -27,6 +27,18 @@ export type DeptCatalog = {
 
 export const DEPARTMENTS: DeptCatalog[] = [
   {
+    id: "finance_admin",
+    name: "Finance & Admin",
+    owner: "CFO desk",
+    tagline: "Set this first — every other department is spent against it",
+    accent: "indigo",
+    fields: [
+      { key: "compliance_legal", label: "Compliance & Legal" },
+      { key: "financial_planning", label: "Financial Planning" },
+      { key: "audit_prep", label: "Audit Prep" },
+    ],
+  },
+  {
     id: "marketing",
     name: "Marketing",
     owner: "Growth desk",
@@ -89,18 +101,6 @@ export const DEPARTMENTS: DeptCatalog[] = [
       { key: "culture_benefits", label: "Culture & Benefits" },
       { key: "training_development", label: "Training & Development" },
       { key: "cx_team", label: "CX Team" },
-    ],
-  },
-  {
-    id: "finance_admin",
-    name: "Finance & Admin",
-    owner: "CFO desk",
-    tagline: "Compliance, planning, audit readiness",
-    accent: "indigo",
-    fields: [
-      { key: "compliance_legal", label: "Compliance & Legal" },
-      { key: "financial_planning", label: "Financial Planning" },
-      { key: "audit_prep", label: "Audit Prep" },
     ],
   },
 ];
