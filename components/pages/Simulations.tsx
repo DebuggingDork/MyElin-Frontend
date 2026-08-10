@@ -223,7 +223,7 @@ export function Simulations() {
         </Container>
 
         <Container wide className="relative z-10 mt-16">
-          <div className="grid divide-line overflow-hidden rounded-2xl border border-line bg-white/[0.02] sm:grid-cols-2 sm:divide-x lg:grid-cols-4">
+          <div className="grid divide-line overflow-hidden rounded-2xl border border-line bg-[var(--panel)] sm:grid-cols-2 sm:divide-x lg:grid-cols-4">
             {shelfStats.map((stat, i) => (
               <motion.div
                 key={stat.label}
@@ -269,7 +269,7 @@ export function Simulations() {
             }
           />
 
-          <div className="mt-10 flex flex-wrap items-center gap-2 rounded-full border border-line bg-white/[0.03] p-1.5">
+          <div className="mt-10 flex flex-wrap items-center gap-2 rounded-full border border-line bg-[var(--panel-2)] p-1.5">
             {filters.map((option) => {
               const active = option === filter;
               return (

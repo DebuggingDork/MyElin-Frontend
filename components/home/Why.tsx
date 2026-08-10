@@ -244,7 +244,7 @@ function ConsequenceChain() {
       <div className="relative mt-2">
         <span
           aria-hidden
-          className="absolute bottom-6 left-[57px] top-0 w-px bg-white/10"
+          className="absolute bottom-6 left-[57px] top-0 w-px bg-[var(--line-2)]"
         />
         <motion.span
           aria-hidden

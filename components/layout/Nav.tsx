@@ -45,7 +45,7 @@ export function Nav() {
           <Logo priority />
         </Link>
 
-        <nav className="absolute left-1/2 top-1/2 z-10 hidden -translate-x-1/2 -translate-y-1/2 items-center rounded-full border border-line bg-white/[0.03] p-1 min-[880px]:flex">
+        <nav className="absolute left-1/2 top-1/2 z-10 hidden -translate-x-1/2 -translate-y-1/2 items-center rounded-full border border-line bg-[var(--panel-2)] p-1 min-[880px]:flex">
           {links.map((link) => {
             const active =
               link.href === "/"
@@ -62,7 +62,7 @@ export function Nav() {
               >
                 {active && (
                   <span
-                    className="absolute inset-0 rounded-full border border-white/10"
+                    className="absolute inset-0 rounded-full border border-line"
                     style={{
                       background:
                         "linear-gradient(135deg, rgba(20,184,166,0.28), rgba(255,255,255,0.08))",
@@ -115,7 +115,7 @@ export function Nav() {
                 key={link.href}
                 href={link.href}
                 onClick={() => setOpen(false)}
-                className="rounded-xl px-3 py-3 text-[15px] text-dim transition-colors hover:bg-white/5 hover:text-ink"
+                className="rounded-xl px-3 py-3 text-[15px] text-dim transition-colors hover:bg-[var(--panel-2)] hover:text-ink"
               >
                 {link.label}
               </Link>

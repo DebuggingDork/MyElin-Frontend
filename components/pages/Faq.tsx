@@ -104,7 +104,7 @@ export function Faq() {
               ].map((s) => (
                 <div
                   key={s.l}
-                  className="rounded-2xl border border-line bg-white/[0.03] px-5 py-5"
+                  className="rounded-2xl border border-line bg-[var(--panel-2)] px-5 py-5"
                 >
                   <p
                     className="display text-[28px] leading-none"

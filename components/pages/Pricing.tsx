@@ -170,7 +170,7 @@ export function Pricing() {
             </div>
             <div className="overflow-x-auto">
               <div className="min-w-[720px]">
-                <div className="grid grid-cols-[1.4fr_1fr_1fr_1fr_1fr] gap-0 border-b border-line bg-white/[0.03] px-6 py-4 sm:px-8">
+                <div className="grid grid-cols-[1.4fr_1fr_1fr_1fr_1fr] gap-0 border-b border-line bg-[var(--panel-2)] px-6 py-4 sm:px-8">
                   <span className="eyebrow text-faint">Capability</span>
                   {tiers.map((t) => (
                     <span

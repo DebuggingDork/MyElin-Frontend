@@ -164,7 +164,7 @@ export function Dimensions() {
               })}
             </svg>
 
-            <div className="mt-4 w-full rounded-2xl border border-line bg-white/[0.03] px-5 py-4">
+            <div className="mt-4 w-full rounded-2xl border border-line bg-[var(--panel-2)] px-5 py-4">
               <div className="flex items-center justify-between gap-4">
                 <p
                   className="display text-[16px]"

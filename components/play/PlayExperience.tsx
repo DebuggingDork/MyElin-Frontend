@@ -192,7 +192,7 @@ function RunCard({
     <button
       type="button"
       onClick={onResume}
-      className="group flex w-full items-center justify-between gap-4 rounded-xl border border-line bg-raise/50 px-5 py-4 text-left transition-colors hover:border-white/20 hover:bg-white/[0.06]"
+      className="group flex w-full items-center justify-between gap-4 rounded-xl border border-line bg-raise/50 px-5 py-4 text-left transition-colors hover:border-line-2 hover:bg-[var(--panel-2)]"
     >
       <div className="min-w-0">
         <p className="truncate text-[14.5px] font-medium text-ink">{run.name}</p>

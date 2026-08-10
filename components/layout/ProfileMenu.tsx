@@ -108,7 +108,7 @@ export function ProfileMenu() {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="true"
-        className="flex items-center gap-2 rounded-full border border-line py-1 pl-1 pr-3 text-[13px] text-ink transition-colors hover:border-white/30 hover:bg-white/[0.06]"
+        className="flex items-center gap-2 rounded-full border border-line py-1 pl-1 pr-3 text-[13px] text-ink transition-colors hover:border-line-2 hover:bg-[var(--panel-2)]"
       >
         <Avatar email={user.email} />
         <span className="hidden max-w-[140px] truncate sm:inline">{user.email}</span>
@@ -195,7 +195,7 @@ export function ProfileMenu() {
                 logout();
                 setOpen(false);
               }}
-              className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[13px] text-dim transition-colors hover:bg-white/5 hover:text-ink"
+              className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[13px] text-dim transition-colors hover:bg-[var(--panel-2)] hover:text-ink"
             >
               <LogOut className="h-3.5 w-3.5" />
               Log out

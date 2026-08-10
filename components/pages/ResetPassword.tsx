@@ -99,7 +99,7 @@ export function ResetPassword() {
           </h1>
 
           {done ? (
-            <p className="mt-8 rounded-xl border border-line bg-white/[0.04] px-4 py-3 text-[13.5px] text-ink">
+            <p className="mt-8 rounded-xl border border-line bg-[var(--panel-2)] px-4 py-3 text-[13.5px] text-ink">
               Password updated. Taking you to login…
             </p>
           ) : linkError ? (
@@ -134,7 +134,7 @@ export function ResetPassword() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="At least 8 characters"
-                    className="w-full rounded-full border border-line bg-white/[0.04] py-3.5 pl-11 pr-5 text-[14.5px] text-ink outline-none transition-colors placeholder:text-faint focus:border-teal/60"
+                    className="w-full rounded-full border border-line bg-[var(--panel-2)] py-3.5 pl-11 pr-5 text-[14.5px] text-ink outline-none transition-colors placeholder:text-faint focus:border-teal/60"
                   />
                 </div>
               </div>
@@ -155,7 +155,7 @@ export function ResetPassword() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Re-enter your new password"
-                    className="w-full rounded-full border border-line bg-white/[0.04] py-3.5 pl-11 pr-5 text-[14.5px] text-ink outline-none transition-colors placeholder:text-faint focus:border-teal/60"
+                    className="w-full rounded-full border border-line bg-[var(--panel-2)] py-3.5 pl-11 pr-5 text-[14.5px] text-ink outline-none transition-colors placeholder:text-faint focus:border-teal/60"
                   />
                 </div>
               </div>

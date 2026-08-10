@@ -81,7 +81,7 @@ export function Institutions() {
 
             <div className="mt-6">
               <p className="eyebrow text-faint">I am a</p>
-              <div className="mt-3 grid grid-cols-3 gap-1 rounded-full border border-line bg-white/[0.03] p-1">
+              <div className="mt-3 grid grid-cols-3 gap-1 rounded-full border border-line bg-[var(--panel-2)] p-1">
                 {roles.map((option) => {
                   const active = option === role;
                   return (
@@ -127,7 +127,7 @@ export function Institutions() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@university.edu"
-                  className="flex-1 rounded-full border border-line bg-white/[0.04] px-5 py-3.5 text-[14.5px] text-ink outline-none transition-colors placeholder:text-faint focus:border-teal/60"
+                  className="flex-1 rounded-full border border-line bg-[var(--panel-2)] px-5 py-3.5 text-[14.5px] text-ink outline-none transition-colors placeholder:text-faint focus:border-teal/60"
                 />
                 <Action onClick={() => email.includes("@") && setSent(true)}>
                   {sent ? (

@@ -157,7 +157,7 @@ export function EndgameView() {
           onChange={(e) => setReasoning(e.target.value)}
           rows={3}
           disabled={!can("submit_endgame_decision")}
-          className="mt-2 w-full rounded-xl border border-line bg-white/[0.03] px-4 py-3 text-[13.5px] text-ink outline-none focus:border-teal/50"
+          className="mt-2 w-full rounded-xl border border-line bg-[var(--panel-2)] px-4 py-3 text-[13.5px] text-ink outline-none focus:border-teal/50"
           placeholder="Why this path?"
         />
       </div>

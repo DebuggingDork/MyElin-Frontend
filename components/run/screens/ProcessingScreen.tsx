@@ -107,7 +107,7 @@ export function ProcessingScreen({ quarterId }: { quarterId: string }) {
           })}
         </div>
 
-        <div className="mt-6 h-[4px] overflow-hidden rounded-full bg-white/[0.06]">
+        <div className="mt-6 h-[4px] overflow-hidden rounded-full bg-[var(--panel-2)]">
           <motion.span
             className="block h-full rounded-full"
             style={{ background: "var(--grad-primary)" }}

@@ -241,7 +241,7 @@ function CriterionRow({
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.25, ease: easeOut }}
-            className="overflow-hidden border-t border-white/[0.05] px-4 py-3 text-[12px] text-dim"
+            className="overflow-hidden border-t border-line px-4 py-3 text-[12px] text-dim"
           >
             {detail}
           </motion.p>

@@ -54,7 +54,7 @@ export function ForgotPassword() {
           </p>
 
           {sent ? (
-            <p className="mt-8 rounded-xl border border-line bg-white/[0.04] px-4 py-3 text-[13.5px] text-ink">
+            <p className="mt-8 rounded-xl border border-line bg-[var(--panel-2)] px-4 py-3 text-[13.5px] text-ink">
               If that email is registered, a reset link has been sent. Check your inbox (and
               spam folder) for a message from Supabase.
             </p>
@@ -75,7 +75,7 @@ export function ForgotPassword() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@university.edu"
-                    className="w-full rounded-full border border-line bg-white/[0.04] py-3.5 pl-11 pr-5 text-[14.5px] text-ink outline-none transition-colors placeholder:text-faint focus:border-teal/60"
+                    className="w-full rounded-full border border-line bg-[var(--panel-2)] py-3.5 pl-11 pr-5 text-[14.5px] text-ink outline-none transition-colors placeholder:text-faint focus:border-teal/60"
                   />
                 </div>
               </div>
