@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, ChevronDown, Minus, ShieldAlert, TrendingDown, TrendingUp, X } from "lucide-react";
+import { Check, ChevronDown, Minus, ShieldAlert, X } from "lucide-react";
 import { easeOut } from "@/lib/media";
 import { asNumber, formatInr } from "@/lib/api/catalog";
+import { BalanceSheet } from "@/components/run/BalanceSheet";
 import type {
   BindingConstraintSchema,
   DecisionQualitySchema,
@@ -12,37 +13,8 @@ import type {
   QuarterReportResponse,
 } from "@/lib/api/types";
 
-type LedgerRow = {
-  label: string;
-  value: string | number | null | undefined;
-  delta?: string | number | null;
-  gapReason?: string | null;
-};
-
 export function ReportView({ report }: { report: QuarterReportResponse }) {
-  const o = report.outcome;
   const dq = report.decision_quality;
-
-  const ledger: LedgerRow[] = [
-    { label: "Units sold", value: o.units_sold.value, delta: o.units_sold.delta },
-    { label: "Revenue", value: o.revenue_inr.value, delta: o.revenue_inr.delta },
-    { label: "COGS", value: o.cogs_inr.value, delta: o.cogs_inr.delta },
-    { label: "Gross profit", value: o.gross_profit_inr.value, delta: o.gross_profit_inr.delta },
-    { label: "Net cash flow", value: o.net_cash_flow_inr.value, delta: o.net_cash_flow_inr.delta },
-    { label: "Closing cash", value: o.closing_cash_inr.value, delta: o.closing_cash_inr.delta },
-    {
-      label: "Cash runway (quarters)",
-      value: o.cash_runway_quarters?.value,
-      delta: o.cash_runway_quarters?.delta,
-      gapReason: o.cash_runway_gap_reason,
-    },
-    {
-      label: "Valuation",
-      value: o.valuation_inr?.value,
-      delta: o.valuation_inr?.delta,
-      gapReason: o.valuation_gap_reason,
-    },
-  ];
 
   return (
     <div className="space-y-8">
@@ -64,57 +36,7 @@ export function ReportView({ report }: { report: QuarterReportResponse }) {
         {/* outcome */}
         <section className="space-y-4">
           <h3 className="eyebrow text-faint">A · Business outcome</h3>
-          <div className="overflow-hidden rounded-xl border border-line bg-raise/50">
-            {ledger.map((row) => {
-              const isCount = row.label.startsWith("Units") || row.label.includes("runway");
-              const hasValue = row.value !== null && row.value !== undefined;
-              const delta = row.delta === undefined ? null : row.delta;
-              const deltaNum = delta === null ? null : asNumber(delta);
-              return (
-                <div
-                  key={row.label}
-                  className="flex items-center justify-between border-b border-white/[0.04] px-4 py-2.5 last:border-0"
-                >
-                  <span className="text-[12.5px] text-dim">{row.label}</span>
-                  <div className="flex items-center gap-2.5">
-                    {deltaNum !== null && (
-                      <span
-                        className="num flex items-center gap-1 text-[11px]"
-                        style={{ color: deltaNum >= 0 ? "var(--emerald)" : "var(--rose)" }}
-                      >
-                        {deltaNum >= 0 ? (
-                          <TrendingUp className="h-3 w-3" />
-                        ) : (
-                          <TrendingDown className="h-3 w-3" />
-                        )}
-                        {isCount
-                          ? deltaNum.toLocaleString("en-IN", { maximumFractionDigits: 2 })
-                          : formatInr(deltaNum)}
-                      </span>
-                    )}
-                    {hasValue ? (
-                      <span
-                        className="num text-[13px] font-semibold"
-                        style={{
-                          color: asNumber(row.value) < 0 ? "var(--rose)" : "var(--ink)",
-                        }}
-                      >
-                        {isCount
-                          ? asNumber(row.value).toLocaleString("en-IN", {
-                              maximumFractionDigits: 2,
-                            })
-                          : formatInr(row.value)}
-                      </span>
-                    ) : (
-                      <span className="text-[12px] italic text-faint" title={row.gapReason ?? undefined}>
-                        {row.gapReason ?? "—"}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <BalanceSheet quarterNumber={report.quarter_number} outcome={report.outcome} />
 
           <div>
             <h4 className="mb-3 text-[14px] font-medium text-ink">
