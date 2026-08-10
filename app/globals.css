@@ -293,6 +293,15 @@ body {
   border-radius: 0.85rem;
 }
 
+/* Same glass surface, no radius/shadow -- for a flush full-width bar (RunKpiBar) rather than a
+   floating card. */
+.glass-strip {
+  background: var(--panel-2);
+  background-image: var(--glass-tint);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+}
+
 .ring-grad {
   position: relative;
 }
