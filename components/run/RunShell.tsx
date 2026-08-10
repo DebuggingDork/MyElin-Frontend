@@ -11,6 +11,7 @@ import { DEPARTMENTS } from "@/lib/api/catalog";
 import { useRun } from "@/components/run/RunProvider";
 import { RunKpiBar } from "@/components/run/RunKpiBar";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { ProfileMenu } from "@/components/layout/ProfileMenu";
 import { cn } from "@/lib/utils";
 
 /**
@@ -204,6 +205,8 @@ export function RunShell({ children }: { children: React.ReactNode }) {
               ))}
             </div>
             <ThemeToggle />
+            <div className="h-6 w-px bg-line" aria-hidden />
+            <ProfileMenu />
           </div>
         </header>
 

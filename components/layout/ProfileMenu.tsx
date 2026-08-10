@@ -61,8 +61,8 @@ export function ProfileMenu() {
   useEffect(() => {
     if (!open || !user || runs !== null) return;
     let cancelled = false;
-    setLoading(true);
     void (async () => {
+      setLoading(true);
       try {
         const { entries } = await api.listCompanies();
         if (!cancelled) setRuns(entries);
