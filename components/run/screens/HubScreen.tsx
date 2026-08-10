@@ -3,16 +3,27 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  Activity,
   ArrowRight,
+  Calendar,
   FileCheck2,
   Play,
   Shield,
   Trophy,
+  TrendingUp,
 } from "lucide-react";
-import { Action } from "@/components/ui/Kit";
+import { Action, Pill, type Accent } from "@/components/ui/Kit";
 import { asNumber } from "@/lib/api/catalog";
 import { useRun } from "@/components/run/RunProvider";
 import { DashboardCharts } from "@/components/run/charts/DashboardCharts";
+import type { RunStatus } from "@/lib/api/types";
+
+const STATUS_ACCENT: Record<RunStatus, Accent> = {
+  active: "teal",
+  distressed: "amber",
+  failed: "rose",
+  completed: "emerald",
+};
 
 /** Screen: GET /companies/{id}/run — hub driven by legal_moves. */
 export function HubScreen() {
@@ -35,43 +46,51 @@ export function HubScreen() {
   const terminal =
     run?.run_status === "completed" || run?.run_status === "failed";
 
+  const statusAccent = run ? STATUS_ACCENT[run.run_status] : "teal";
+  const latestScore = run?.score_trajectory?.at(-1);
+
   return (
     <div className="space-y-8">
-      <header>
-        <p className="eyebrow text-cyan">
-          GET /companies/&#123;id&#125;/run · legal_moves drive the UI
-        </p>
-        <h1 className="display mt-3 text-[clamp(1.7rem,3.4vw,2.5rem)] text-ink">
-          {company?.name}
-        </h1>
-        <p className="mt-2 text-[14px] text-dim">
-          Seed {company?.seed_name} · profile {company?.profile_name} · scenario{" "}
-          {company?.scenario_id}
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="eyebrow text-faint">Company dashboard</p>
+          <h1 className="display mt-2 text-[clamp(1.7rem,3.4vw,2.5rem)] text-ink">
+            {company?.name}
+          </h1>
+          <p className="mt-2 text-[13.5px] text-dim">
+            {company?.seed_name} · {company?.profile_name} profile ·{" "}
+            {company?.scenario_id}
+          </p>
+        </div>
+        {run && (
+          <Pill accent={statusAccent} solid>
+            {run.run_status}
+          </Pill>
+        )}
       </header>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <Stat label="Status" value={run?.run_status ?? "—"} />
         <Stat
+          icon={Activity}
+          label="Status"
+          value={run?.run_status ?? "—"}
+          accent={statusAccent}
+        />
+        <Stat
+          icon={Calendar}
           label="Current quarter"
           value={
             run?.current_quarter_number
-              ? `Q${run.current_quarter_number} · ${run.current_quarter_status}`
+              ? `Q${run.current_quarter_number} / ${run.total_quarters}`
               : "None open"
           }
+          hint={run?.current_quarter_status}
         />
         <Stat
-          label="Score trajectory"
-          value={
-            run?.score_trajectory?.length
-              ? run.score_trajectory
-                  .map(
-                    (s) =>
-                      `Q${s.quarter_number}:${asNumber(s.ceo_score).toFixed(0)}`,
-                  )
-                  .join(" · ")
-              : "—"
-          }
+          icon={TrendingUp}
+          label="Latest CEO score"
+          value={latestScore ? asNumber(latestScore.ceo_score).toFixed(0) : "—"}
+          hint={latestScore ? `Q${latestScore.quarter_number} · ${latestScore.band}` : "No quarters scored yet"}
         />
       </div>
 
@@ -147,13 +166,6 @@ export function HubScreen() {
         </Action>
       </div>
 
-      <div className="rounded-xl border border-line bg-raise/40 p-4">
-        <p className="eyebrow text-faint">legal_moves right now</p>
-        <p className="num mt-2 text-[12.5px] text-dim">
-          {run?.legal_moves.join(" · ") || "none"}
-        </p>
-      </div>
-
       {company?.quarters && company.quarters.length > 0 && (
         <div>
           <p className="eyebrow text-faint">Quarters on this company</p>
@@ -181,15 +193,50 @@ export function HubScreen() {
           </ul>
         </div>
       )}
+
+      <details className="glass-card-flat p-4 text-[12px]">
+        <summary className="eyebrow cursor-pointer select-none text-faint">
+          Legal moves right now (debug)
+        </summary>
+        <p className="num mt-2 text-[12px] text-dim">
+          {run?.legal_moves.join(" · ") || "none"}
+        </p>
+      </details>
     </div>
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({
+  icon: Icon,
+  label,
+  value,
+  hint,
+  accent = "teal",
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: string;
+  hint?: string | null;
+  accent?: Accent;
+}) {
   return (
-    <div className="rounded-xl border border-line bg-raise/50 p-4">
-      <p className="eyebrow text-faint">{label}</p>
-      <p className="mt-2 text-[14px] font-medium text-ink">{value}</p>
+    <div className="glass-card flex items-start gap-3 p-4">
+      <span
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+        style={{
+          background: `color-mix(in srgb, var(--${accent}) 16%, transparent)`,
+          color: `var(--${accent})`,
+        }}
+      >
+        <Icon className="h-4 w-4" />
+      </span>
+      <div className="min-w-0">
+        <p className="eyebrow text-faint">{label}</p>
+        <p className="num mt-1 truncate text-[18px] font-semibold text-ink">
+          {value}
+        </p>
+        {hint && <p className="mt-0.5 truncate text-[11.5px] text-faint">{hint}</p>}
+      </div>
     </div>
   );
 }
