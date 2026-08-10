@@ -34,7 +34,7 @@ export function ReportView({ report }: { report: QuarterReportResponse }) {
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* outcome */}
-        <section className="space-y-4">
+        <section className="min-w-0 space-y-4">
           <h3 className="eyebrow text-faint">A · Business outcome</h3>
           <BalanceSheet quarterNumber={report.quarter_number} outcome={report.outcome} />
 
@@ -47,7 +47,7 @@ export function ReportView({ report }: { report: QuarterReportResponse }) {
         </section>
 
         {/* decision quality */}
-        <section className="space-y-4">
+        <section className="min-w-0 space-y-4">
           <h3 className="eyebrow text-faint">B · Decision quality</h3>
           <div className="rounded-2xl border border-line bg-raise/60 px-5 py-6 text-center">
             <p className="display text-[48px] leading-none text-grad">

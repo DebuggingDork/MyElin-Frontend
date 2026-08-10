@@ -24,7 +24,7 @@ export function BalanceSheet({
 
   return (
     <div
-      className="overflow-hidden rounded-xl border"
+      className="min-w-0 overflow-hidden rounded-xl border"
       style={{
         // @ts-expect-error -- custom properties aren't in the CSSProperties type
         "--bs-paper": "#faf9f5",
@@ -132,23 +132,27 @@ function BsRow({
 
   return (
     <div className="flex items-baseline justify-between gap-3 py-1 pl-3">
-      <span className="text-[12.5px]" style={{ color: "var(--bs-ink-soft)" }}>
+      <span className="min-w-0 flex-1 text-[12.5px]" style={{ color: "var(--bs-ink-soft)" }}>
         {label}
       </span>
-      <span className="flex items-baseline gap-2">
+      <span className="flex shrink-0 items-baseline gap-2">
         {deltaNum !== null && deltaNum !== 0 && (
           <span
-            className="num flex items-center gap-0.5 text-[10.5px]"
+            className="num flex shrink-0 items-center gap-0.5 whitespace-nowrap text-[10.5px]"
             style={{ color: deltaNum >= 0 ? "#1a7a4c" : "#a3352f" }}
           >
-            {deltaNum >= 0 ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
+            {deltaNum >= 0 ? <TrendingUp className="h-2.5 w-2.5 shrink-0" /> : <TrendingDown className="h-2.5 w-2.5 shrink-0" />}
             {isCount ? Math.abs(deltaNum).toLocaleString("en-IN", { maximumFractionDigits: 2 }) : formatInr(Math.abs(deltaNum))}
           </span>
         )}
         {hasValue ? (
-          <span className="num text-[13.5px] font-medium tabular-nums">{display}</span>
+          <span className="num shrink-0 whitespace-nowrap text-[13.5px] font-medium tabular-nums">{display}</span>
         ) : (
-          <span className="text-[11.5px] italic" style={{ color: "var(--bs-ink-soft)" }} title={gapReason ?? undefined}>
+          <span
+            className="shrink-0 text-[11.5px] italic"
+            style={{ color: "var(--bs-ink-soft)" }}
+            title={gapReason ?? undefined}
+          >
             {gapReason ?? "not reported"}
           </span>
         )}
@@ -183,21 +187,25 @@ function BsSubtotal({
           : "1px solid var(--bs-rule-strong)",
       }}
     >
-      <span className="text-[13px] font-semibold">{label}</span>
-      <span className="flex items-baseline gap-2">
+      <span className="min-w-0 flex-1 text-[13px] font-semibold">{label}</span>
+      <span className="flex shrink-0 items-baseline gap-2">
         {deltaNum !== null && deltaNum !== 0 && (
           <span
-            className="num flex items-center gap-0.5 text-[10.5px]"
+            className="num flex shrink-0 items-center gap-0.5 whitespace-nowrap text-[10.5px]"
             style={{ color: deltaNum >= 0 ? "#1a7a4c" : "#a3352f" }}
           >
-            {deltaNum >= 0 ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
+            {deltaNum >= 0 ? <TrendingUp className="h-2.5 w-2.5 shrink-0" /> : <TrendingDown className="h-2.5 w-2.5 shrink-0" />}
             {formatInr(Math.abs(deltaNum))}
           </span>
         )}
         {hasValue ? (
-          <span className="num text-[16px] font-bold tabular-nums">{formatInr(n)}</span>
+          <span className="num shrink-0 whitespace-nowrap text-[16px] font-bold tabular-nums">{formatInr(n)}</span>
         ) : (
-          <span className="text-[11.5px] italic" style={{ color: "var(--bs-ink-soft)" }} title={gapReason ?? undefined}>
+          <span
+            className="shrink-0 text-[11.5px] italic"
+            style={{ color: "var(--bs-ink-soft)" }}
+            title={gapReason ?? undefined}
+          >
             {gapReason ?? "not reported"}
           </span>
         )}
