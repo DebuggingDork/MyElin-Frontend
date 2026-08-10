@@ -1,5 +1,6 @@
 "use client";
 
+import { LineChart as LineChartIcon } from "lucide-react";
 import {
   Area,
   AreaChart,
@@ -33,7 +34,7 @@ export function QuarterTrendChart({
   const hasData = data.length > 0;
 
   return (
-    <div className="rounded-xl border border-line bg-raise/40 p-4">
+    <div className="glass-card p-4">
       <p className="eyebrow text-faint">{title}</p>
       <div className="mt-3 h-[140px]">
         {hasData ? (
@@ -90,8 +91,9 @@ export function QuarterTrendChart({
             )}
           </ResponsiveContainer>
         ) : (
-          <div className="flex h-full items-center justify-center text-[12px] text-faint">
-            No quarters closed yet
+          <div className="flex h-full flex-col items-center justify-center gap-2 text-faint">
+            <LineChartIcon className="h-5 w-5 opacity-50" />
+            <p className="text-[12px]">No quarters closed yet</p>
           </div>
         )}
       </div>
@@ -111,7 +113,7 @@ function TrendTooltip({
   if (!active || !payload?.length) return null;
   const point = payload[0].payload;
   return (
-    <div className="rounded-lg border border-line bg-raise px-3 py-2 shadow-[var(--shadow-lift)]">
+    <div className="glass-card-flat px-3 py-2">
       <p className="eyebrow text-faint">Q{point.quarter}</p>
       <p className="num mt-0.5 text-[13px] font-semibold text-ink">
         {formatValue(point.value)}

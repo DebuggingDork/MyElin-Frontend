@@ -1,5 +1,6 @@
 "use client";
 
+import { PieChart } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -30,7 +31,7 @@ export function DepartmentSpendChart({
   const hasSpend = sorted.some((d) => d.lakhs > 0);
 
   return (
-    <div className="rounded-xl border border-line bg-raise/40 p-4">
+    <div className="glass-card p-4">
       <p className="eyebrow text-faint">This quarter&apos;s spend by department</p>
       <div className="mt-3" style={{ height: sorted.length * 34 + 16 }}>
         {hasSpend ? (
@@ -70,8 +71,9 @@ export function DepartmentSpendChart({
             </BarChart>
           </ResponsiveContainer>
         ) : (
-          <div className="flex h-full items-center justify-center text-[12px] text-faint">
-            Nothing allocated yet this quarter
+          <div className="flex h-full flex-col items-center justify-center gap-2 text-faint">
+            <PieChart className="h-5 w-5 opacity-50" />
+            <p className="text-[12px]">Nothing allocated yet this quarter</p>
           </div>
         )}
       </div>
@@ -91,7 +93,7 @@ function SpendTooltip({
   if (!active || !payload?.length) return null;
   const point = payload[0].payload;
   return (
-    <div className="rounded-lg border border-line bg-raise px-3 py-2 shadow-[var(--shadow-lift)]">
+    <div className="glass-card-flat px-3 py-2">
       <p className="eyebrow text-faint">{point.name}</p>
       <p className="num mt-0.5 text-[13px] font-semibold text-ink">
         {formatValue(point.lakhs)}
