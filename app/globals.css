@@ -456,6 +456,13 @@ body {
   );
 }
 
+.newsprint .chunk-word {
+  display: inline-block;
+  transition:
+    opacity 220ms ease-out,
+    transform 220ms ease-out;
+}
+
 .newsprint-lead::first-letter {
   float: left;
   font-size: 3.6em;
@@ -507,5 +514,8 @@ body {
   .newsprint-stamp {
     animation: none;
     transform: rotate(-2deg);
+  }
+  .newsprint .chunk-word {
+    transition: none;
   }
 }
