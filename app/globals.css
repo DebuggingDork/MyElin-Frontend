@@ -55,6 +55,10 @@
   --shadow-lift: 0 1px 0 rgba(255, 255, 255, 0.04) inset,
     0 24px 60px -30px rgba(7, 26, 22, 0.9);
 
+  --glass-highlight: rgba(255, 255, 255, 0.07);
+  --glass-shadow: 0 24px 48px -28px rgba(2, 10, 8, 0.65);
+  --glass-tint: linear-gradient(165deg, rgba(45, 212, 191, 0.1), rgba(45, 212, 191, 0.02) 60%);
+
   color-scheme: dark;
 }
 
@@ -102,6 +106,10 @@
   --focus-ring: 0 0 0 3px rgba(11, 125, 112, 0.35);
   --shadow-lift: 0 1px 0 rgba(255, 255, 255, 0.7) inset,
     0 24px 60px -30px rgba(10, 31, 26, 0.16);
+
+  --glass-highlight: rgba(255, 255, 255, 0.85);
+  --glass-shadow: 0 24px 48px -28px rgba(10, 31, 26, 0.16);
+  --glass-tint: linear-gradient(165deg, rgba(11, 125, 112, 0.06), rgba(11, 125, 112, 0.01) 60%);
 
   color-scheme: light;
 }
@@ -257,6 +265,32 @@ body {
 .panel-flat {
   background: var(--raise);
   border: 1px solid var(--line);
+}
+
+/* Real glass, not a flat tinted rectangle: a blurred, saturated backdrop (so whatever's behind
+   the card -- the aurora glow, another card -- bleeds through softened), a top highlight standing
+   in for a light source, and a diffuse ambient shadow instead of a hard drop shadow. Every value
+   is a token, so it reads correctly in both themes without a second copy of this rule. */
+.glass-card {
+  position: relative;
+  background: var(--panel-2);
+  background-image: var(--glass-tint);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    var(--glass-shadow);
+}
+
+.glass-card-flat {
+  background: var(--panel-2);
+  background-image: var(--glass-tint);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid var(--line);
+  border-radius: 0.85rem;
 }
 
 .ring-grad {
