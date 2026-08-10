@@ -6,11 +6,14 @@ import { ArrowRight, Play } from "lucide-react";
 import { easeOut } from "@/lib/media";
 import { Action, Container, Eyebrow, Pill } from "@/components/ui/Kit";
 
+/** Kept honest against the shipped engine: the scenario runs 4 quarters (config/scenarios,
+ *  total_quarters: 4) over 22 spend lines per quarter (CLAUDE.md's 22-line model), not the
+ *  "120+ decisions / 24 months" this previously claimed. */
 const stats = [
   { value: "0", label: "videos to watch" },
-  { value: "120+", label: "decisions per simulation" },
+  { value: "22", label: "spend lines every quarter" },
   { value: "7", label: "cognitive dimensions scored" },
-  { value: "24mo", label: "compressed into 30 minutes" },
+  { value: "12mo", label: "compressed into 30 minutes" },
 ];
 
 /** Rolling stakeholder chatter — keeps the hero alive instead of static. */
@@ -71,7 +74,7 @@ export function Hero() {
               transition={{ duration: 0.7, delay: 0.12, ease: easeOut }}
               className="mt-7 max-w-xl text-[17px] leading-[1.7] text-dim"
             >
-              Myelin compresses 24 months of running a startup into 30 minutes of
+              Myelin compresses a year of running a startup into 30 minutes of
               consequential choices. No videos. No quizzes. Just judgment —
               measured across seven cognitive dimensions.
             </motion.p>
@@ -106,7 +109,7 @@ export function Hero() {
       </Container>
 
       <Container wide className="relative z-10 mt-20">
-        <div className="grid divide-line overflow-hidden rounded-2xl border border-line bg-white/[0.02] sm:grid-cols-2 sm:divide-x lg:grid-cols-4">
+        <div className="grid divide-line overflow-hidden rounded-2xl border border-line bg-[var(--panel)] sm:grid-cols-2 sm:divide-x lg:grid-cols-4">
           {stats.map((stat, i) => (
             <motion.div
               key={stat.label}
@@ -134,7 +137,7 @@ function ConsoleCard({ active }: { active: number }) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <span className="live-dot h-2 w-2 rounded-full bg-emerald" />
-            <span className="eyebrow text-dim">Simulation · month 14 of 24</span>
+            <span className="eyebrow text-dim">Simulation · quarter 3 of 4</span>
           </div>
           <Pill accent="amber">Live</Pill>
         </div>
@@ -143,7 +146,7 @@ function ConsoleCard({ active }: { active: number }) {
           {metrics.map((metric) => (
             <div
               key={metric.label}
-              className="rounded-xl border border-line bg-white/[0.03] px-4 py-3.5"
+              className="rounded-xl border border-line bg-[var(--panel-2)] px-4 py-3.5"
             >
               <p className="eyebrow text-faint">{metric.label}</p>
               <div className="mt-2 flex items-baseline gap-2">
@@ -161,7 +164,7 @@ function ConsoleCard({ active }: { active: number }) {
           ))}
         </div>
 
-        <div className="mt-5 rounded-xl border border-line bg-white/[0.02] p-4">
+        <div className="mt-5 rounded-xl border border-line bg-[var(--panel)] p-4">
           <p className="eyebrow text-faint">Stakeholders reacting</p>
           <div className="mt-4 space-y-3">
             {feed.map((item, i) => {
@@ -193,10 +196,10 @@ function ConsoleCard({ active }: { active: number }) {
           </div>
         </div>
 
-        <div className="mt-5 flex items-center justify-between rounded-xl border border-line bg-white/[0.03] px-4 py-3">
-          <span className="eyebrow text-faint">Decision 87 of 120</span>
+        <div className="mt-5 flex items-center justify-between rounded-xl border border-line bg-[var(--panel-2)] px-4 py-3">
+          <span className="eyebrow text-faint">Marketing · 16 of 22 lines</span>
           <div className="flex flex-1 px-4">
-            <div className="h-1 w-full overflow-hidden rounded-full bg-white/10">
+            <div className="h-1 w-full overflow-hidden rounded-full bg-[var(--line-2)]">
               <div
                 className="h-full rounded-full"
                 style={{ width: "72%", background: "var(--grad-primary)" }}

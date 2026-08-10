@@ -38,7 +38,7 @@ const newsreader = Newsreader({
 export const metadata: Metadata = {
   title: "Myelin — Decision Intelligence Platform",
   description:
-    "Myelin compresses 24 months of running a startup into 30 minutes of consequential choices. No videos. No quizzes. Just judgment — measured across seven cognitive dimensions.",
+    "Myelin compresses a year of running a startup into 30 minutes of consequential choices. No videos. No quizzes. Just judgment — measured across seven cognitive dimensions.",
   metadataBase: new URL("https://myelin.app"),
   openGraph: {
     title: "Myelin — Decision Intelligence Platform",

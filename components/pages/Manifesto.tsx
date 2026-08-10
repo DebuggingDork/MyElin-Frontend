@@ -242,7 +242,7 @@ export function Manifesto() {
                   <span className="text-grad">Judgment isn&apos;t.</span>
                 </p>
                 <p className="mt-4 max-w-lg text-[15px] leading-[1.7] text-dim">
-                  Run Startup Survival — 24 months compressed into 30 minutes —
+                  Run Startup Survival — a year compressed into 30 minutes —
                   and see your first DI Report.
                 </p>
               </div>
