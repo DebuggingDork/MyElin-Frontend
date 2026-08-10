@@ -7,6 +7,7 @@ import { ArrowRight, Menu, X } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { ProfileMenu } from "@/components/layout/ProfileMenu";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { Action, Container } from "@/components/ui/Kit";
 import { cn } from "@/lib/utils";
 
@@ -76,6 +77,7 @@ export function Nav() {
         </nav>
 
         <div className="relative z-10 flex shrink-0 items-center gap-2">
+          <ThemeToggle />
           {ready && user ? (
             <div className="hidden sm:block">
               <ProfileMenu />

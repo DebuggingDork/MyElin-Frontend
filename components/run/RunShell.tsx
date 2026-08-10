@@ -10,6 +10,7 @@ import { Pill } from "@/components/ui/Kit";
 import { DEPARTMENTS } from "@/lib/api/catalog";
 import { useRun } from "@/components/run/RunProvider";
 import { RunKpiBar } from "@/components/run/RunKpiBar";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { cn } from "@/lib/utils";
 
 /**
@@ -191,15 +192,18 @@ export function RunShell({ children }: { children: React.ReactNode }) {
               {run?.crisis_quarter ? ` · crisis Q${run.crisis_quarter}` : ""}
             </p>
           </div>
-          <div className="hidden flex-wrap items-center gap-1.5 sm:flex">
-            {run?.legal_moves.map((m) => (
-              <span
-                key={m}
-                className="num rounded-full border border-line px-2 py-1 text-[10px] text-faint"
-              >
-                {m}
-              </span>
-            ))}
+          <div className="flex shrink-0 items-center gap-3">
+            <div className="hidden flex-wrap items-center gap-1.5 sm:flex">
+              {run?.legal_moves.map((m) => (
+                <span
+                  key={m}
+                  className="num rounded-full border border-line px-2 py-1 text-[10px] text-faint"
+                >
+                  {m}
+                </span>
+              ))}
+            </div>
+            <ThemeToggle />
           </div>
         </header>
 
