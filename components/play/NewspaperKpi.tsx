@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { easeOut } from "@/lib/media";
-import { newsreader, typewriter } from "@/lib/play/newsprint-fonts";
+import { typewriter } from "@/lib/play/newsprint-fonts";
 import { kpiCopy } from "@/lib/play/newsprint-copy";
 import { ChunkReveal } from "@/components/play/ChunkReveal";
 import type { Scenario } from "@/lib/play/types";
@@ -27,7 +27,7 @@ export function NewspaperKpi({
   const [evalDone, setEvalDone] = useState(false);
 
   return (
-    <div className={`newsprint relative min-h-screen ${newsreader.variable} ${typewriter.variable}`} style={{ fontFamily: "var(--font-newsreader)" }}>
+    <div className={`newsprint relative min-h-screen ${typewriter.variable}`} style={{ fontFamily: "var(--font-newsreader)" }}>
       <div className="newsprint-texture absolute inset-0" aria-hidden />
       <div className="newsprint-fold hidden lg:block" aria-hidden />
 

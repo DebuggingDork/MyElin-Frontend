@@ -156,7 +156,7 @@
   --color-graphite: var(--dim);
 
   --font-sans: var(--font-geist-sans);
-  --font-display: var(--font-sora);
+  --font-display: var(--font-newsreader);
   --font-mono: var(--font-geist-mono);
 }
 
@@ -210,10 +210,15 @@ body {
 
 /* ───────────────────────── typography ───────────────────────── */
 
+/* Serif display against the sans body -- a real contrast axis, and the way serious financial
+   press sets type (serif headline, sans data). Serifs need far less negative tracking than the
+   geometric sans this replaced: -0.03em was tuned for Sora and would crowd Newsreader's
+   terminals. */
 .display {
-  font-family: var(--font-sora), var(--font-geist-sans), sans-serif;
-  letter-spacing: -0.03em;
+  font-family: var(--font-newsreader), Georgia, serif;
+  letter-spacing: -0.011em;
   font-weight: 600;
+  line-height: 1.08;
 }
 
 .num {
