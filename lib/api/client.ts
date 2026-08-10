@@ -19,6 +19,7 @@ import type {
   OperationsAllocationSubmit,
   QuarterAllocationResponse,
   QuarterDetailResponse,
+  QuarterReportPdfResponse,
   QuarterReportResponse,
   RegisterRequest,
   ResetPasswordRequest,
@@ -105,7 +106,9 @@ async function request<T>(
   auth = true,
 ): Promise<T> {
   const headers = new Headers(init.headers);
-  if (!headers.has("Content-Type") && init.body) {
+  // FormData sets its own Content-Type (multipart/form-data with a generated boundary) --
+  // setting it here would strip that boundary and break the upload.
+  if (!headers.has("Content-Type") && init.body && !(init.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
   }
   if (auth) {
@@ -279,6 +282,23 @@ export const api = {
   getReport: (companyId: string, quarterId: string) =>
     request<QuarterReportResponse>(
       `/companies/${companyId}/quarters/${quarterId}/report`,
+    ),
+
+  /** Uploads a client-rendered report PDF for storage in Supabase Storage's private bucket. */
+  storeReportPdf: (companyId: string, quarterId: string, pdf: Blob) => {
+    const form = new FormData();
+    form.append("file", pdf, "report.pdf");
+    return request<QuarterReportPdfResponse>(
+      `/companies/${companyId}/quarters/${quarterId}/report/pdf`,
+      { method: "POST", body: form },
+    );
+  },
+
+  /** 404s if no PDF has been generated for this quarter yet -- a normal answer, not an error
+   *  worth surfacing (mirrors getCrisisBriefing's reasoning below). */
+  getReportPdf: (companyId: string, quarterId: string) =>
+    request<QuarterReportPdfResponse>(
+      `/companies/${companyId}/quarters/${quarterId}/report/pdf`,
     ),
 
   /** The crisis briefing. 404s on any quarter that isn't the scenario's crisis quarter, which

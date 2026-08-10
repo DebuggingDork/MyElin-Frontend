@@ -364,6 +364,13 @@ export type LeaderboardResponse = {
   entries: LeaderboardEntry[];
 };
 
+export type QuarterReportPdfResponse = {
+  bucket: string;
+  path: string;
+  signed_url: string;
+  expires_in: number;
+};
+
 export type ApiErrorBody = {
   error?: string;
   reason?: string;
