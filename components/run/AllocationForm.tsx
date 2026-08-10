@@ -64,8 +64,33 @@ export function AllocationWorkspace({ deptId }: { deptId: DeptId }) {
   const quarterId = run?.current_quarter_id;
   const locked = deptId !== "finance_admin" && !financeUnlocked;
 
+  // What every *other* department already has saved (server truth). `allocatedLakhs` covers all
+  // six, so subtracting this department's persisted total leaves the five this form isn't
+  // editing -- this department's own figures are counted live from `spend` instead, or a
+  // just-saved amount would be charged to the budget twice.
+  const persistedDeptTotal = keys.reduce(
+    (s, k) => s + asNumber(quarter?.allocations?.[k]),
+    0,
+  );
+  const cashLakhs = asNumber(quarter?.cash_balance) / 100_000;
+  const otherDeptsLakhs = allocatedLakhs - persistedDeptTotal;
+  // What this department may still commit. Clamped at 0: the other five can already have
+  // committed more than the quarter's cash (the API allows it -- insolvency is a real move),
+  // and a negative budget would make every slider jump backwards instead of simply refusing.
+  const deptBudgetLakhs = Math.max(0, cashLakhs - otherDeptsLakhs);
+
   const setField = (key: string, value: number) => {
-    setSpend((prev) => ({ ...prev, [key]: value }));
+    setSpend((prev) => {
+      // Headroom for this line = the department's budget minus every *other* line in it, so
+      // raising one line stops exactly where the quarter's cash runs out rather than borrowing
+      // from a sibling's saved value.
+      const otherLines = keys.reduce(
+        (s, k) => (k === key ? s : s + (prev[k] ?? 0)),
+        0,
+      );
+      const headroom = Math.max(0, deptBudgetLakhs - otherLines);
+      return { ...prev, [key]: Math.min(Math.max(0, value), headroom) };
+    });
     setSaved(false);
   };
 
@@ -112,17 +137,14 @@ export function AllocationWorkspace({ deptId }: { deptId: DeptId }) {
   }
 
   const total = Object.values(spend).reduce((a, b) => a + b, 0);
-
-  // What every *other* department already has saved (server truth), so the live figure below
-  // reacts to this department's in-progress edits without double-counting its own persisted
-  // values -- `allocatedLakhs` still includes this department's last-saved amount until submit.
-  const persistedDeptTotal = keys.reduce(
-    (s, k) => s + asNumber(quarter?.allocations?.[k]),
-    0,
-  );
-  const cash = asNumber(quarter?.cash_balance);
-  const otherDeptsInr = (allocatedLakhs - persistedDeptTotal) * 100_000;
-  const projectedRemaining = cash - otherDeptsInr - total * 100_000;
+  const projectedRemaining = (cashLakhs - otherDeptsLakhs - total) * 100_000;
+  // Share of this department's own headroom, not of the whole quarter -- the meter sits under
+  // this form's fields, so it answers "how much of what I can still spend have I spent".
+  const usedPct =
+    deptBudgetLakhs > 0
+      ? Math.min(100, (total / deptBudgetLakhs) * 100)
+      : 100;
+  const atCap = deptBudgetLakhs > 0 && total >= deptBudgetLakhs - 0.0001;
 
   if (locked) {
     return (
@@ -166,15 +188,40 @@ export function AllocationWorkspace({ deptId }: { deptId: DeptId }) {
         </p>
         <h2 className="display mt-2 text-[28px] text-ink">{catalog.name}</h2>
         <p className="mt-1 text-[13.5px] text-dim">{catalog.tagline}</p>
-        <p className="num mt-3 text-[12px] text-faint">
-          Department total · {formatLakhs(total)} · all fields optional (default 0)
-        </p>
-        <p
-          className={`num mt-1 text-[12px] ${projectedRemaining < 0 ? "text-rose" : "text-faint"}`}
-        >
-          Cash remaining if saved as-is · {formatInr(projectedRemaining)}
-        </p>
       </header>
+
+      <div className="rounded-xl border border-line bg-raise/50 p-4">
+        <div className="flex items-baseline justify-between gap-3">
+          <p className="eyebrow text-faint">Budget available to this department</p>
+          <p className="num text-[13px] text-ink">
+            {formatLakhs(total)} <span className="text-faint">/ {formatLakhs(deptBudgetLakhs)}</span>
+          </p>
+        </div>
+        <div
+          className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-line/60"
+          role="progressbar"
+          aria-valuenow={Math.round(usedPct)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="Share of this department's budget allocated"
+        >
+          <div
+            className="h-full rounded-full transition-[width] duration-200"
+            style={{ width: `${usedPct}%`, background: atCap ? "var(--amber)" : color }}
+          />
+        </div>
+        <p className={`num mt-2 text-[12px] ${atCap ? "text-amber" : "text-faint"}`}>
+          {atCap
+            ? "Fully committed — lower another line here to raise this one"
+            : `Cash remaining if saved as-is · ${formatInr(projectedRemaining)}`}
+        </p>
+        {otherDeptsLakhs > 0 && (
+          <p className="num mt-1 text-[12px] text-faint">
+            Other departments hold {formatLakhs(otherDeptsLakhs)} of the quarter&apos;s{" "}
+            {formatLakhs(cashLakhs)}
+          </p>
+        )}
+      </div>
 
       {!enabled && (
         <p className="rounded-xl border border-amber/30 bg-amber/[0.07] px-4 py-3 text-[13px] text-amber">
