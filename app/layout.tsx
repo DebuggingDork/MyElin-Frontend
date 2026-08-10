@@ -1,7 +1,15 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Sora } from "next/font/google";
 import { AuthProvider } from "@/components/auth/AuthProvider";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import "./globals.css";
+
+/** Runs before paint so the first frame already has the right theme -- without this, the page
+ *  would flash the default (dark) theme for a moment on every load for a light-mode visitor.
+ *  Kept as a literal inline script (not lib/theme.ts) because it has to execute standalone,
+ *  before any bundled JS runs. `ThemeProvider` reads whatever attribute this leaves behind; it
+ *  never decides the theme itself. */
+const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem('myelin_theme');if(t!=='light'&&t!=='dark'){t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -58,10 +66,16 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${sora.variable} h-full antialiased`}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="flex min-h-full flex-col bg-void font-sans text-ink">
-        <AuthProvider>{children}</AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

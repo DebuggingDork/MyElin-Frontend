@@ -54,6 +54,56 @@
   --focus-ring: 0 0 0 3px rgba(20, 184, 166, 0.4);
   --shadow-lift: 0 1px 0 rgba(255, 255, 255, 0.04) inset,
     0 24px 60px -30px rgba(7, 26, 22, 0.9);
+
+  color-scheme: dark;
+}
+
+/* Explicit light override -- `<html data-theme>` always carries one of the two values (set by
+   the no-flash script in RootLayout before paint), so this is the only override block needed;
+   there's no bare `prefers-color-scheme` branch to keep in sync separately. Same three-tone
+   teal/grey/white system, lightness-inverted: white's "reserved 10%" role becomes near-black ink,
+   and every teal value is deepened since the original bright teal-on-dark values fail contrast
+   read as text against a light surface. */
+:root[data-theme="light"] {
+  --void: #f4faf8;
+  --base: #eef7f4;
+  --raise: #e2f1ec;
+  --raise-2: #d3e9e1;
+
+  --panel: rgba(11, 125, 112, 0.05);
+  --panel-2: rgba(11, 125, 112, 0.09);
+  --line: rgba(11, 125, 112, 0.16);
+  --line-2: rgba(11, 125, 112, 0.26);
+
+  --text: #0a1f1a;
+  --dim: #4d6059;
+  --faint: #6c7d76;
+
+  --teal: #0b7d70;
+  --teal-bright: #0d9488;
+  --teal-deep: #075e54;
+  --teal-soft: #12a695;
+
+  --violet: #0b7d70;
+  --violet-2: #12a695;
+  --indigo: #075e54;
+  --cyan: #0d9488;
+  --emerald: #0d9488;
+  --amber: #5b6169;
+  --orange: #6f7880;
+  --rose: #0a1f1a;
+  --pink: #12a695;
+
+  --grad-primary: linear-gradient(135deg, #075e54 0%, #0b7d70 48%, #0d9488 100%);
+  --grad-cool: linear-gradient(135deg, #075e54 0%, #0b7d70 100%);
+  --grad-warm: linear-gradient(135deg, #6c7d76 0%, #4d6059 55%, #0a1f1a 100%);
+  --grad-iris: linear-gradient(135deg, #075e54 0%, #0b7d70 50%, #12a695 100%);
+
+  --focus-ring: 0 0 0 3px rgba(11, 125, 112, 0.35);
+  --shadow-lift: 0 1px 0 rgba(255, 255, 255, 0.7) inset,
+    0 24px 60px -30px rgba(10, 31, 26, 0.16);
+
+  color-scheme: light;
 }
 
 @theme inline {
@@ -108,7 +158,6 @@
 
 html {
   scroll-behavior: smooth;
-  color-scheme: dark;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -127,7 +176,7 @@ body {
 
 ::selection {
   background: rgba(20, 184, 166, 0.35);
-  color: #fff;
+  color: var(--text);
 }
 
 :focus-visible {
@@ -143,12 +192,12 @@ body {
   background: var(--void);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--line-2);
   border-radius: 999px;
   border: 2px solid var(--void);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--teal-soft);
 }
 
 /* ───────────────────────── typography ───────────────────────── */
@@ -318,6 +367,16 @@ body {
 
 .section-pad {
   padding-block: clamp(4.5rem, 10vw, 8rem);
+}
+
+/* .aurora/.grid-lines/.dot-grid are dark-glow effects (white/teal blur blobs, faint white grid
+   lines) tuned to show up against the dark surfaces above -- against the light palette they'd
+   either vanish (white-on-near-white) or read as a smudge, so they're switched off rather than
+   re-tuned blind. .noise is a low-opacity dark speckle and reads fine on either surface. */
+:root[data-theme="light"] .aurora,
+:root[data-theme="light"] .grid-lines::before,
+:root[data-theme="light"] .dot-grid::before {
+  display: none;
 }
 
 /* ────────────────────────── motion ────────────────────────── */
