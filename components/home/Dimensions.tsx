@@ -95,7 +95,7 @@ export function Dimensions() {
                     })
                     .join(" ")}
                   fill="none"
-                  stroke="rgba(255,255,255,0.09)"
+                  stroke="var(--line-2)"
                 />
               ))}
 
@@ -108,7 +108,7 @@ export function Dimensions() {
                     y1={CENTER}
                     x2={outer.x}
                     y2={outer.y}
-                    stroke="rgba(255,255,255,0.09)"
+                    stroke="var(--line-2)"
                     strokeWidth={1}
                   />
                 );

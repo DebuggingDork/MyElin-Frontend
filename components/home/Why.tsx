@@ -280,7 +280,7 @@ function ConsequenceChain() {
                   initial={false}
                   animate={{
                     scale: lit ? 1 : 0.55,
-                    backgroundColor: lit ? color : "rgba(255,255,255,0.18)",
+                    backgroundColor: lit ? color : "rgba(113,132,125,0.55)",
                     boxShadow: lit ? `0 0 12px ${color}` : "0 0 0 transparent",
                   }}
                   transition={{ duration: 0.45, ease: easeOut }}

@@ -89,7 +89,7 @@ export function ProcessingScreen({ quarterId }: { quarterId: string }) {
                         animate={{
                           background: active
                             ? "var(--violet-2)"
-                            : "rgba(255,255,255,0.15)",
+                            : "var(--line-2)",
                         }}
                       />
                     )}
