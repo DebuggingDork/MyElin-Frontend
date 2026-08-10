@@ -8,7 +8,6 @@ const columns = [
     links: [
       { label: "Simulations", href: "/simulations" },
       { label: "Pricing", href: "/pricing" },
-      { label: "Leaderboard", href: "/leaderboard" },
       { label: "Play now", href: "/play/startup-survival" },
     ],
   },
