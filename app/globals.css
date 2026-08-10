@@ -394,3 +394,118 @@ body {
     animation: none;
   }
 }
+
+/* ─────────────────── storyline entry ("front page") ──────────────────
+   Scoped to .newsprint -- the pre-run /play/[slug] screen only. Everything
+   below lives under this one class so it can never bleed into the app's
+   dark theme elsewhere. */
+
+.newsprint {
+  --paper: #efe8d8;
+  --paper-deep: #e5dac0;
+  --ink: #1c1712;
+  --ink-soft: #4a4030;
+  --rule: rgba(28, 23, 18, 0.22);
+  --rule-soft: rgba(28, 23, 18, 0.12);
+  --press: #7a1f1f;
+  --press-bright: #9c2b2b;
+
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.newsprint :focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(122, 31, 31, 0.35);
+}
+
+.newsprint-texture::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  mix-blend-mode: multiply;
+}
+.newsprint-texture::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    120% 90% at 50% 0%,
+    transparent 55%,
+    rgba(28, 23, 18, 0.07) 100%
+  );
+}
+
+.newsprint-fold {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: linear-gradient(
+    90deg,
+    transparent calc(50% - 14px),
+    rgba(28, 23, 18, 0.05) 50%,
+    transparent calc(50% + 14px)
+  );
+}
+
+.newsprint-lead::first-letter {
+  float: left;
+  font-size: 3.6em;
+  line-height: 0.82;
+  font-weight: 600;
+  padding: 0.03em 0.09em 0 0;
+  color: var(--ink);
+}
+
+.newsprint-caret {
+  display: inline-block;
+  width: 0.5em;
+  height: 1em;
+  margin-left: 0.02em;
+  vertical-align: -0.14em;
+  background: var(--ink);
+  animation: newsprint-blink 1s steps(1) infinite;
+}
+@keyframes newsprint-blink {
+  0%,
+  49% {
+    opacity: 0.75;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.newsprint-stamp {
+  animation: newsprint-settle 0.55s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+@keyframes newsprint-settle {
+  from {
+    opacity: 0;
+    transform: scale(0.92) rotate(-3deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(-2deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .newsprint-caret {
+    animation: none;
+    opacity: 0;
+  }
+  .newsprint-stamp {
+    animation: none;
+    transform: rotate(-2deg);
+  }
+}
