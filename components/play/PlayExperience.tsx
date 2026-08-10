@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Loader2, Plus } from "lucide-react";
 import { EntryGate } from "@/components/play/EntryGate";
+import { NewspaperStory } from "@/components/play/NewspaperStory";
+import { NewspaperKpi } from "@/components/play/NewspaperKpi";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { api, setActiveCompanyId } from "@/lib/api/client";
 import { asNumber } from "@/lib/api/catalog";
@@ -11,29 +13,35 @@ import { ApiError, type CompanyListItem } from "@/lib/api/types";
 import type { Scenario } from "@/lib/play/types";
 import { Action, Pill } from "@/components/ui/Kit";
 
+type Phase = "rules" | "picker" | "story" | "kpi";
+
 /**
- * Entry: consent gate → auth check → resume an existing run or create one → /run/{companyId}.
+ * Entry sequence: rules + timer (EntryGate) -> pick up an existing run or start fresh -> for a
+ * fresh start, the newspaper story -> the newspaper KPI page -> /run/{companyId}.
  *
  * Which runs exist comes from `GET /companies`, not from localStorage. The previous version
  * trusted a single stored `myelin_active_company` id, so clearing site data (or opening the app
  * on another machine) hid every run the user still owned, with no way to reach them again.
+ *
+ * Company creation happens on the KPI page's final button, not on "start a new run" -- nothing is
+ * created until the CEO actually finishes the ceremony and commits to taking the desk.
  */
 export function PlayExperience({ scenario }: { scenario: Scenario }) {
   const router = useRouter();
   const { user, ready } = useAuth();
-  const [entered, setEntered] = useState(false);
+  const [phase, setPhase] = useState<Phase>("rules");
   const [error, setError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
   const [runs, setRuns] = useState<CompanyListItem[] | null>(null);
 
   useEffect(() => {
-    if (!entered || !ready) return;
+    if (phase === "rules" || !ready) return;
     if (!user) {
       router.replace(
         `/login?next=${encodeURIComponent(`/play/${scenario.id}`)}`,
       );
     }
-  }, [entered, ready, user, router, scenario.id]);
+  }, [phase, ready, user, router, scenario.id]);
 
   const loadRuns = useCallback(async () => {
     try {
@@ -46,9 +54,38 @@ export function PlayExperience({ scenario }: { scenario: Scenario }) {
   }, []);
 
   useEffect(() => {
-    if (!entered || !ready || !user) return;
+    if (phase === "rules" || !ready || !user) return;
     queueMicrotask(() => void loadRuns());
-  }, [entered, ready, user, loadRuns]);
+  }, [phase, ready, user, loadRuns]);
+
+  const resumable = useMemo(
+    () =>
+      (runs ?? []).filter(
+        (r) => r.run_status === "active" || r.run_status === "distressed",
+      ),
+    [runs],
+  );
+  const finished = useMemo(
+    () =>
+      (runs ?? []).filter(
+        (r) => r.run_status === "completed" || r.run_status === "failed",
+      ),
+    [runs],
+  );
+
+  // Nothing to resume -- the picker would just be an empty list and one button, so a brand-new
+  // player goes straight into the newspaper ceremony instead of clicking through an empty screen.
+  useEffect(() => {
+    if (
+      phase !== "picker" ||
+      runs === null ||
+      resumable.length > 0 ||
+      finished.length > 0
+    ) {
+      return;
+    }
+    queueMicrotask(() => setPhase("story"));
+  }, [phase, runs, resumable.length, finished.length]);
 
   async function startRun() {
     setStarting(true);
@@ -74,8 +111,8 @@ export function PlayExperience({ scenario }: { scenario: Scenario }) {
     router.replace(`/run/${companyId}`);
   }
 
-  if (!entered) {
-    return <EntryGate scenario={scenario} onEnter={() => setEntered(true)} />;
+  if (phase === "rules") {
+    return <EntryGate scenario={scenario} onEnter={() => setPhase("picker")} />;
   }
 
   if (!ready || !user || runs === null) {
@@ -87,48 +124,47 @@ export function PlayExperience({ scenario }: { scenario: Scenario }) {
     );
   }
 
-  const resumable = runs.filter(
-    (r) => r.run_status === "active" || r.run_status === "distressed",
-  );
-  const finished = runs.filter(
-    (r) => r.run_status === "completed" || r.run_status === "failed",
-  );
+  if (phase === "story") {
+    return <NewspaperStory scenario={scenario} onContinue={() => setPhase("kpi")} />;
+  }
+
+  if (phase === "kpi") {
+    return (
+      <NewspaperKpi
+        scenario={scenario}
+        starting={starting}
+        error={error}
+        onEnter={startRun}
+      />
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-8 bg-void px-5 py-16">
       <div className="w-full max-w-xl text-center">
         <p className="eyebrow text-cyan">{scenario.name}</p>
         <h1 className="display mt-3 text-[clamp(1.6rem,3vw,2.2rem)] text-ink">
-          {resumable.length > 0 ? "Pick up where you left off" : "Start your run"}
+          Pick up where you left off
         </h1>
         <p className="mt-3 text-[14px] text-dim">
-          Each run is a company you own, played over{" "}
-          {scenario.minutes ? "four quarters" : "four quarters"}. Your runs live on
-          the server, not in this browser.
+          Each run is a company you own, played over four quarters. Your runs
+          live on the server, not in this browser.
         </p>
       </div>
 
-      {error && (
-        <p className="max-w-md rounded-xl border border-rose/30 bg-rose/[0.07] px-4 py-3 text-center text-[13px] text-rose">
-          {error}
-        </p>
-      )}
-
-      {runs.length > 0 && (
-        <div className="w-full max-w-xl space-y-3">
-          {[...resumable, ...finished].map((run) => (
-            <RunCard key={run.id} run={run} onResume={() => resume(run.id)} />
-          ))}
-        </div>
-      )}
+      <div className="w-full max-w-xl space-y-3">
+        {[...resumable, ...finished].map((run) => (
+          <RunCard key={run.id} run={run} onResume={() => resume(run.id)} />
+        ))}
+      </div>
 
       <div className="flex flex-col items-center gap-3">
-        <Action onClick={startRun} disabled={starting} size="lg">
+        <Action onClick={() => setPhase("story")} size="lg">
           <Plus className="h-4 w-4" />
-          {starting ? "Creating company…" : "Start a new run"}
+          Start a new run
         </Action>
         <p className="text-[12px] text-faint">
-          Creates a company you own via <code>POST /companies</code>.
+          Opens the front page for {scenario.company.name} first.
         </p>
       </div>
     </div>
