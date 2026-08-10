@@ -12,6 +12,7 @@ import {
 import { Action } from "@/components/ui/Kit";
 import { asNumber } from "@/lib/api/catalog";
 import { useRun } from "@/components/run/RunProvider";
+import { DashboardCharts } from "@/components/run/charts/DashboardCharts";
 
 /** Screen: GET /companies/{id}/run — hub driven by legal_moves. */
 export function HubScreen() {
@@ -73,6 +74,8 @@ export function HubScreen() {
           }
         />
       </div>
+
+      <DashboardCharts />
 
       {run?.binding_constraint_hint &&
         run.binding_constraint_hint.length > 0 && (
