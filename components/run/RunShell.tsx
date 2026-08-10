@@ -118,7 +118,7 @@ export function RunShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-[100dvh] overflow-hidden bg-void text-ink">
-      <aside className="hidden w-[268px] shrink-0 flex-col border-r border-line bg-base lg:flex">
+      <aside className="hidden w-[268px] shrink-0 flex-col border-r border-line bg-gradient-to-b from-raise/60 via-base to-base lg:flex">
         <div className="flex items-center justify-between border-b border-line px-4 py-4">
           <Link href="/" aria-label="Myelin home">
             <Logo variant="glyph" />
@@ -158,10 +158,10 @@ export function RunShell({ children }: { children: React.ReactNode }) {
                 key={link.label}
                 href={link.href}
                 className={cn(
-                  "block rounded-lg px-3 py-2.5 text-[13.5px] transition-colors",
+                  "block rounded-lg px-3 py-2.5 text-[13.5px] transition-all duration-200",
                   active
-                    ? "border border-teal/30 bg-teal/[0.08] font-medium text-ink"
-                    : "border border-transparent text-dim hover:bg-white/[0.04]",
+                    ? "border border-teal/30 bg-teal/[0.1] font-medium text-ink shadow-[0_0_0_1px_rgba(20,184,166,0.06),0_4px_16px_-8px_rgba(20,184,166,0.35)]"
+                    : "border border-transparent text-dim hover:bg-[var(--panel-2)]",
                 )}
               >
                 {link.label}
@@ -173,7 +173,7 @@ export function RunShell({ children }: { children: React.ReactNode }) {
         <div className="border-t border-line p-3">
           <Link
             href="/simulations"
-            className="flex items-center gap-2 rounded-lg px-3 py-2 text-[13px] text-dim hover:bg-white/[0.04] hover:text-ink"
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-[13px] text-dim hover:bg-[var(--panel-2)] hover:text-ink"
           >
             <LogOut className="h-3.5 w-3.5" />
             Exit run
