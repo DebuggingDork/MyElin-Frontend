@@ -8,7 +8,7 @@ import { easeOut } from "@/lib/media";
  * scenario's minute count so the "how long this takes" framing reads at a glance, the way an
  * actual twist-timer would if you set it before starting.
  */
-export function TimerDial({ minutes }: { minutes: number }) {
+export function TimerDial({ minutes, size = 168 }: { minutes: number; size?: number }) {
   const ticks = Array.from({ length: 60 }, (_, i) => i);
   const majorEvery = 5;
   const angleFor = (mark: number) => (mark / 60) * 360;
@@ -21,7 +21,7 @@ export function TimerDial({ minutes }: { minutes: number }) {
       transition={{ duration: 0.6, ease: easeOut }}
       className="relative shrink-0"
     >
-      <svg width="168" height="168" viewBox="0 0 168 168" className="drop-shadow-[0_18px_40px_rgba(0,0,0,0.45)]">
+      <svg width={size} height={size} viewBox="0 0 168 168" className="drop-shadow-[0_18px_40px_rgba(0,0,0,0.45)]">
         <defs>
           <radialGradient id="timer-bezel" cx="35%" cy="30%" r="75%">
             <stop offset="0%" stopColor="#e6e9ec" />
