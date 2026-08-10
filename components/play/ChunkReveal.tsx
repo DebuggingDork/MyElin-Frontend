@@ -63,16 +63,20 @@ export function ChunkReveal({
       }}
     >
       {words.map((word, i) => (
-        <span
-          key={i}
-          className="chunk-word"
-          style={{
-            opacity: i < shown ? 1 : 0,
-            transform: i < shown ? "translateY(0)" : "translateY(4px)",
-            transitionDelay: i < shown ? "0ms" : "0ms",
-          }}
-        >
-          {word}
+        // The space after each word is a sibling text node, not trailing content inside the
+        // inline-block span -- a trailing space *inside* an inline-block gets collapsed away at
+        // the box's own edge (the classic word-by-word-span bug), which is why this can't just be
+        // `{word} ` inside the span below.
+        <span key={i}>
+          <span
+            className="chunk-word"
+            style={{
+              opacity: i < shown ? 1 : 0,
+              transform: i < shown ? "translateY(0)" : "translateY(4px)",
+            }}
+          >
+            {word}
+          </span>
           {i < words.length - 1 ? " " : ""}
         </span>
       ))}
