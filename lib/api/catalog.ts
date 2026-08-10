@@ -22,11 +22,21 @@ export type DeptIcon =
   | "factory"
   | "users";
 
+/**
+ * Which input the department's spend lines get. Not decoration -- each is chosen from what that
+ * department's numbers actually do (docs/12-quarter-1-reference.md):
+ *   dial    -- many independent lines, each an absolute magnitude (Marketing's 8 channels).
+ *   split   -- few lines where the *division between them* is the decision (Sales, R&D).
+ *   columns -- lines that each raise a level off a baseline (Operations, HR).
+ */
+export type DeptInput = "dial" | "split" | "columns";
+
 export type DeptCatalog = {
   id: DeptId;
   name: string;
   owner: string;
   tagline: string;
+  input: DeptInput;
   /** In the department's own voice -- grounded in how its numbers actually feed the chain
    *  (docs/12-quarter-1-reference.md §8), not generic flavor text. */
   quote: string;
@@ -44,6 +54,7 @@ export const DEPARTMENTS: DeptCatalog[] = [
     owner: "CFO desk",
     tagline: "Set this first — every other department is spent against it",
     quote: "We don't sell a single unit. Skip us, and next quarter's risk catches up with you.",
+    input: "dial",
     accent: "indigo",
     icon: "landmark",
     fields: [
@@ -58,6 +69,7 @@ export const DEPARTMENTS: DeptCatalog[] = [
     owner: "Growth desk",
     tagline: "8 channel spend lines · power-law lead formulas",
     quote: "Every rupee here buys leads. Whether Sales can use them is someone else's problem.",
+    input: "dial",
     accent: "cyan",
     icon: "megaphone",
     fields: [
@@ -77,6 +89,7 @@ export const DEPARTMENTS: DeptCatalog[] = [
     owner: "Revenue desk",
     tagline: "Rep capacity is a hard gate on marketing leads",
     quote: "Give us more leads than we can handle, and the extra ones just evaporate.",
+    input: "split",
     accent: "teal",
     icon: "trending-up",
     fields: [
@@ -91,6 +104,7 @@ export const DEPARTMENTS: DeptCatalog[] = [
     owner: "Product / Engineering",
     tagline: "Quality & innovation · subject to conversion ceiling",
     quote: "No amount of marketing spend fixes a product that isn't good enough to convert.",
+    input: "split",
     accent: "violet",
     icon: "flask-conical",
     warranty: true,
@@ -105,6 +119,7 @@ export const DEPARTMENTS: DeptCatalog[] = [
     owner: "Ops desk",
     tagline: "Manufacturing, supplier QC, logistics",
     quote: "We can build it, but we can't sell what isn't in stock.",
+    input: "columns",
     accent: "amber",
     icon: "factory",
     fields: [
@@ -119,6 +134,7 @@ export const DEPARTMENTS: DeptCatalog[] = [
     owner: "People desk",
     tagline: "Culture, training, and the CX team",
     quote: "A tired team closes fewer deals, no matter how good the leads are.",
+    input: "columns",
     accent: "emerald",
     icon: "users",
     fields: [

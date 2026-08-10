@@ -22,6 +22,8 @@ import { accentVar } from "@/components/ui/Kit";
 import { Action } from "@/components/ui/Kit";
 import { useRun } from "@/components/run/RunProvider";
 import { SpendDial } from "@/components/run/SpendDial";
+import { SpendSplit } from "@/components/run/SpendSplit";
+import { SpendColumns } from "@/components/run/SpendColumns";
 
 type SpendMap = Record<string, number>;
 
@@ -181,19 +183,49 @@ export function AllocationWorkspace({ deptId }: { deptId: DeptId }) {
         </p>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        {catalog.fields.map((field) => (
-          <SpendDial
-            key={field.key}
-            label={field.label}
-            hint={field.hint}
-            value={spend[field.key] ?? 0}
-            color={color}
-            disabled={!enabled}
-            onChange={(v) => setField(field.key, v)}
-          />
-        ))}
-      </div>
+      {catalog.input === "dial" && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {catalog.fields.map((field) => (
+            <SpendDial
+              key={field.key}
+              label={field.label}
+              hint={field.hint}
+              value={spend[field.key] ?? 0}
+              color={color}
+              disabled={!enabled}
+              onChange={(v) => setField(field.key, v)}
+            />
+          ))}
+        </div>
+      )}
+
+      {catalog.input === "split" && (
+        <SpendSplit
+          color={color}
+          disabled={!enabled}
+          onChange={setField}
+          lines={catalog.fields.map((f) => ({
+            key: f.key,
+            label: f.label,
+            hint: f.hint,
+            value: spend[f.key] ?? 0,
+          }))}
+        />
+      )}
+
+      {catalog.input === "columns" && (
+        <SpendColumns
+          color={color}
+          disabled={!enabled}
+          onChange={setField}
+          lines={catalog.fields.map((f) => ({
+            key: f.key,
+            label: f.label,
+            hint: f.hint,
+            value: spend[f.key] ?? 0,
+          }))}
+        />
+      )}
 
       {catalog.warranty && (
         <div className="rounded-xl border border-line bg-raise/50 p-4">
