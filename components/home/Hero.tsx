@@ -15,18 +15,7 @@ const stats = [
   { value: "12mo", label: "Compressed into 30 min" },
 ];
 
-/** Same six axes as the radar in Dimensions.tsx — echoed here as slow-drifting
- *  background type rather than restated as another panel. */
-const driftDimensions: { name: string; accent: Accent; top: string; left: string; duration: number; delay: number }[] = [
-  { name: "Strategic Thinking", accent: "violet", top: "16%", left: "68%", duration: 10, delay: 0 },
-  { name: "Risk Management", accent: "cyan", top: "38%", left: "88%", duration: 12, delay: 0.8 },
-  { name: "Adaptability", accent: "indigo", top: "64%", left: "74%", duration: 9, delay: 1.6 },
-  { name: "Decision Under Uncertainty", accent: "violet", top: "80%", left: "56%", duration: 13, delay: 0.4 },
-];
-
 export function Hero() {
-  const reduceMotion = useReducedMotion();
-
   return (
     <section
       id="home"
@@ -34,35 +23,7 @@ export function Hero() {
     >
       <div className="aurora" />
       <div className="grid-lines absolute inset-0" />
-      <DecisionLines />
-
-      <div aria-hidden className="pointer-events-none absolute inset-0 z-0 hidden lg:block">
-        {driftDimensions.map((d) => (
-          <motion.span
-            key={d.name}
-            className="eyebrow absolute flex items-center gap-2 whitespace-nowrap text-faint"
-            style={{ top: d.top, left: d.left }}
-            initial={{ opacity: 0, y: 0 }}
-            animate={
-              reduceMotion
-                ? { opacity: 0.42 }
-                : { opacity: [0.28, 0.5, 0.28], y: [0, -14, 0] }
-            }
-            transition={{
-              duration: d.duration,
-              delay: d.delay,
-              repeat: reduceMotion ? 0 : Infinity,
-              ease: "easeInOut",
-            }}
-          >
-            <span
-              className="h-1 w-1 rounded-full"
-              style={{ background: accentVar[d.accent] }}
-            />
-            {d.name}
-          </motion.span>
-        ))}
-      </div>
+      <DecisionConstellation />
 
       <Container
         wide
@@ -151,43 +112,97 @@ export function Hero() {
   );
 }
 
-/** Faint branching lines behind the headline — a decision tree, not a chart:
- *  the same "one choice, many consequences" idea as the ConsequenceChain in
- *  Why.tsx, reduced to pure atmosphere. Dashes drift slowly to read as alive
- *  without competing with the type sitting above it. */
-function DecisionLines() {
+const root = { x: 60, y: 9 };
+
+/** Same axes as the radar in Dimensions.tsx, arranged as branches off one root —
+ *  "a decision, and what it touches" — instead of restating them as another panel.
+ *  Coordinates are percentages of the hero box, shared by the SVG lines below and
+ *  the HTML labels, so the two layers actually line up as one motif. */
+const dimensionNodes: {
+  name: string;
+  accent: Accent;
+  x: number;
+  y: number;
+  duration: number;
+  delay: number;
+}[] = [
+  { name: "Strategic Thinking", accent: "violet", x: 71, y: 15, duration: 10, delay: 0 },
+  { name: "Risk Management", accent: "cyan", x: 90, y: 37, duration: 12, delay: 0.8 },
+  { name: "Adaptability", accent: "indigo", x: 77, y: 62, duration: 9, delay: 1.6 },
+  { name: "Decision Under Uncertainty", accent: "violet", x: 59, y: 80, duration: 13, delay: 0.4 },
+];
+
+function branch(x2: number, y2: number) {
+  const midX = (root.x + x2) / 2;
+  return `M ${root.x} ${root.y} C ${midX} ${root.y}, ${midX} ${y2}, ${x2} ${y2}`;
+}
+
+/** Faint branching constellation behind the headline — a decision tree, not a
+ *  chart: the same "one choice, many consequences" idea as the ConsequenceChain
+ *  in Why.tsx, reduced to pure atmosphere. Lines flow slowly and labels drift to
+ *  read as alive without competing with the type sitting above them.
+ *
+ *  Replaces the earlier pairing of independently-drifting labels and unrelated
+ *  branching lines (Phase 2/3) — those two layers didn't share coordinates, so
+ *  they read as disconnected noise rather than one motif. This version drives
+ *  both the SVG paths and the HTML labels off the same `dimensionNodes` data so
+ *  every line visibly terminates at its label. */
+function DecisionConstellation() {
   const reduceMotion = useReducedMotion();
 
   return (
-    <svg
-      aria-hidden
-      viewBox="0 0 1200 800"
-      preserveAspectRatio="xMidYMid slice"
-      className="pointer-events-none absolute inset-0 z-0 h-full w-full opacity-[0.32]"
-    >
-      {[
-        "M 620 120 C 780 180, 860 260, 940 320",
-        "M 940 320 C 1000 360, 1040 410, 1080 470",
-        "M 940 320 C 1010 300, 1080 300, 1140 260",
-        "M 700 480 C 820 520, 900 560, 1020 560",
-        "M 1020 560 C 1070 590, 1110 630, 1150 680",
-      ].map((d, i) => (
-        <motion.path
-          key={d}
-          d={d}
-          fill="none"
-          stroke="var(--teal)"
-          strokeWidth={1}
-          strokeDasharray="2 10"
-          strokeLinecap="round"
-          animate={reduceMotion ? undefined : { strokeDashoffset: [0, -48] }}
+    <div aria-hidden className="pointer-events-none absolute inset-0 z-0 hidden lg:block">
+      <svg
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+        className="absolute inset-0 h-full w-full opacity-[0.55]"
+      >
+        {dimensionNodes.map((n, i) => (
+          <motion.path
+            key={n.name}
+            d={branch(n.x, n.y)}
+            fill="none"
+            stroke={accentVar[n.accent]}
+            strokeWidth={1}
+            strokeDasharray="1 3"
+            strokeLinecap="round"
+            vectorEffect="non-scaling-stroke"
+            animate={reduceMotion ? undefined : { strokeDashoffset: [0, -16] }}
+            transition={{
+              duration: 10 + i * 2,
+              repeat: reduceMotion ? 0 : Infinity,
+              ease: "linear",
+            }}
+          />
+        ))}
+        <circle cx={root.x} cy={root.y} r={0.7} fill="var(--teal)" />
+      </svg>
+
+      {dimensionNodes.map((n) => (
+        <motion.span
+          key={n.name}
+          className="eyebrow absolute flex -translate-y-1/2 items-center gap-2 whitespace-nowrap text-dim"
+          style={{ top: `${n.y}%`, left: `${n.x}%` }}
+          initial={{ opacity: 0, y: 0 }}
+          animate={
+            reduceMotion
+              ? { opacity: 0.55 }
+              : { opacity: [0.4, 0.65, 0.4], y: [0, -14, 0] }
+          }
           transition={{
-            duration: 16 + i * 2,
+            duration: n.duration,
+            delay: n.delay,
             repeat: reduceMotion ? 0 : Infinity,
-            ease: "linear",
+            ease: "easeInOut",
           }}
-        />
+        >
+          <span
+            className="h-1.5 w-1.5 rounded-full"
+            style={{ background: accentVar[n.accent] }}
+          />
+          {n.name}
+        </motion.span>
       ))}
-    </svg>
+    </div>
   );
 }
