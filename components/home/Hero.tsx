@@ -1,9 +1,9 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Play } from "lucide-react";
 import { easeOut } from "@/lib/media";
-import { Action, Container, Eyebrow } from "@/components/ui/Kit";
+import { Action, Container, Eyebrow, accentVar, type Accent } from "@/components/ui/Kit";
 
 /** Kept honest against the shipped engine: the scenario runs 4 quarters (config/scenarios,
  *  total_quarters: 4) over 22 spend lines per quarter (CLAUDE.md's 22-line model), not the
@@ -15,7 +15,18 @@ const stats = [
   { value: "12mo", label: "Compressed into 30 min" },
 ];
 
+/** Same six axes as the radar in Dimensions.tsx — echoed here as slow-drifting
+ *  background type rather than restated as another panel. */
+const driftDimensions: { name: string; accent: Accent; top: string; left: string; duration: number; delay: number }[] = [
+  { name: "Strategic Thinking", accent: "violet", top: "16%", left: "68%", duration: 10, delay: 0 },
+  { name: "Risk Management", accent: "cyan", top: "38%", left: "88%", duration: 12, delay: 0.8 },
+  { name: "Adaptability", accent: "indigo", top: "64%", left: "74%", duration: 9, delay: 1.6 },
+  { name: "Decision Under Uncertainty", accent: "violet", top: "80%", left: "56%", duration: 13, delay: 0.4 },
+];
+
 export function Hero() {
+  const reduceMotion = useReducedMotion();
+
   return (
     <section
       id="home"
@@ -23,6 +34,35 @@ export function Hero() {
     >
       <div className="aurora" />
       <div className="grid-lines absolute inset-0" />
+      <DecisionLines />
+
+      <div aria-hidden className="pointer-events-none absolute inset-0 z-0 hidden lg:block">
+        {driftDimensions.map((d) => (
+          <motion.span
+            key={d.name}
+            className="eyebrow absolute flex items-center gap-2 whitespace-nowrap text-faint"
+            style={{ top: d.top, left: d.left }}
+            initial={{ opacity: 0, y: 0 }}
+            animate={
+              reduceMotion
+                ? { opacity: 0.18 }
+                : { opacity: [0.1, 0.24, 0.1], y: [0, -14, 0] }
+            }
+            transition={{
+              duration: d.duration,
+              delay: d.delay,
+              repeat: reduceMotion ? 0 : Infinity,
+              ease: "easeInOut",
+            }}
+          >
+            <span
+              className="h-1 w-1 rounded-full"
+              style={{ background: accentVar[d.accent] }}
+            />
+            {d.name}
+          </motion.span>
+        ))}
+      </div>
 
       <Container
         wide
@@ -108,5 +148,46 @@ export function Hero() {
         </motion.div>
       </Container>
     </section>
+  );
+}
+
+/** Faint branching lines behind the headline — a decision tree, not a chart:
+ *  the same "one choice, many consequences" idea as the ConsequenceChain in
+ *  Why.tsx, reduced to pure atmosphere. Dashes drift slowly to read as alive
+ *  without competing with the type sitting above it. */
+function DecisionLines() {
+  const reduceMotion = useReducedMotion();
+
+  return (
+    <svg
+      aria-hidden
+      viewBox="0 0 1200 800"
+      preserveAspectRatio="xMidYMid slice"
+      className="pointer-events-none absolute inset-0 z-0 h-full w-full opacity-[0.14]"
+    >
+      {[
+        "M 620 120 C 780 180, 860 260, 940 320",
+        "M 940 320 C 1000 360, 1040 410, 1080 470",
+        "M 940 320 C 1010 300, 1080 300, 1140 260",
+        "M 700 480 C 820 520, 900 560, 1020 560",
+        "M 1020 560 C 1070 590, 1110 630, 1150 680",
+      ].map((d, i) => (
+        <motion.path
+          key={d}
+          d={d}
+          fill="none"
+          stroke="var(--teal)"
+          strokeWidth={1}
+          strokeDasharray="2 10"
+          strokeLinecap="round"
+          animate={reduceMotion ? undefined : { strokeDashoffset: [0, -48] }}
+          transition={{
+            duration: 16 + i * 2,
+            repeat: reduceMotion ? 0 : Infinity,
+            ease: "linear",
+          }}
+        />
+      ))}
+    </svg>
   );
 }
