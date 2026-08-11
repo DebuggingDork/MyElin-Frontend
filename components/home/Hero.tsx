@@ -45,8 +45,8 @@ export function Hero() {
             initial={{ opacity: 0, y: 0 }}
             animate={
               reduceMotion
-                ? { opacity: 0.18 }
-                : { opacity: [0.1, 0.24, 0.1], y: [0, -14, 0] }
+                ? { opacity: 0.42 }
+                : { opacity: [0.28, 0.5, 0.28], y: [0, -14, 0] }
             }
             transition={{
               duration: d.duration,
@@ -163,7 +163,7 @@ function DecisionLines() {
       aria-hidden
       viewBox="0 0 1200 800"
       preserveAspectRatio="xMidYMid slice"
-      className="pointer-events-none absolute inset-0 z-0 h-full w-full opacity-[0.14]"
+      className="pointer-events-none absolute inset-0 z-0 h-full w-full opacity-[0.32]"
     >
       {[
         "M 620 120 C 780 180, 860 260, 940 320",
