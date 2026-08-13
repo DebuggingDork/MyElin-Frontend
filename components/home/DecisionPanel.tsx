@@ -11,7 +11,7 @@ const WINDOW = 180;
 const ROTATE_MS = 3400;
 
 /** Drawn from the shipped Startup Survival brief: three defensible moves, each with a real
- *  price. The point of the panel is the trade-off column, not the options -- "no option is
+ *  price. The trade-off column is the point of the panel, not the options -- "no option is
  *  correct" is the product's entire thesis and this is the shortest way to show it. */
 const options = [
   {
@@ -27,7 +27,7 @@ const options = [
   {
     key: "3",
     label: "Hold price and spend into the roadmap",
-    cost: "Runway ends one month before the raise",
+    cost: "Runway ends a month before the raise",
   },
 ];
 
@@ -42,7 +42,7 @@ export function DecisionPanel() {
   const [left, setLeft] = useState(WINDOW);
   const [active, setActive] = useState(0);
 
-  // One tick a second, and only while the tab is actually in front. A marketing hero has no
+  // One tick a second, and only while the tab is in front. A marketing hero has no
   // business burning a timer in a background tab.
   useEffect(() => {
     let id: number | undefined;
@@ -80,23 +80,23 @@ export function DecisionPanel() {
   const urgent = left <= 45;
 
   return (
-    <div className="glass-card w-full max-w-[30rem] overflow-hidden">
-      <div className="flex items-center justify-between gap-4 px-5 pt-4">
-        <p className="eyebrow text-faint">Startup Survival · Q3</p>
+    <div className="ticked w-full border border-line bg-base lg:w-[27.5rem]">
+      <div className="flex items-center justify-between gap-4 border-b border-line px-5 py-3">
+        <p className="tick-label">Startup Survival · Q3</p>
         <p
           className={cn(
             "num text-[13px] tabular-nums transition-colors duration-300",
-            urgent ? "text-ember" : "text-dim",
+            urgent ? "text-ember" : "text-teal",
           )}
         >
           {clock(left)}
         </p>
       </div>
 
-      {/* The decision window running out, as one hairline. Constant motion, so: linear, and
-          left to CSS -- it never needs to interrupt or retarget, and this keeps it off the
-          main thread while the rest of the page is still hydrating. */}
-      <div className="relative mt-4 h-px w-full bg-line">
+      {/* The decision window running out, as one hairline. Constant motion, so: linear,
+          and left to CSS -- it never needs to interrupt or retarget, and this keeps it
+          off the main thread while the rest of the page is still hydrating. */}
+      <div className="relative h-px w-full bg-line">
         <span
           aria-hidden
           className="absolute inset-y-0 left-0 w-full origin-left bg-teal motion-safe:animate-[deplete_180s_linear_infinite]"
@@ -105,32 +105,28 @@ export function DecisionPanel() {
       </div>
 
       <div className="px-5 py-5">
-        <p className="display text-[17px] leading-[1.45] text-ink">
+        <p className="ledger-display text-[19px] leading-[1.3] text-ink">
           Runway is 5.8 months. Your lead engineer resigned on Monday and a
           competitor undercut you by 40% on Tuesday.
         </p>
 
-        <ul className="mt-5 space-y-1.5">
+        <ul className="mt-6 border-t border-line">
           {options.map((option, i) => {
             const on = i === active;
             return (
               <li
                 key={option.key}
                 className={cn(
-                  "flex items-center gap-3 rounded-xl border px-3 py-2.5",
-                  "transition-[background-color,border-color] duration-300 ease-out",
-                  on
-                    ? "border-teal/45 bg-teal/[0.09]"
-                    : "border-transparent bg-[var(--panel)]",
+                  "flex items-center gap-3 border-b border-line px-1 py-3",
+                  "transition-colors duration-300 ease-out",
+                  on ? "bg-teal/[0.08]" : "bg-transparent",
                 )}
               >
                 <span
                   className={cn(
-                    "num flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[11px]",
+                    "num w-4 shrink-0 text-center text-[11px]",
                     "transition-colors duration-300 ease-out",
-                    on
-                      ? "bg-teal text-void"
-                      : "bg-[var(--panel-2)] text-faint",
+                    on ? "text-teal" : "text-faint",
                   )}
                 >
                   {option.key}
@@ -148,10 +144,11 @@ export function DecisionPanel() {
           })}
         </ul>
 
-        {/* Fixed height so the swap never reflows the panel, and a blur on the outgoing text
-            so the crossfade reads as one line changing rather than two lines overlapping. */}
-        <div className="mt-5 flex h-9 items-center gap-3 border-t border-line pt-4">
-          <span className="eyebrow shrink-0 text-faint">Costs you</span>
+        {/* Fixed height so the swap never reflows the panel, and a blur on the outgoing
+            text so the crossfade reads as one line changing rather than two lines
+            overlapping. */}
+        <div className="mt-4 flex h-6 items-center gap-3">
+          <span className="tick-label shrink-0 text-ember">Costs you</span>
           <span className="relative min-w-0 flex-1">
             {options.map((option, i) => (
               <span
