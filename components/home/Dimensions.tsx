@@ -5,7 +5,8 @@ import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import { duration, easeOut } from "@/lib/media";
 import { cn } from "@/lib/utils";
-import { Container, Panel, SectionHead } from "@/components/ui/Kit";
+import { Container } from "@/components/ui/Kit";
+import { LedgerHead } from "@/components/home/LedgerHead";
 
 type Dimension = {
   name: string;
@@ -27,9 +28,9 @@ const dimensions: Dimension[] = [
   { name: "Decision Under Uncertainty", blurb: "Bet right when nobody knows.", score: 72 },
 ];
 
-const SIZE = 340;
+const SIZE = 320;
 const CENTER = SIZE / 2;
-const RADIUS = 126;
+const RADIUS = 124;
 
 function pointAt(index: number, value: number) {
   const angle = (Math.PI * 2 * index) / dimensions.length - Math.PI / 2;
@@ -53,22 +54,25 @@ export function Dimensions() {
   const activePoint = pointAt(active, current.score);
 
   return (
-    <section
-      id="measure"
-      className="relative overflow-hidden border-b border-line bg-void"
-    >
-      <div className="aurora opacity-60" />
-      <Container wide className="relative z-10 section-pad">
-        <SectionHead
+    <section id="measure" className="relative border-b border-line">
+      <Container wide className="ledger-section relative z-10">
+        <LedgerHead
           title={
             <>
-              Seven <span className="text-grad">cognitive dimensions.</span>
+              Seven <span className="text-teal">cognitive dimensions.</span>
             </>
+          }
+          deck={
+            <p>
+              One run produces one profile. The shape is what a recruiter or a
+              dean reads: not whether you won, but which kinds of decision you
+              are reliably good at and which ones cost you.
+            </p>
           }
           action={
             <a
               href="#how"
-              className="group inline-flex items-center gap-2 text-[14px] text-dim transition-colors hover:text-ink"
+              className="group inline-flex items-center gap-2 border-b border-line pb-1 text-[14px] text-ink transition-colors hover:border-teal hover:text-teal"
             >
               How scoring works
               <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
@@ -76,25 +80,19 @@ export function Dimensions() {
           }
         />
 
-        <div className="mt-14 grid items-start gap-5 lg:grid-cols-[0.95fr_1.05fr]">
-          <Panel gradientRing className="flex flex-col items-center p-7 sm:p-9">
+        <div className="mt-16 grid items-start gap-x-16 gap-y-12 lg:grid-cols-[auto_1fr]">
+          {/* The plot, unframed. A radar is already a bounded shape; putting it inside a
+              bordered card draws a second boundary around the first. */}
+          <div className="lg:w-[22rem]">
+            <p className="tick-label border-b border-line pb-3">
+              Sample profile · S-25
+            </p>
             <svg
               viewBox={`0 0 ${SIZE} ${SIZE}`}
-              className="w-full max-w-[360px]"
+              className="mt-6 w-full max-w-[22rem]"
               role="img"
               aria-label={`A sample profile across seven dimensions, highlighting ${current.name} at ${current.score}`}
             >
-              <defs>
-                <linearGradient id="radar-fill" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="var(--teal)" stopOpacity="0.4" />
-                  <stop
-                    offset="100%"
-                    stopColor="var(--teal-bright)"
-                    stopOpacity="0.14"
-                  />
-                </linearGradient>
-              </defs>
-
               {[0.25, 0.5, 0.75, 1].map((ring) => (
                 <polygon
                   key={ring}
@@ -105,7 +103,7 @@ export function Dimensions() {
                     })
                     .join(" ")}
                   fill="none"
-                  stroke="var(--line-2)"
+                  stroke="var(--line)"
                 />
               ))}
 
@@ -118,7 +116,7 @@ export function Dimensions() {
                     y1={CENTER}
                     x2={outer.x}
                     y2={outer.y}
-                    stroke="var(--line-2)"
+                    stroke="var(--line)"
                     strokeWidth={1}
                   />
                 );
@@ -128,7 +126,7 @@ export function Dimensions() {
               <motion.line
                 x1={CENTER}
                 y1={CENTER}
-                stroke="var(--teal-bright)"
+                stroke="var(--teal)"
                 strokeWidth={1.5}
                 initial={false}
                 animate={{ x2: activePoint.x, y2: activePoint.y }}
@@ -137,10 +135,11 @@ export function Dimensions() {
 
               <motion.polygon
                 points={polygon}
-                fill="url(#radar-fill)"
+                fill="var(--teal)"
+                fillOpacity={0.16}
                 stroke="var(--teal)"
-                strokeWidth={1.6}
-                initial={{ opacity: 0, scale: 0.82 }}
+                strokeWidth={1.5}
+                initial={{ opacity: 0, scale: 0.84 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: duration.explain, ease: easeOut }}
@@ -151,45 +150,43 @@ export function Dimensions() {
                 const p = pointAt(i, d.score);
                 const isActive = i === active;
                 return (
-                  <g key={`node-${d.name}`}>
-                    {isActive && (
-                      <circle
-                        cx={p.x}
-                        cy={p.y}
-                        r={11}
-                        fill="var(--teal-bright)"
-                        opacity={0.22}
-                      />
-                    )}
-                    <circle
-                      cx={p.x}
-                      cy={p.y}
-                      r={isActive ? 5.5 : 3.5}
-                      fill={isActive ? "var(--teal-bright)" : "var(--teal)"}
-                      className="cursor-pointer"
-                      onMouseEnter={() => setActive(i)}
-                    />
-                  </g>
+                  <rect
+                    key={`node-${d.name}`}
+                    x={p.x - (isActive ? 4.5 : 2.5)}
+                    y={p.y - (isActive ? 4.5 : 2.5)}
+                    width={isActive ? 9 : 5}
+                    height={isActive ? 9 : 5}
+                    fill={isActive ? "var(--ember)" : "var(--teal)"}
+                    className="cursor-pointer"
+                    onMouseEnter={() => setActive(i)}
+                  />
                 );
               })}
             </svg>
 
-            <div className="mt-5 w-full border-t border-line pt-5">
+            <div className="mt-6 border-t border-line pt-4">
               <div className="flex items-baseline justify-between gap-4">
-                <p className="display text-[17px] text-ink">{current.name}</p>
-                <span className="num text-[22px] font-semibold text-teal-bright">
+                <p className="ledger-display text-[19px] text-ink">
+                  {current.name}
+                </p>
+                <span className="num text-[24px] text-ember">
                   {current.score}
                 </span>
               </div>
-              <p className="mt-1.5 text-[13.5px] text-dim">{current.blurb}</p>
+              <p className="mt-2 text-[13.5px] text-dim">{current.blurb}</p>
             </div>
-          </Panel>
+          </div>
 
-          {/* A ruled list, not seven bordered cards. The cards were identical boxes whose
-              only differing element was a decorative 01–07 counter; every row now carries
-              its own score bar, so the column reads as a profile instead of a menu. */}
+          {/* A scored table, not seven cards. The cards were identical boxes whose only
+              differing element was a decorative 01-07 counter; every row now carries its
+              own bar, so the column reads as a profile instead of a menu. */}
           <div>
-            <ul className="divide-y divide-line border-y border-line">
+            <div className="flex items-baseline justify-between gap-4 border-b border-line pb-3">
+              <p className="tick-label">Dimension</p>
+              <p className="tick-label">Percentile</p>
+            </div>
+
+            <ul>
               {dimensions.map((d, i) => {
                 const isActive = i === active;
                 return (
@@ -201,14 +198,15 @@ export function Dimensions() {
                       onClick={() => setActive(i)}
                       aria-pressed={isActive}
                       className={cn(
-                        "w-full px-4 py-4 text-left transition-colors duration-200 ease-out",
+                        "w-full border-b border-line px-1 py-4 text-left",
+                        "transition-colors duration-200 ease-out",
                         isActive ? "bg-teal/[0.07]" : "bg-transparent",
                       )}
                     >
                       <div className="flex items-baseline justify-between gap-5">
                         <p
                           className={cn(
-                            "text-[15.5px] font-medium transition-colors duration-200 ease-out",
+                            "text-[15.5px] transition-colors duration-200 ease-out",
                             isActive ? "text-ink" : "text-dim",
                           )}
                         >
@@ -216,25 +214,25 @@ export function Dimensions() {
                         </p>
                         <span
                           className={cn(
-                            "num shrink-0 text-[13px] tabular-nums transition-colors duration-200 ease-out",
-                            isActive ? "text-teal-bright" : "text-faint",
+                            "num shrink-0 text-[14px] tabular-nums transition-colors duration-200 ease-out",
+                            isActive ? "text-ember" : "text-faint",
                           )}
                         >
                           {d.score}
                         </span>
                       </div>
-                      <p className="mt-1 text-[13.5px] text-faint">{d.blurb}</p>
+
                       <span
                         aria-hidden
-                        className="mt-3 block h-px w-full bg-[var(--line)]"
+                        className="mt-3 block h-[3px] w-full bg-[var(--panel-2)]"
                       >
                         <motion.span
-                          className="block h-px origin-left"
+                          className="block h-[3px] origin-left"
                           style={{
                             background: isActive
-                              ? "var(--teal-bright)"
+                              ? "var(--ember)"
                               : "var(--teal)",
-                            opacity: isActive ? 1 : 0.45,
+                            opacity: isActive ? 1 : 0.55,
                           }}
                           initial={{ scaleX: 0 }}
                           whileInView={{ scaleX: d.score / 100 }}
@@ -252,17 +250,19 @@ export function Dimensions() {
               })}
             </ul>
 
-            <div className="mt-5 flex flex-wrap items-end justify-between gap-6 rounded-2xl border border-line bg-[var(--panel)] px-6 py-5">
-              <div className="max-w-xs">
-                <p className="display text-[18px] text-ink">DI Score™</p>
+            <div className="mt-8 flex flex-wrap items-end justify-between gap-6 border-t-2 border-line pt-5">
+              <div className="max-w-sm">
+                <p className="ledger-display text-[22px] text-ink">DI Score™</p>
                 <p className="mt-2 text-[13.5px] leading-relaxed text-dim">
                   One composite percentile across all seven, comparable between
-                  cohorts and readable by a recruiter in ten seconds.
+                  cohorts and readable in ten seconds.
                 </p>
               </div>
-              <div>
-                <p className="num text-[42px] leading-none text-teal-bright">78</p>
-                <p className="eyebrow mt-2 text-faint">Composite percentile</p>
+              <div className="text-right">
+                <p className="num text-[clamp(2.6rem,5vw,3.6rem)] leading-none text-teal">
+                  78
+                </p>
+                <p className="tick-label mt-3">Composite percentile</p>
               </div>
             </div>
           </div>
