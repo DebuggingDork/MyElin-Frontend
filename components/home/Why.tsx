@@ -101,9 +101,6 @@ export function Why() {
       <div className="dot-grid absolute inset-0" />
       <Container wide className="relative z-10 section-pad">
         <SectionHead
-          index="001"
-          kicker="Why"
-          accent="teal"
           title={
             <>
               <span className="text-grad-iris">LeetCode</span> for judgment.

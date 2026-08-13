@@ -252,7 +252,6 @@ export function Simulations() {
         <div className="dot-grid absolute inset-0" />
         <Container wide className="relative z-10 section-pad">
           <SectionHead
-            index="001"
             kicker="The catalogue"
             accent="teal"
             title={

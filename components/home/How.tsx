@@ -94,9 +94,6 @@ export function How() {
       <div className="grid-lines absolute inset-0" />
       <Container wide className="relative z-10 section-pad">
         <SectionHead
-          index="003"
-          kicker="How"
-          accent="amber"
           title={
             <>
               Pressure. Choice.{" "}

@@ -56,9 +56,6 @@ export function Dimensions() {
       <div className="aurora opacity-60" />
       <Container wide className="relative z-10 section-pad">
         <SectionHead
-          index="002"
-          kicker="What we measure"
-          accent="teal"
           title={
             <>
               Seven <span className="text-grad">cognitive dimensions.</span>

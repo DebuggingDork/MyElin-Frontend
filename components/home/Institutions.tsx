@@ -30,9 +30,6 @@ export function Institutions() {
         <div className="grid gap-12 lg:grid-cols-[1fr_1fr] lg:items-center">
           <div>
             <SectionHead
-              index="004"
-              kicker="For institutions"
-              accent="emerald"
               title={
                 <>
                   Bring Myelin to{" "}

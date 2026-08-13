@@ -231,7 +231,6 @@ export function Action({
 }
 
 export function SectionHead({
-  index,
   kicker,
   title,
   copy,
@@ -239,8 +238,9 @@ export function SectionHead({
   className,
   accent = "teal",
 }: {
-  index?: string;
-  kicker: string;
+  /** Optional on purpose. An uppercase tracked label above *every* section is scaffolding,
+   *  not hierarchy — the headline already says what the section is. */
+  kicker?: string;
   title: React.ReactNode;
   copy?: React.ReactNode;
   action?: React.ReactNode;
@@ -249,19 +249,19 @@ export function SectionHead({
 }) {
   return (
     <div className={cn("relative z-10", className)}>
-      <div className="flex flex-wrap items-center gap-3">
-        {index && (
-          <span className="num text-[12px] text-faint">{index}</span>
+      {kicker && <Eyebrow accent={accent}>{kicker}</Eyebrow>}
+      <div
+        className={cn(
+          "flex flex-wrap items-end justify-between gap-6",
+          kicker && "mt-5",
         )}
-        <Eyebrow accent={accent}>{kicker}</Eyebrow>
-      </div>
-      <div className="mt-5 flex flex-wrap items-end justify-between gap-6">
+      >
         <motion.h2
           initial={{ opacity: 0, y: 18 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.6, ease: easeOut }}
-          className="display max-w-3xl text-[clamp(1.9rem,4.4vw,3.4rem)] leading-[1.04] text-ink"
+          className="display max-w-3xl text-balance text-[clamp(1.9rem,4.4vw,3.2rem)] leading-[1.06] text-ink"
         >
           {title}
         </motion.h2>
