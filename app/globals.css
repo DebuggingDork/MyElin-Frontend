@@ -66,9 +66,14 @@
      read as intentional, and `ease-in` is never used — it withholds motion during the
      exact frames the user is watching, which is what makes an interface feel slow.
      `lib/media.ts` exports the same two as control-point arrays so the framer-motion
-     work and the CSS work land on identical timing. */
-  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+     work and the CSS work land on identical timing.
+
+     Named `--motion-*` and not `--ease-out` / `--ease-in-out` on purpose: those two are
+     Tailwind v4 theme tokens backing the `ease-out` and `ease-in-out` utilities, so
+     redefining them on `:root` would silently retime every one of those utilities
+     app-wide rather than just the rules that opt in here. */
+  --motion-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --motion-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 
   --focus-ring: 0 0 0 3px rgba(20, 184, 166, 0.4);
   --shadow-lift: 0 1px 0 rgba(255, 255, 255, 0.04) inset,
@@ -372,7 +377,7 @@ body {
 
 .hover-lift {
   transition:
-    transform 220ms var(--ease-out),
+    transform 220ms var(--motion-out),
     border-color 220ms ease,
     background-color 220ms ease;
 }
@@ -472,7 +477,7 @@ body {
     transparent 72%
   );
   transform: translateX(-120%);
-  transition: transform 520ms var(--ease-out);
+  transition: transform 520ms var(--motion-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -484,6 +489,33 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .sweep::after {
     display: none;
+  }
+}
+
+/* Above-the-fold entrance. Deliberately CSS and not framer-motion: a `motion` element
+   with `initial={{opacity:0}}` server-renders at opacity 0 and stays there until React
+   hydrates, so the hero headline -- the LCP element -- was blank for as long as the
+   bundle took to boot. A stylesheet is render-blocking, so this starts on the first
+   painted frame and runs off the main thread while that bundle is still parsing. */
+.rise {
+  animation: rise 560ms var(--motion-out) both;
+}
+.rise-1 {
+  animation-delay: 70ms;
+}
+.rise-2 {
+  animation-delay: 140ms;
+}
+.rise-3 {
+  animation-delay: 210ms;
+}
+.rise-4 {
+  animation-delay: 280ms;
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
   }
 }
 
@@ -499,6 +531,17 @@ body {
   50% {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+/* The hero decision window emptying. Constant motion, so linear, and expressed as a
+   transform so it composites instead of relayouting once a second for three minutes. */
+@keyframes deplete {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
   }
 }
 
@@ -542,6 +585,17 @@ body {
   .spin-slow,
   .caret {
     animation: none;
+  }
+  /* Not `animation: none` -- that would leave `.rise` at its unanimated default, which is
+     already the visible state, but keeping a short fade preserves the sense of arrival
+     without any movement. */
+  .rise {
+    animation: rise-fade 240ms ease both;
+  }
+  @keyframes rise-fade {
+    from {
+      opacity: 0;
+    }
   }
 }
 
