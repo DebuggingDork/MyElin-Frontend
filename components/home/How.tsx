@@ -9,7 +9,7 @@ import {
   MessagesSquare,
   Target,
 } from "lucide-react";
-import { easeOut } from "@/lib/media";
+import { duration, easeOut } from "@/lib/media";
 import { Container, Panel, SectionHead, accentVar, type Accent } from "@/components/ui/Kit";
 
 type Step = {
@@ -63,7 +63,7 @@ const steps: Step[] = [
     title: "Crises break the plan.",
     copy: "Data leaks, viral moments, key engineers quit. Your reflexes are measured.",
     icon: AlertTriangle,
-    accent: "amber",
+    accent: "ember",
     readout: [
       { label: "Trigger window", value: "any round" },
       { label: "Delayed impact", value: "1–6 mo" },
@@ -97,7 +97,7 @@ export function How() {
           title={
             <>
               Pressure. Choice.{" "}
-              <span className="text-grad-warm">Consequence.</span>
+              <span className="text-ember">Consequence.</span>
             </>
           }
           copy={
@@ -110,14 +110,17 @@ export function How() {
           }
         />
 
-        {/* Stepper rail — click a node to open its detail. */}
+        {/* Stepper rail — click a node to open its detail. The rail carries the step name
+            only; the sentence explaining it lives in the panel below, which used to print
+            the very same sentence a second time a few hundred pixels lower. */}
         <div className="relative mt-16">
           <div className="absolute left-0 right-0 top-[26px] hidden h-px bg-line lg:block" />
           <motion.div
-            className="absolute left-0 top-[26px] hidden h-px lg:block"
+            className="absolute left-0 top-[26px] hidden h-px w-full origin-left lg:block"
             style={{ background: "var(--grad-primary)" }}
-            animate={{ width: `${((active + 1) / steps.length) * 100}%` }}
-            transition={{ duration: 0.5, ease: easeOut }}
+            initial={false}
+            animate={{ scaleX: (active + 1) / steps.length }}
+            transition={{ duration: duration.panel, ease: easeOut }}
           />
 
           <div className="grid gap-4 lg:grid-cols-5">
@@ -146,13 +149,10 @@ export function How() {
                     <span className="num text-[13px] font-semibold">{step.id}</span>
                   </span>
                   <p
-                    className="mt-4 text-[15.5px] font-medium transition-colors"
+                    className="mt-4 text-[15.5px] font-medium transition-colors duration-200 ease-out"
                     style={{ color: isActive ? "var(--text)" : "var(--dim)" }}
                   >
                     {step.title}
-                  </p>
-                  <p className="mt-2 text-[13px] leading-relaxed text-faint">
-                    {step.copy}
                   </p>
                 </button>
               );
@@ -162,7 +162,16 @@ export function How() {
 
         <Panel gradientRing className="mt-10 overflow-hidden p-0">
           <div className="grid gap-0 md:grid-cols-[1.4fr_1fr]">
-            <div className="p-7 sm:p-9">
+            {/* Keyed on the step so the whole block crossfades rather than snapping. The
+                slight blur on the way in and out is what stops it reading as two pieces of
+                text stacked on each other mid-fade. */}
+            <motion.div
+              key={current.id}
+              initial={{ opacity: 0, filter: "blur(3px)" }}
+              animate={{ opacity: 1, filter: "blur(0px)" }}
+              transition={{ duration: duration.hover, ease: easeOut }}
+              className="p-7 sm:p-9"
+            >
               <div className="flex items-center gap-3">
                 <span
                   className="flex h-11 w-11 items-center justify-center rounded-xl border"
@@ -186,7 +195,7 @@ export function How() {
               <p className="mt-6 max-w-xl text-[16px] leading-[1.72] text-dim">
                 {current.copy}
               </p>
-            </div>
+            </motion.div>
 
             <div
               className="grid divide-y divide-line border-line md:border-l"
