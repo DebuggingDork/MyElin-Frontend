@@ -1,0 +1,92 @@
+/**
+ * The signup onboarding answers (screen 2 of `/signup`).
+ *
+ * The backend's `/auth/register` takes email + password only, so there is nowhere to send
+ * these yet — they're persisted locally against the user id, ready to POST unchanged once a
+ * profile endpoint exists. Shapes match what the directory/analytics questions
+ * ("2,840 students from 47 institutions") need: ids, not prose.
+ */
+
+import type { InstitutionRef } from "@/lib/institutions";
+
+const PROFILE_KEY = "myelin_profile";
+
+export const goalOptions = [
+  "Decision-making",
+  "Strategic thinking",
+  "Problem-solving",
+  "Leadership",
+  "Financial thinking",
+  "Communication",
+  "Negotiation",
+  "Risk-taking",
+  "Adaptability",
+  "Entrepreneurship",
+] as const;
+
+export type Goal = (typeof goalOptions)[number];
+
+export const MAX_GOALS = 3;
+
+export const degreeOptions = [
+  "B.Tech / B.E.",
+  "B.Sc",
+  "B.Com",
+  "BBA",
+  "BA",
+  "BCA",
+  "B.Des",
+  "LLB",
+  "MBBS",
+  "M.Tech / M.E.",
+  "M.Sc",
+  "M.Com",
+  "MBA / PGDM",
+  "MCA",
+  "MA",
+  "PhD",
+  "Other",
+] as const;
+
+export const yearOptions = [
+  "1st Year",
+  "2nd Year",
+  "3rd Year",
+  "4th Year",
+  "5th Year",
+  "Postgraduate",
+  "Graduated",
+] as const;
+
+export type OnboardingProfile = {
+  user_id: string | null;
+  email: string | null;
+  first_name: string;
+  institution: InstitutionRef | null;
+  degree: string | null;
+  current_year: string | null;
+  /** At most `MAX_GOALS` entries, from `goalOptions`. */
+  goals: string[];
+  captured_at: string;
+};
+
+export function saveProfile(profile: OnboardingProfile): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+  } catch {
+    // A full or blocked localStorage must never cost someone their account — the answers
+    // are a nice-to-have, the registration above them already succeeded.
+  }
+}
+
+export function getProfile(): OnboardingProfile | null {
+  if (typeof window === "undefined") return null;
+  const raw = window.localStorage.getItem(PROFILE_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as OnboardingProfile;
+  } catch {
+    return null;
+  }
+}

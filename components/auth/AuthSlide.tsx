@@ -5,9 +5,10 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Eye, EyeOff, Lock, Mail } from "lucide-react";
-import { Logo } from "@/components/brand/Logo";
+import { ArrowRight, Eye, EyeOff, Lock, Mail, User } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { AuthShell } from "@/components/auth/AuthShell";
+import { OnboardingProfile } from "@/components/auth/OnboardingProfile";
 import { easeOut, photos } from "@/lib/media";
 import { ApiError } from "@/lib/api/types";
 import { Action, Eyebrow } from "@/components/ui/Kit";
@@ -17,6 +18,11 @@ type Mode = "login" | "signup";
 /**
  * Sliding auth: login = form left + photo right.
  * Signup slides the track so photo is left and form is right.
+ *
+ * Signup is two screens, not one. Screen 1 is name + email + password and nothing else —
+ * it registers the account, which is what surfaces "that address is taken" against the field
+ * it belongs to. Screen 2 (`OnboardingProfile`) collects the institution/degree/goals data on
+ * an account that already exists, so abandoning it costs the student nothing.
  */
 export function AuthSlide({ initialMode }: { initialMode: Mode }) {
   const router = useRouter();
@@ -25,9 +31,10 @@ export function AuthSlide({ initialMode }: { initialMode: Mode }) {
   const { login, register } = useAuth();
 
   const [mode, setMode] = useState<Mode>(initialMode);
+  const [step, setStep] = useState<1 | 2>(1);
+  const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -42,8 +49,8 @@ export function AuthSlide({ initialMode }: { initialMode: Mode }) {
 
   function switchMode(nextMode: Mode) {
     setMode(nextMode);
+    setStep(1);
     setError(null);
-    setConfirmPassword("");
     router.replace(`/${nextMode}?next=${encodeURIComponent(next)}`, {
       scroll: false,
     });
@@ -58,19 +65,15 @@ export function AuthSlide({ initialMode }: { initialMode: Mode }) {
       return;
     }
 
-    if (mode === "signup" && password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-
     setPending(true);
     try {
       if (mode === "login") {
         await login({ email, password });
+        router.replace(next);
       } else {
         await register({ email, password });
+        setStep(2);
       }
-      router.replace(next);
     } catch (err) {
       // 429 is the only auth failure whose own message ("email rate limit exceeded") reads as
       // jargon rather than an instruction, so it gets replacement copy. Every other rejection
@@ -92,134 +95,128 @@ export function AuthSlide({ initialMode }: { initialMode: Mode }) {
     }
   }
 
+  if (mode === "signup" && step === 2) {
+    return (
+      <OnboardingProfile
+        firstName={firstName.trim()}
+        onFinish={() => router.replace(next)}
+      />
+    );
+  }
+
   return (
-    <div className="relative flex min-h-screen flex-col overflow-hidden bg-void">
-      <div className="aurora" />
-      <div className="grid-lines absolute inset-0" />
-
-      <div className="relative z-20 px-5 pt-7 sm:px-8">
-        <Link href="/" aria-label="Myelin home" className="inline-flex">
-          <Logo priority />
-        </Link>
-      </div>
-
-      <div className="relative z-10 flex flex-1 items-center px-4 py-10 sm:px-8">
-        <div className="relative mx-auto w-full max-w-5xl overflow-hidden rounded-[1.75rem] border border-line bg-void/60 shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
-          {/* Mobile: stacked photo + form */}
-          <div className="lg:hidden">
-            <PhotoPanel
+    <AuthShell>
+      <div className="relative mx-auto w-full max-w-5xl overflow-hidden rounded-[1.75rem] border border-line bg-void/60 shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
+        {/* Mobile: stacked photo + form */}
+        <div className="lg:hidden">
+          <PhotoPanel mode={mode} onSwitch={switchMode} compact />
+          <div className="p-6 sm:p-8">
+            <AuthForm
               mode={mode}
+              firstName={firstName}
+              email={email}
+              password={password}
+              error={error}
+              pending={pending}
+              onFirstName={setFirstName}
+              onEmail={setEmail}
+              onPassword={setPassword}
+              onSubmit={onSubmit}
               onSwitch={switchMode}
-              compact
+              next={next}
             />
-            <div className="p-6 sm:p-8">
-              <AuthForm
-                mode={mode}
-                email={email}
-                password={password}
-                confirmPassword={confirmPassword}
-                error={error}
-                pending={pending}
-                onEmail={setEmail}
-                onPassword={setPassword}
-                onConfirmPassword={setConfirmPassword}
-                onSubmit={onSubmit}
-                onSwitch={switchMode}
-                next={next}
-              />
-            </div>
-          </div>
-
-          {/* Desktop: sliding track — login [form|photo], signup [photo|form] */}
-          <div className="relative hidden min-h-[36rem] overflow-hidden lg:block">
-            <motion.div
-              className="flex h-full w-[200%]"
-              animate={{ x: mode === "login" ? "0%" : "-50%" }}
-              transition={{ duration: 0.7, ease: easeOut }}
-            >
-              {/* Panel A — login layout */}
-              <div
-                className="grid h-full w-1/2 grid-cols-2"
-                aria-hidden={mode !== "login"}
-                inert={mode !== "login" ? true : undefined}
-              >
-                <div className="flex items-center p-8 xl:p-10">
-                  <AuthForm
-                    mode="login"
-                    email={email}
-                    password={password}
-                    confirmPassword={confirmPassword}
-                    error={mode === "login" ? error : null}
-                    pending={pending && mode === "login"}
-                    onEmail={setEmail}
-                    onPassword={setPassword}
-                    onConfirmPassword={setConfirmPassword}
-                    onSubmit={onSubmit}
-                    onSwitch={switchMode}
-                    next={next}
-                    hideSwitch
-                  />
-                </div>
-                <PhotoPanel mode="login" onSwitch={switchMode} />
-              </div>
-
-              {/* Panel B — signup layout */}
-              <div
-                className="grid h-full w-1/2 grid-cols-2"
-                aria-hidden={mode !== "signup"}
-                inert={mode !== "signup" ? true : undefined}
-              >
-                <PhotoPanel mode="signup" onSwitch={switchMode} />
-                <div className="flex items-center p-8 xl:p-10">
-                  <AuthForm
-                    mode="signup"
-                    email={email}
-                    password={password}
-                    confirmPassword={confirmPassword}
-                    error={mode === "signup" ? error : null}
-                    pending={pending && mode === "signup"}
-                    onEmail={setEmail}
-                    onPassword={setPassword}
-                    onConfirmPassword={setConfirmPassword}
-                    onSubmit={onSubmit}
-                    onSwitch={switchMode}
-                    next={next}
-                    hideSwitch
-                  />
-                </div>
-              </div>
-            </motion.div>
           </div>
         </div>
+
+        {/* Desktop: sliding track — login [form|photo], signup [photo|form] */}
+        <div className="relative hidden min-h-[36rem] overflow-hidden lg:block">
+          <motion.div
+            className="flex h-full w-[200%]"
+            animate={{ x: mode === "login" ? "0%" : "-50%" }}
+            transition={{ duration: 0.7, ease: easeOut }}
+          >
+            {/* Panel A — login layout */}
+            <div
+              className="grid h-full w-1/2 grid-cols-2"
+              aria-hidden={mode !== "login"}
+              inert={mode !== "login" ? true : undefined}
+            >
+              <div className="flex items-center p-8 xl:p-10">
+                <AuthForm
+                  mode="login"
+                  firstName={firstName}
+                  email={email}
+                  password={password}
+                  error={mode === "login" ? error : null}
+                  pending={pending && mode === "login"}
+                  onFirstName={setFirstName}
+                  onEmail={setEmail}
+                  onPassword={setPassword}
+                  onSubmit={onSubmit}
+                  onSwitch={switchMode}
+                  next={next}
+                  hideSwitch
+                />
+              </div>
+              <PhotoPanel mode="login" onSwitch={switchMode} />
+            </div>
+
+            {/* Panel B — signup layout */}
+            <div
+              className="grid h-full w-1/2 grid-cols-2"
+              aria-hidden={mode !== "signup"}
+              inert={mode !== "signup" ? true : undefined}
+            >
+              <PhotoPanel mode="signup" onSwitch={switchMode} />
+              <div className="flex items-center p-8 xl:p-10">
+                <AuthForm
+                  mode="signup"
+                  firstName={firstName}
+                  email={email}
+                  password={password}
+                  error={mode === "signup" ? error : null}
+                  pending={pending && mode === "signup"}
+                  onFirstName={setFirstName}
+                  onEmail={setEmail}
+                  onPassword={setPassword}
+                  onSubmit={onSubmit}
+                  onSwitch={switchMode}
+                  next={next}
+                  hideSwitch
+                />
+              </div>
+            </div>
+          </motion.div>
+        </div>
       </div>
-    </div>
+    </AuthShell>
   );
 }
 
 function AuthForm({
   mode,
+  firstName,
   email,
   password,
-  confirmPassword,
   error,
   pending,
+  onFirstName,
   onEmail,
   onPassword,
-  onConfirmPassword,
   onSubmit,
   onSwitch,
   next,
   hideSwitch = false,
 }: {
   mode: Mode;
+  firstName: string;
   email: string;
   password: string;
-  confirmPassword: string;
   error: string | null;
   pending: boolean;
+  onFirstName: (v: string) => void;
   onEmail: (v: string) => void;
   onPassword: (v: string) => void;
-  onConfirmPassword: (v: string) => void;
   onSubmit: (e: React.FormEvent) => void;
   onSwitch: (m: Mode) => void;
   next: string;
@@ -227,13 +224,15 @@ function AuthForm({
 }) {
   const isLogin = mode === "login";
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   return (
     <div className="w-full">
-      <Eyebrow accent={isLogin ? "cyan" : "violet"}>
-        {isLogin ? "Welcome back" : "Join the S-25 cohort"}
-      </Eyebrow>
+      <div className="flex items-center justify-between gap-4">
+        <Eyebrow accent={isLogin ? "cyan" : "violet"}>
+          {isLogin ? "Welcome back" : "Step 1 of 2"}
+        </Eyebrow>
+        {!isLogin && <span className="eyebrow text-faint">30 seconds</span>}
+      </div>
       <h1 className="display mt-5 text-[clamp(1.7rem,3vw,2.25rem)] leading-[1.05] text-ink">
         {isLogin ? (
           <>
@@ -248,10 +247,32 @@ function AuthForm({
       <p className="mt-3 text-[14.5px] text-dim">
         {isLogin
           ? "Pick up where you left your last decision."
-          : "Email and password only — then start your first company."}
+          : "Name, email, password. We'll personalize the rest on the next screen."}
       </p>
 
       <form onSubmit={onSubmit} className="mt-8 space-y-5">
+        {!isLogin && (
+          <div>
+            <label className="eyebrow text-faint" htmlFor={`${mode}-first-name`}>
+              First name <span className="text-rose">*</span>
+            </label>
+            <div className="relative mt-3">
+              <User className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
+              <input
+                id={`${mode}-first-name`}
+                name="given-name"
+                type="text"
+                required
+                autoComplete="given-name"
+                value={firstName}
+                onChange={(e) => onFirstName(e.target.value)}
+                placeholder="Enter your first name"
+                className="w-full rounded-full border border-line bg-[var(--panel-2)] py-3.5 pl-11 pr-5 text-[14.5px] text-ink outline-none transition-colors placeholder:text-faint focus:border-teal/60"
+              />
+            </div>
+          </div>
+        )}
+
         <div>
           <label className="eyebrow text-faint" htmlFor={`${mode}-email`}>
             Email <span className="text-rose">*</span>
@@ -266,7 +287,7 @@ function AuthForm({
               autoComplete="email"
               value={email}
               onChange={(e) => onEmail(e.target.value)}
-              placeholder="you@university.edu"
+              placeholder="you@example.com"
               className="w-full rounded-full border border-line bg-[var(--panel-2)] py-3.5 pl-11 pr-5 text-[14.5px] text-ink outline-none transition-colors placeholder:text-faint focus:border-teal/60"
             />
           </div>
@@ -317,43 +338,6 @@ function AuthForm({
           </div>
         </div>
 
-        {!isLogin && (
-          <div>
-            <label className="eyebrow text-faint" htmlFor={`${mode}-confirm-password`}>
-              Confirm password <span className="text-rose">*</span>
-            </label>
-            <div className="relative mt-3">
-              <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
-              <input
-                id={`${mode}-confirm-password`}
-                name="confirm-password"
-                type={showConfirmPassword ? "text" : "password"}
-                required
-                minLength={8}
-                autoComplete="new-password"
-                value={confirmPassword}
-                onChange={(e) => onConfirmPassword(e.target.value)}
-                placeholder="Re-enter your password"
-                className="w-full rounded-full border border-line bg-[var(--panel-2)] py-3.5 pl-11 pr-11 text-[14.5px] text-ink outline-none transition-colors placeholder:text-faint focus:border-teal/60"
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword((v) => !v)}
-                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                aria-pressed={showConfirmPassword}
-                tabIndex={-1}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-faint transition-colors hover:text-ink"
-              >
-                {showConfirmPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
-            </div>
-          </div>
-        )}
-
         {error && (
           <p className="rounded-xl border border-rose/30 bg-rose/[0.07] px-4 py-3 text-[13px] text-rose">
             {error}
@@ -367,7 +351,7 @@ function AuthForm({
               : "Creating account…"
             : isLogin
               ? "Log in"
-              : "Create account"}
+              : "Continue"}
           <ArrowRight className="h-4 w-4" />
         </Action>
       </form>
@@ -469,7 +453,7 @@ function PhotoPanel({
         </p>
         <p className={`mt-3 max-w-sm text-dim ${compact ? "text-[12.5px]" : "text-[14px]"}`}>
           {isLogin
-            ? "Twenty-four months of company pressure, compressed into consequential choices."
+            ? "Four quarters of company pressure, compressed into consequential choices."
             : "Your allocations, crisis, and lock state wait where you left them."}
         </p>
 
