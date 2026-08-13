@@ -14,7 +14,8 @@ import { cn } from "@/lib/utils";
 const links = [
   { href: "/", label: "Home" },
   { href: "/simulations", label: "Simulations" },
-  { href: "/pricing", label: "Pricing" },
+  // Pricing is off the primary nav until plans are set — /pricing still resolves to a
+  // "coming soon" page so existing links don't 404.
   { href: "/manifesto", label: "Manifesto" },
   { href: "/faq", label: "FAQ" },
 ];

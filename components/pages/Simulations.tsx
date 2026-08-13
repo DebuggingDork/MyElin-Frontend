@@ -328,8 +328,8 @@ export function Simulations() {
                   engine — same telemetry, same DI Report, your curriculum.
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3">
-                  <Action href="/pricing">
-                    See institution plans
+                  <Action href="/#institutions">
+                    Talk to us about institution plans
                     <ArrowRight className="h-4 w-4" />
                   </Action>
                   <Action href="/manifesto" variant="outline">

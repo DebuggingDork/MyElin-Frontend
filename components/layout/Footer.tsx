@@ -12,12 +12,14 @@ const columns = [
     ],
   },
   {
+    // These all pointed at the pricing tables, which are now a "coming soon" page — the
+    // student path goes to signup and the institutional ones to the contact block.
     title: "For",
     links: [
-      { label: "Students", href: "/pricing" },
-      { label: "Faculty", href: "/pricing" },
-      { label: "Recruiters", href: "/pricing" },
-      { label: "Admins", href: "/pricing" },
+      { label: "Students", href: "/signup" },
+      { label: "Faculty", href: "/#institutions" },
+      { label: "Recruiters", href: "/#institutions" },
+      { label: "Admins", href: "/#institutions" },
     ],
   },
   {
