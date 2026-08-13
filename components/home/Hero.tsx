@@ -12,7 +12,7 @@ const stats = [
   { value: "0", label: "Videos to watch" },
   { value: "22", label: "Spend lines a quarter" },
   { value: "7", label: "Cognitive dimensions" },
-  { value: "12mo", label: "Compressed into 30 min" },
+  { value: "4Q", label: "Compressed into 30 min" },
 ];
 
 export function Hero() {
@@ -39,42 +39,58 @@ export function Hero() {
           </Eyebrow>
         </motion.div>
 
-        <h1 className="mt-8 leading-[0.94]">
+        {/* The size lives on the h1, not the spans: `max-w-[…ch]` resolves against *this*
+            element's font-size, and with it left at the browser default the headline
+            collapsed to one word per line. */}
+        <h1 className="display mt-8 max-w-[17ch] text-[clamp(2.2rem,4.8vw,4.2rem)] font-medium leading-[1.06] text-ink">
           <motion.span
             initial={{ opacity: 0, y: 28 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.08, ease: easeOut }}
-            className="display block text-[clamp(2.8rem,7.6vw,6.2rem)] font-medium italic text-ink"
+            className="block"
           >
-            Make
+            The world&apos;s most immersive way to learn
           </motion.span>
           <motion.span
             initial={{ opacity: 0, y: 28 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.18, ease: easeOut }}
-            className="display block text-[clamp(2.8rem,7.6vw,6.2rem)] font-medium italic text-ink"
+            transition={{ duration: 0.7, delay: 0.2, ease: easeOut }}
+            className="text-grad block font-bold"
           >
-            decisions.
-          </motion.span>
-          <motion.span
-            initial={{ opacity: 0, y: 28 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.3, ease: easeOut }}
-            className="text-grad display block text-[clamp(3.2rem,9.4vw,7.6rem)] font-bold not-italic"
-          >
-            Not notes.
+            how to think.
           </motion.span>
         </h1>
+
+        <motion.p
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.32, ease: easeOut }}
+          className="mt-8 max-w-2xl text-[16.5px] leading-[1.72] text-dim"
+        >
+          Myelin puts you inside real-world situations where there are no right
+          answers, no instructions, and no room for passive learning. You make
+          decisions, face consequences, and develop the judgment to navigate
+          complexity.
+        </motion.p>
+
+        <motion.p
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.4, ease: easeOut }}
+          className="display mt-6 text-[clamp(1.05rem,2vw,1.35rem)] font-medium italic text-ink"
+        >
+          Learn by doing. Think by deciding.
+        </motion.p>
 
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.44, ease: easeOut }}
+          transition={{ duration: 0.7, delay: 0.48, ease: easeOut }}
           className="mt-10 flex flex-wrap items-center gap-3"
         >
           <Action href="/play/startup-survival" size="lg">
             <Play className="h-4 w-4" />
-            Run Startup Survival
+            Experience Myelin
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </Action>
           <Action href="/manifesto" variant="outline" size="lg">
@@ -91,9 +107,8 @@ export function Hero() {
           transition={{ duration: 0.7, delay: 0.56, ease: easeOut }}
           className="flex flex-col gap-6 border-t border-line pt-6 sm:flex-row sm:items-end sm:justify-between sm:gap-10"
         >
-          <p className="max-w-md text-[13.5px] leading-[1.7] text-dim">
-            Myelin compresses a year of running a startup into 30 minutes of
-            consequential choices. No videos. No quizzes. Just judgment.
+          <p className="eyebrow max-w-md text-faint">
+            No videos. No quizzes. Just judgment.
           </p>
 
           <div className="flex flex-wrap gap-x-8 gap-y-4 sm:justify-end">
