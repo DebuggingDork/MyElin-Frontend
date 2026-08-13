@@ -259,8 +259,11 @@ body {
    across its width, so contrast is only ever guaranteed at one end of the sweep, and thin serif
    strokes are exactly where that shows. The names are kept because ~23 call sites use them; only
    what they render changed. */
+/* `--teal-bright` is a display-weight value: it clears 3:1 for large type but lands at
+   3.54:1 on the light surface, and this class is also applied to 15px runs ("Train it.",
+   the manifesto pull-outs). `--teal` clears 4.5:1 in both themes at every size. */
 .text-grad {
-  color: var(--teal-bright);
+  color: var(--teal);
 }
 
 .text-grad-iris {
