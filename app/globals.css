@@ -78,6 +78,14 @@
   --glass-shadow: 0 24px 48px -28px rgba(2, 10, 8, 0.65);
   --glass-tint: linear-gradient(165deg, rgba(45, 212, 191, 0.1), rgba(45, 212, 191, 0.02) 60%);
 
+  /* Backdrop layers (.aurora / .grid-lines / .dot-grid) read from these rather than
+     hardcoding dark-theme values, so one set of rules serves both themes. */
+  --wash-1: rgba(20, 184, 166, 0.38);
+  --wash-2: rgba(255, 255, 255, 0.06);
+  --wash-opacity: 0.22;
+  --rule-line: rgba(255, 255, 255, 0.04);
+  --rule-dot: rgba(255, 255, 255, 0.1);
+
   color-scheme: dark;
 }
 
@@ -135,6 +143,15 @@
   --glass-highlight: rgba(255, 255, 255, 0.85);
   --glass-shadow: 0 24px 48px -28px rgba(10, 31, 26, 0.16);
   --glass-tint: linear-gradient(165deg, rgba(11, 125, 112, 0.06), rgba(11, 125, 112, 0.01) 60%);
+
+  /* Inverted: the wash tints toward the brand instead of glowing, and the rules are
+     drawn in ink rather than white — white-on-near-white is what made the light theme
+     look like an unstyled page. */
+  --wash-1: rgba(11, 125, 112, 0.3);
+  --wash-2: rgba(11, 125, 112, 0.12);
+  --wash-opacity: 0.5;
+  --rule-line: rgba(7, 64, 57, 0.055);
+  --rule-dot: rgba(7, 64, 57, 0.11);
 
   color-scheme: light;
 }
@@ -386,25 +403,17 @@ body {
   height: 58vw;
   border-radius: 50%;
   filter: blur(120px);
-  opacity: 0.22;
+  opacity: var(--wash-opacity);
 }
 .aurora::before {
   top: -28vw;
   left: -16vw;
-  background: radial-gradient(
-    circle at 50% 50%,
-    rgba(20, 184, 166, 0.38),
-    transparent 64%
-  );
+  background: radial-gradient(circle at 50% 50%, var(--wash-1), transparent 64%);
 }
 .aurora::after {
   bottom: -32vw;
   right: -18vw;
-  background: radial-gradient(
-    circle at 50% 50%,
-    rgba(255, 255, 255, 0.06),
-    transparent 64%
-  );
+  background: radial-gradient(circle at 50% 50%, var(--wash-2), transparent 64%);
 }
 
 .grid-lines::before {
@@ -414,8 +423,8 @@ body {
   pointer-events: none;
   z-index: 0;
   background-image:
-    linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    linear-gradient(to right, var(--rule-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--rule-line) 1px, transparent 1px);
   background-size: 64px 64px;
   mask-image: radial-gradient(80% 60% at 50% 30%, #000 10%, transparent 75%);
 }
@@ -426,10 +435,7 @@ body {
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  background-image: radial-gradient(
-    rgba(255, 255, 255, 0.1) 1px,
-    transparent 1px
-  );
+  background-image: radial-gradient(var(--rule-dot) 1px, transparent 1px);
   background-size: 22px 22px;
   mask-image: radial-gradient(70% 60% at 50% 40%, #000 5%, transparent 78%);
 }
@@ -447,16 +453,6 @@ body {
 
 .section-pad {
   padding-block: clamp(4.5rem, 10vw, 8rem);
-}
-
-/* .aurora/.grid-lines/.dot-grid are dark-glow effects (white/teal blur blobs, faint white grid
-   lines) tuned to show up against the dark surfaces above -- against the light palette they'd
-   either vanish (white-on-near-white) or read as a smudge, so they're switched off rather than
-   re-tuned blind. .noise is a low-opacity dark speckle and reads fine on either surface. */
-:root[data-theme="light"] .aurora,
-:root[data-theme="light"] .grid-lines::before,
-:root[data-theme="light"] .dot-grid::before {
-  display: none;
 }
 
 /* ────────────────────────── motion ────────────────────────── */
