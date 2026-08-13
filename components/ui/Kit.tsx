@@ -11,6 +11,8 @@ export type Accent =
   | "indigo"
   | "cyan"
   | "teal"
+  | "ember"
+  | "ember-soft"
   | "emerald"
   | "amber"
   | "orange"
@@ -22,6 +24,8 @@ export const accentVar: Record<Accent, string> = {
   indigo: "var(--indigo)",
   cyan: "var(--cyan)",
   teal: "var(--teal)",
+  ember: "var(--ember)",
+  "ember-soft": "var(--ember-soft)",
   emerald: "var(--emerald)",
   amber: "var(--amber)",
   orange: "var(--orange)",

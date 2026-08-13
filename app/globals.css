@@ -35,14 +35,24 @@
   --teal-deep: #0f766e;
   --teal-soft: #5eead4;
 
-  /* Legacy accent names → teal / grey scale (3-color system) */
+  /* Ember — the one warm voice, teal's complement. It is never decoration: it marks
+     cost, pressure and consequence (burn, morale, crisis, at-cap, distressed), which is
+     exactly the half of this product teal cannot say. Budgeted well under 10% of surface. */
+  --ember: #e8845f;
+  --ember-soft: #f2a488;
+  --ember-deep: #b8542f;
+
+  /* Legacy accent names → teal / ember / grey scale */
   --violet: #14b8a6;
   --violet-2: #5eead4;
   --indigo: #0f766e;
   --cyan: #2dd4bf;
   --emerald: #2dd4bf;
-  --amber: #a8b2ba;
-  --orange: #8b969e;
+  /* amber/orange were grey (#a8b2ba/#8b969e) app-wide, which meant every warning,
+     "at cap", "distressed" and crisis state was rendered in the same neutral as body
+     chrome. Both now resolve to ember so a warning actually looks like one. */
+  --amber: var(--ember);
+  --orange: var(--ember-soft);
   --rose: #e8eef0;
   --pink: #5eead4;
 
@@ -88,13 +98,19 @@
   --teal-deep: #075e54;
   --teal-soft: #12a695;
 
+  /* Ember, deepened for a light surface the same way teal is — the dark-theme clay
+     (#e8845f) sits at 1.7:1 on near-white and would read as a smudge. */
+  --ember: #a8481c;
+  --ember-soft: #c0552a;
+  --ember-deep: #7d3311;
+
   --violet: #0b7d70;
   --violet-2: #12a695;
   --indigo: #075e54;
   --cyan: #0d9488;
   --emerald: #0d9488;
-  --amber: #5b6169;
-  --orange: #6f7880;
+  --amber: var(--ember);
+  --orange: var(--ember-soft);
   --rose: #0a1f1a;
   --pink: #12a695;
 
@@ -135,6 +151,9 @@
   --color-teal-bright: var(--teal-bright);
   --color-teal-deep: var(--teal-deep);
   --color-teal-soft: var(--teal-soft);
+  --color-ember: var(--ember);
+  --color-ember-soft: var(--ember-soft);
+  --color-ember-deep: var(--ember-deep);
   --color-emerald: var(--emerald);
   --color-amber: var(--amber);
   --color-orange: var(--orange);
