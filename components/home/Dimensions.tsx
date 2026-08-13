@@ -3,29 +3,33 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
-import { easeOut } from "@/lib/media";
-import { Container, Panel, SectionHead, accentVar, type Accent } from "@/components/ui/Kit";
+import { duration, easeOut } from "@/lib/media";
+import { cn } from "@/lib/utils";
+import { Container, Panel, SectionHead } from "@/components/ui/Kit";
 
 type Dimension = {
   name: string;
   blurb: string;
   score: number;
-  accent: Accent;
 };
 
-/* One cool family across the six axes — a rainbow reads as decoration, not data. */
+/* Seven axes, matching the seven CEO-score traits the engine returns and the "seven
+   dimensions" claim the rest of the product makes (layout metadata, Simulations, the
+   play entry gate). This list shipped with six, so the heading above it was wrong.
+   Resource Allocation is the missing one: it is what the 22 spend lines a quarter test. */
 const dimensions: Dimension[] = [
-  { name: "Strategic Thinking", blurb: "See three moves ahead in fog.", score: 78, accent: "violet" },
-  { name: "Business Judgment", blurb: "Trade-offs you can defend in a board meeting.", score: 84, accent: "indigo" },
-  { name: "Risk Management", blurb: "Spot the downside before it spots you.", score: 69, accent: "cyan" },
-  { name: "Adaptability", blurb: "Re-plan in the time it took to plan.", score: 88, accent: "violet" },
-  { name: "Leadership", blurb: "Decide when there is no good option.", score: 74, accent: "indigo" },
-  { name: "Decision Under Uncertainty", blurb: "Bet right when nobody knows.", score: 72, accent: "cyan" },
+  { name: "Strategic Thinking", blurb: "See three moves ahead in fog.", score: 78 },
+  { name: "Business Judgment", blurb: "Trade-offs you can defend in a board meeting.", score: 84 },
+  { name: "Risk Management", blurb: "Spot the downside before it spots you.", score: 69 },
+  { name: "Resource Allocation", blurb: "Put the money where the quarter is won.", score: 81 },
+  { name: "Adaptability", blurb: "Re-plan in the time it took to plan.", score: 88 },
+  { name: "Leadership", blurb: "Decide when there is no good option.", score: 74 },
+  { name: "Decision Under Uncertainty", blurb: "Bet right when nobody knows.", score: 72 },
 ];
 
 const SIZE = 340;
 const CENTER = SIZE / 2;
-const RADIUS = 122;
+const RADIUS = 126;
 
 function pointAt(index: number, value: number) {
   const angle = (Math.PI * 2 * index) / dimensions.length - Math.PI / 2;
@@ -66,19 +70,28 @@ export function Dimensions() {
               href="#how"
               className="group inline-flex items-center gap-2 text-[14px] text-dim transition-colors hover:text-ink"
             >
-              The science
+              How scoring works
               <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </a>
           }
         />
 
-        <div className="mt-14 grid gap-5 lg:grid-cols-[1.05fr_1fr]">
+        <div className="mt-14 grid items-start gap-5 lg:grid-cols-[0.95fr_1.05fr]">
           <Panel gradientRing className="flex flex-col items-center p-7 sm:p-9">
-            <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="w-full max-w-[380px]">
+            <svg
+              viewBox={`0 0 ${SIZE} ${SIZE}`}
+              className="w-full max-w-[360px]"
+              role="img"
+              aria-label={`A sample profile across seven dimensions, highlighting ${current.name} at ${current.score}`}
+            >
               <defs>
                 <linearGradient id="radar-fill" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#14b8a6" stopOpacity="0.42" />
-                  <stop offset="100%" stopColor="#2dd4bf" stopOpacity="0.18" />
+                  <stop offset="0%" stopColor="var(--teal)" stopOpacity="0.4" />
+                  <stop
+                    offset="100%"
+                    stopColor="var(--teal-bright)"
+                    stopOpacity="0.14"
+                  />
                 </linearGradient>
               </defs>
 
@@ -115,22 +128,22 @@ export function Dimensions() {
               <motion.line
                 x1={CENTER}
                 y1={CENTER}
-                stroke={accentVar[current.accent]}
+                stroke="var(--teal-bright)"
                 strokeWidth={1.5}
                 initial={false}
                 animate={{ x2: activePoint.x, y2: activePoint.y }}
-                transition={{ duration: 0.35, ease: easeOut }}
+                transition={{ duration: duration.hover, ease: easeOut }}
               />
 
               <motion.polygon
                 points={polygon}
                 fill="url(#radar-fill)"
-                stroke="#14b8a6"
+                stroke="var(--teal)"
                 strokeWidth={1.6}
-                initial={{ opacity: 0, scale: 0.7 }}
+                initial={{ opacity: 0, scale: 0.82 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.9, ease: easeOut }}
+                transition={{ duration: duration.explain, ease: easeOut }}
                 style={{ transformOrigin: `${CENTER}px ${CENTER}px` }}
               />
 
@@ -144,7 +157,7 @@ export function Dimensions() {
                         cx={p.x}
                         cy={p.y}
                         r={11}
-                        fill={accentVar[d.accent]}
+                        fill="var(--teal-bright)"
                         opacity={0.22}
                       />
                     )}
@@ -152,7 +165,7 @@ export function Dimensions() {
                       cx={p.x}
                       cy={p.y}
                       r={isActive ? 5.5 : 3.5}
-                      fill={accentVar[d.accent]}
+                      fill={isActive ? "var(--teal-bright)" : "var(--teal)"}
                       className="cursor-pointer"
                       onMouseEnter={() => setActive(i)}
                     />
@@ -161,15 +174,10 @@ export function Dimensions() {
               })}
             </svg>
 
-            <div className="mt-4 w-full rounded-2xl border border-line bg-[var(--panel-2)] px-5 py-4">
-              <div className="flex items-center justify-between gap-4">
-                <p
-                  className="display text-[16px]"
-                  style={{ color: accentVar[current.accent] }}
-                >
-                  {current.name}
-                </p>
-                <span className="num text-[22px] font-semibold text-ink">
+            <div className="mt-5 w-full border-t border-line pt-5">
+              <div className="flex items-baseline justify-between gap-4">
+                <p className="display text-[17px] text-ink">{current.name}</p>
+                <span className="num text-[22px] font-semibold text-teal-bright">
                   {current.score}
                 </span>
               </div>
@@ -177,79 +185,86 @@ export function Dimensions() {
             </div>
           </Panel>
 
-          <div className="space-y-2.5">
-            {dimensions.map((d, i) => {
-              const isActive = i === active;
-              return (
-                <motion.button
-                  key={d.name}
-                  type="button"
-                  onMouseEnter={() => setActive(i)}
-                  onFocus={() => setActive(i)}
-                  initial={{ opacity: 0, y: 12 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-60px" }}
-                  transition={{ duration: 0.45, delay: i * 0.06, ease: easeOut }}
-                  className="group relative w-full overflow-hidden rounded-2xl border px-5 py-4 text-left transition-all duration-300"
-                  style={{
-                    borderColor: isActive
-                      ? `color-mix(in srgb, ${accentVar[d.accent]} 45%, transparent)`
-                      : "var(--line)",
-                    background: isActive
-                      ? `color-mix(in srgb, ${accentVar[d.accent]} 9%, rgba(255,255,255,0.02))`
-                      : "rgba(255,255,255,0.02)",
-                  }}
-                >
-                  <span
-                    className="absolute inset-y-0 left-0 w-[3px] transition-opacity duration-300"
-                    style={{
-                      background: accentVar[d.accent],
-                      opacity: isActive ? 1 : 0,
-                    }}
-                  />
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="min-w-0">
-                      <p className="text-[15.5px] font-medium text-ink">{d.name}</p>
-                      <p className="mt-1 text-[13.5px] text-dim">{d.blurb}</p>
-                    </div>
-                    <span
-                      className="num shrink-0 text-[15px]"
-                      style={{ color: isActive ? accentVar[d.accent] : "var(--faint)" }}
+          {/* A ruled list, not seven bordered cards. The cards were identical boxes whose
+              only differing element was a decorative 01–07 counter; every row now carries
+              its own score bar, so the column reads as a profile instead of a menu. */}
+          <div>
+            <ul className="divide-y divide-line border-y border-line">
+              {dimensions.map((d, i) => {
+                const isActive = i === active;
+                return (
+                  <li key={d.name}>
+                    <button
+                      type="button"
+                      onMouseEnter={() => setActive(i)}
+                      onFocus={() => setActive(i)}
+                      onClick={() => setActive(i)}
+                      aria-pressed={isActive}
+                      className={cn(
+                        "w-full px-4 py-4 text-left transition-colors duration-200 ease-out",
+                        isActive ? "bg-teal/[0.07]" : "bg-transparent",
+                      )}
                     >
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                  </div>
-                </motion.button>
-              );
-            })}
+                      <div className="flex items-baseline justify-between gap-5">
+                        <p
+                          className={cn(
+                            "text-[15.5px] font-medium transition-colors duration-200 ease-out",
+                            isActive ? "text-ink" : "text-dim",
+                          )}
+                        >
+                          {d.name}
+                        </p>
+                        <span
+                          className={cn(
+                            "num shrink-0 text-[13px] tabular-nums transition-colors duration-200 ease-out",
+                            isActive ? "text-teal-bright" : "text-faint",
+                          )}
+                        >
+                          {d.score}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-[13.5px] text-faint">{d.blurb}</p>
+                      <span
+                        aria-hidden
+                        className="mt-3 block h-px w-full bg-[var(--line)]"
+                      >
+                        <motion.span
+                          className="block h-px origin-left"
+                          style={{
+                            background: isActive
+                              ? "var(--teal-bright)"
+                              : "var(--teal)",
+                            opacity: isActive ? 1 : 0.45,
+                          }}
+                          initial={{ scaleX: 0 }}
+                          whileInView={{ scaleX: d.score / 100 }}
+                          viewport={{ once: true, margin: "-40px" }}
+                          transition={{
+                            duration: duration.panel,
+                            delay: i * 0.05,
+                            ease: easeOut,
+                          }}
+                        />
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
 
-            <Panel
-              gradientRing
-              className="mt-3 overflow-hidden p-0"
-              delay={0.12}
-            >
-              <div
-                className="px-6 py-6"
-                style={{
-                  background:
-                    "linear-gradient(120deg, rgba(20,184,166,0.22), rgba(255,255,255,0.06))",
-                }}
-              >
-                <div className="flex items-center justify-between gap-5">
-                  <div>
-                    <p className="display text-[19px] text-ink">DI Score™</p>
-                    <p className="mt-2 max-w-xs text-[13.5px] leading-relaxed text-dim">
-                      A composite percentile across all dimensions. Comparable across
-                      cohorts.
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="display text-grad text-[46px] leading-none">78</p>
-                    <p className="eyebrow mt-2 text-faint">composite</p>
-                  </div>
-                </div>
+            <div className="mt-5 flex flex-wrap items-end justify-between gap-6 rounded-2xl border border-line bg-[var(--panel)] px-6 py-5">
+              <div className="max-w-xs">
+                <p className="display text-[18px] text-ink">DI Score™</p>
+                <p className="mt-2 text-[13.5px] leading-relaxed text-dim">
+                  One composite percentile across all seven, comparable between
+                  cohorts and readable by a recruiter in ten seconds.
+                </p>
               </div>
-            </Panel>
+              <div>
+                <p className="num text-[42px] leading-none text-teal-bright">78</p>
+                <p className="eyebrow mt-2 text-faint">Composite percentile</p>
+              </div>
+            </div>
           </div>
         </div>
       </Container>
