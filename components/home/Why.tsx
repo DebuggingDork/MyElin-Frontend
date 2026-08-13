@@ -363,7 +363,7 @@ function ConsequenceChain() {
       <div className="mt-4 flex items-center gap-2 text-[13px] text-dim">
         <span>
           {reached < chain.length
-            ? "Keep scrolling — consequences mature on their own clock"
+            ? "Keep scrolling: consequences mature on their own clock"
             : "Open any link to see what it costs you"}
         </span>
         <ArrowRight className="h-3.5 w-3.5 text-cyan" />

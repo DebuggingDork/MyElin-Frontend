@@ -28,7 +28,7 @@ export function Hero() {
         <div>
           <div className="rise">
             <Eyebrow accent="teal">
-              The Decision Intelligence Platform — S-25 Cohort
+              The Decision Intelligence Platform · S-25 Cohort
             </Eyebrow>
           </div>
 

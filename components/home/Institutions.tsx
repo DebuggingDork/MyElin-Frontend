@@ -9,10 +9,13 @@ import { Action, Container, Panel, SectionHead } from "@/components/ui/Kit";
 
 const roles = ["Student", "Faculty", "Recruiter"] as const;
 
+/* Three chips that are one list, so they get one colour. They previously carried
+   violet/cyan/emerald, which all resolve to teal shades anyway -- three near-identical
+   greens reading as a colour code for nothing. */
 const included = [
-  { label: "Cohort dashboards", icon: BarChart3, accent: "violet" },
-  { label: "Skill gap reports", icon: Users, accent: "cyan" },
-  { label: "Proctored mode", icon: ShieldCheck, accent: "emerald" },
+  { label: "Cohort dashboards", icon: BarChart3 },
+  { label: "Skill gap reports", icon: Users },
+  { label: "Proctored mode", icon: ShieldCheck },
 ];
 
 export function Institutions() {
@@ -55,17 +58,9 @@ export function Institutions() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.45, delay: i * 0.08, ease: easeOut }}
-                    className="inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-[13px]"
-                    style={{
-                      borderColor: `color-mix(in srgb, var(--${item.accent}) 32%, transparent)`,
-                      background: `color-mix(in srgb, var(--${item.accent}) 9%, transparent)`,
-                      color: "var(--dim)",
-                    }}
+                    className="inline-flex items-center gap-2 rounded-full border border-teal/30 bg-teal/[0.08] px-3.5 py-2 text-[13px] text-dim"
                   >
-                    <Icon
-                      className="h-3.5 w-3.5"
-                      style={{ color: `var(--${item.accent})` }}
-                    />
+                    <Icon className="h-3.5 w-3.5 text-teal" />
                     {item.label}
                   </motion.span>
                 );
@@ -126,7 +121,11 @@ export function Institutions() {
                   placeholder="you@university.edu"
                   className="flex-1 rounded-full border border-line bg-[var(--panel-2)] px-5 py-3.5 text-[14.5px] text-ink outline-none transition-colors placeholder:text-faint focus:border-teal/60"
                 />
-                <Action onClick={() => email.includes("@") && setSent(true)}>
+                {/* type="submit", not an onClick duplicating the submit handler: the
+                    click path skipped the input's own `required` / type="email"
+                    validation entirely, so a blank or malformed address still flipped
+                    the form into its "Received" state. */}
+                <Action type="submit">
                   {sent ? (
                     <>
                       <Check className="h-4 w-4" />
@@ -142,7 +141,7 @@ export function Institutions() {
               </div>
               <p className="mt-4 text-[13px] text-faint">
                 {sent
-                  ? `Thanks — we will reach out about ${role.toLowerCase()} access to the S-25 cohort.`
+                  ? `Thanks. We will reach out about ${role.toLowerCase()} access to the S-25 cohort.`
                   : "Pilots start with universities and accelerators. No card, no contract."}
               </p>
             </form>
