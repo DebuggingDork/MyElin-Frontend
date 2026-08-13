@@ -61,6 +61,15 @@
   --grad-warm: linear-gradient(135deg, #71847d 0%, #9fb3ac 55%, #e8eef0 100%);
   --grad-iris: linear-gradient(135deg, #0f766e 0%, #14b8a6 50%, #5eead4 100%);
 
+  /* One curve for anything entering, leaving or responding to a pointer; one for things
+     that move on screen without appearing. The built-in CSS keywords are too weak to
+     read as intentional, and `ease-in` is never used — it withholds motion during the
+     exact frames the user is watching, which is what makes an interface feel slow.
+     `lib/media.ts` exports the same two as control-point arrays so the framer-motion
+     work and the CSS work land on identical timing. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+
   --focus-ring: 0 0 0 3px rgba(20, 184, 166, 0.4);
   --shadow-lift: 0 1px 0 rgba(255, 255, 255, 0.04) inset,
     0 24px 60px -30px rgba(7, 26, 22, 0.9);
@@ -346,13 +355,18 @@ body {
 
 .hover-lift {
   transition:
-    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 0.35s ease,
-    background-color 0.35s ease;
+    transform 220ms var(--ease-out),
+    border-color 220ms ease,
+    background-color 220ms ease;
 }
-.hover-lift:hover {
-  transform: translateY(-3px);
-  border-color: var(--line-2);
+
+/* Touch devices fire :hover on tap and then hold it, so an untargeted hover rule leaves
+   cards stuck in their lifted state after a scroll-tap. */
+@media (hover: hover) and (pointer: fine) {
+  .hover-lift:hover {
+    transform: translateY(-3px);
+    border-color: var(--line-2);
+  }
 }
 
 /* ───────────────────────── backdrops ───────────────────────── */
@@ -462,10 +476,19 @@ body {
     transparent 72%
   );
   transform: translateX(-120%);
-  transition: transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 520ms var(--ease-out);
 }
-.sweep:hover::after {
-  transform: translateX(120%);
+
+@media (hover: hover) and (pointer: fine) {
+  .sweep:hover::after {
+    transform: translateX(120%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sweep::after {
+    display: none;
+  }
 }
 
 .live-dot {

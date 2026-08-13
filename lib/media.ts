@@ -27,5 +27,19 @@ export const photos = {
     "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1600&q=80",
 } as const;
 
-export const easeOut = [0.22, 1, 0.36, 1] as const;
+/** The same two curves `globals.css` defines as `--ease-out` / `--ease-in-out`, so motion
+ *  driven from JS and motion driven from CSS land on identical timing. */
+export const easeOut = [0.23, 1, 0.32, 1] as const;
+export const easeInOut = [0.77, 0, 0.175, 1] as const;
+
+/** Durations, in seconds, banded by what the element is doing. UI motion stays under
+ *  300ms; only explanatory motion (a diagram teaching the product's mechanic) runs long. */
+export const duration = {
+  press: 0.16,
+  hover: 0.2,
+  reveal: 0.42,
+  panel: 0.5,
+  explain: 0.9,
+} as const;
+
 export const springSoft = { type: "spring" as const, stiffness: 120, damping: 22 };
