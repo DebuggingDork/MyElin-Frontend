@@ -16,7 +16,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { easeOut } from "@/lib/media";
-import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
+import { cn } from "@/lib/utils";
 import {
   Container,
   Panel,
@@ -25,11 +25,14 @@ import {
   type Accent,
 } from "@/components/ui/Kit";
 
+/* Three professions that already have a practice surface, then the one that does not.
+   The first three are deliberately unaccented: the whole argument of the block is
+   "them, then us", and giving each row its own colour flattened that into a legend. */
 const practice = [
-  { who: "Engineers", where: "LeetCode", icon: Code2, accent: "cyan" },
-  { who: "Doctors", where: "Rounds", icon: Stethoscope, accent: "emerald" },
-  { who: "Pilots", where: "Simulators", icon: Plane, accent: "amber" },
-  { who: "Operators", where: "Myelin", icon: Sparkles, accent: "violet" },
+  { who: "Engineers", where: "LeetCode", icon: Code2 },
+  { who: "Doctors", where: "Rounds", icon: Stethoscope },
+  { who: "Pilots", where: "Simulators", icon: Plane },
+  { who: "Operators", where: "Myelin", icon: Sparkles },
 ];
 
 type Link = {
@@ -42,6 +45,9 @@ type Link = {
   accent: Accent;
 };
 
+/* Ember for what a choice costs you, teal for how the system answers back. The ramp is
+   the point: the first three links are money and people, the last two are the market and
+   the board, and the colour change is what makes that legible without a legend. */
 const chain: Link[] = [
   {
     id: "cash",
@@ -51,7 +57,7 @@ const chain: Link[] = [
     detail:
       "Runway shortens from 5.8 months to 4.7. The next raise just moved closer than the proof you needed.",
     weight: 82,
-    accent: "rose",
+    accent: "ember",
   },
   {
     id: "morale",
@@ -61,7 +67,7 @@ const chain: Link[] = [
     detail:
       "They read the plan before you explain it. Two engineers quietly start answering recruiter mail.",
     weight: 64,
-    accent: "amber",
+    accent: "ember-soft",
   },
   {
     id: "churn",
@@ -71,7 +77,7 @@ const chain: Link[] = [
     detail:
       "The renewal you postponed comes due, and support never got the tooling you traded away.",
     weight: 71,
-    accent: "orange",
+    accent: "ember",
   },
   {
     id: "competitor",
@@ -79,9 +85,9 @@ const chain: Link[] = [
     label: "A competitor pounces",
     who: "The market",
     detail:
-      "The lane you left open is the lane they take — priced 40% under list, aimed at your softest accounts.",
+      "The lane you left open is the lane they take, priced 40% under list and aimed at your softest accounts.",
     weight: 58,
-    accent: "violet",
+    accent: "teal",
   },
   {
     id: "board",
@@ -107,20 +113,13 @@ export function Why() {
             </>
           }
           copy={
-            <>
-              <p>
-                Engineers practice problems on LeetCode. Doctors do rounds. Pilots
-                fly simulators. Yet the most important professional skill — judgment
-                under uncertainty — is taught with case studies, textbooks, and slide
-                decks.
-              </p>
-              <p>
-                Myelin is the practice gym. Every decision creates ripples: cash
-                burns, morale shifts, a customer churns, a competitor pounces, a
-                board member calls. The simulation responds. Your scores compose into
-                a Decision Intelligence Report recruiters and deans can read.
-              </p>
-            </>
+            <p>
+              Every serious profession has somewhere to practise badly before it
+              matters. Judgment under uncertainty, the skill every one of those
+              professions is actually hiring for, is still taught with case
+              studies and slide decks. Myelin is the room where you get to be
+              wrong first.
+            </p>
           }
         />
 
@@ -136,23 +135,20 @@ export function Why() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true, margin: "-60px" }}
                   transition={{ duration: 0.5, delay: i * 0.09, ease: easeOut }}
-                  className="group relative flex items-center gap-4 overflow-hidden rounded-2xl border px-5 py-4"
-                  style={{
-                    borderColor: isMyelin
-                      ? "color-mix(in srgb, var(--violet) 45%, transparent)"
-                      : "var(--line)",
-                    background: isMyelin
-                      ? "linear-gradient(120deg, rgba(20,184,166,0.16), rgba(255,255,255,0.05))"
-                      : "rgba(255,255,255,0.02)",
-                  }}
+                  className={cn(
+                    "flex items-center gap-4 rounded-2xl border px-5 py-4",
+                    isMyelin
+                      ? "border-teal/45 bg-teal/[0.12]"
+                      : "border-line bg-[var(--panel)]",
+                  )}
                 >
                   <span
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border"
-                    style={{
-                      borderColor: `color-mix(in srgb, var(--${item.accent}) 35%, transparent)`,
-                      background: `color-mix(in srgb, var(--${item.accent}) 12%, transparent)`,
-                      color: `var(--${item.accent})`,
-                    }}
+                    className={cn(
+                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border",
+                      isMyelin
+                        ? "border-teal/40 bg-teal/[0.14] text-teal-bright"
+                        : "border-line text-faint",
+                    )}
                   >
                     <Icon className="h-4.5 w-4.5" />
                   </span>
@@ -161,8 +157,10 @@ export function Why() {
                     <span className="flex items-center gap-2">
                       <span className="h-px w-8 bg-line-2 sm:w-14" />
                       <span
-                        className="display text-[16px]"
-                        style={{ color: `var(--${item.accent})` }}
+                        className={cn(
+                          "display text-[16px]",
+                          isMyelin ? "text-teal-bright" : "text-dim",
+                        )}
                       >
                         {item.where}
                       </span>
@@ -172,22 +170,13 @@ export function Why() {
               );
             })}
 
-            <div className="grid gap-3 pt-4 sm:grid-cols-2">
-              <Panel className="px-5 py-5" delay={0.1}>
-                <p className="eyebrow text-faint">Simulations run</p>
-                <AnimatedNumber
-                  value={0}
-                  className="display mt-2 block text-[30px] text-ink"
-                />
-              </Panel>
-              <Panel className="px-5 py-5" delay={0.16}>
-                <p className="eyebrow text-faint">Reports issued</p>
-                <AnimatedNumber
-                  value={0}
-                  className="display mt-2 block text-[30px] text-ink"
-                />
-              </Panel>
-            </div>
+            {/* This slot held "Simulations run: 0" and "Reports issued: 0". Two animated
+                zeroes are worse than no counter at all -- they read as a product nobody
+                has used yet. The claim underneath them is the thing that was doing the
+                persuading anyway. */}
+            <p className="display pt-6 text-[clamp(1.15rem,2vw,1.5rem)] leading-[1.35] text-ink">
+              Judgment is the last professional skill still taught by anecdote.
+            </p>
           </div>
 
           <Panel gradientRing className="p-6 sm:p-8" delay={0.12}>
@@ -249,8 +238,8 @@ function ConsequenceChain() {
           style={{
             scaleY: scrollYProgress,
             background:
-              "linear-gradient(180deg, var(--violet), var(--cyan))",
-            boxShadow: "0 0 12px var(--violet)",
+              "linear-gradient(180deg, var(--ember), var(--teal-bright))",
+            boxShadow: "0 0 12px var(--teal)",
           }}
         />
 
@@ -277,7 +266,7 @@ function ConsequenceChain() {
                   initial={false}
                   animate={{
                     scale: lit ? 1 : 0.55,
-                    backgroundColor: lit ? color : "rgba(113,132,125,0.55)",
+                    backgroundColor: lit ? color : "var(--faint)",
                     boxShadow: lit ? `0 0 12px ${color}` : "0 0 0 transparent",
                   }}
                   transition={{ duration: 0.45, ease: easeOut }}
@@ -301,8 +290,8 @@ function ConsequenceChain() {
                     ? `color-mix(in srgb, ${color} 45%, transparent)`
                     : "var(--line)",
                   background: isOpen
-                    ? `color-mix(in srgb, ${color} 10%, rgba(255,255,255,0.02))`
-                    : "rgba(255,255,255,0.02)",
+                    ? `color-mix(in srgb, ${color} 10%, var(--panel))`
+                    : "var(--panel)",
                 }}
               >
                 <div className="flex items-center gap-3">
@@ -332,7 +321,7 @@ function ConsequenceChain() {
                             delay: on ? j * 0.03 : 0,
                             ease: easeOut,
                           }}
-                          style={{ background: on ? color : "#ffffff" }}
+                          style={{ background: on ? color : "var(--faint)" }}
                         />
                       );
                     })}
