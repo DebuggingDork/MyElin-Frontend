@@ -46,7 +46,7 @@ const scenarios: Scenario[] = [
     title: "Startup Survival",
     status: "LIVE",
     category: "Founder",
-    copy: "Run a seed-stage SaaS for 24 simulated months. Pressure: cash, crisis, co-founder, competitor.",
+    copy: "Run a seed-stage SaaS for 4 simulated quarters. Pressure: cash, crisis, co-founder, competitor.",
     duration: "30 min",
     level: "Beginner → Pro",
     intensity: 62,

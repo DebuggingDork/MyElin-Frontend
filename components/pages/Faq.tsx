@@ -100,7 +100,7 @@ export function Faq() {
                 { n: "7", l: "Q&A covered", a: "violet" as Accent },
                 { n: "0", l: "videos required", a: "rose" as Accent },
                 { n: "1", l: "free run / month", a: "emerald" as Accent },
-                { n: "24", l: "months compressed", a: "cyan" as Accent },
+                { n: "4", l: "quarters compressed", a: "cyan" as Accent },
               ].map((s) => (
                 <div
                   key={s.l}
