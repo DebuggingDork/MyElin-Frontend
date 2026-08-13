@@ -802,7 +802,10 @@ body {
   --rose: #eef5f2;
   --pink: #99f6e4;
 
-  --grad-primary: linear-gradient(135deg, #0f766e 0%, #14b8a6 50%, #2dd4bf 100%);
+  /* Both stops stay dark enough for the white label Action ships with. The shared
+     gradient ran up to #2dd4bf, where white measures 1.86:1 -- the right-hand half of
+     every primary button on the page was effectively unreadable. #0f766e is 5.47:1. */
+  --grad-primary: linear-gradient(135deg, #0b5f58 0%, #0f766e 100%);
 
   --focus-ring: 0 0 0 2px var(--void), 0 0 0 4px var(--teal);
   --shadow-lift: none;
@@ -853,7 +856,7 @@ body {
   --rose: #0d1412;
   --pink: #0e8a7c;
 
-  --grad-primary: linear-gradient(135deg, #064e46 0%, #0a6b60 50%, #0e8a7c 100%);
+  --grad-primary: linear-gradient(135deg, #064e46 0%, #0a6b60 100%);
 
   --focus-ring: 0 0 0 2px var(--void), 0 0 0 4px var(--teal);
 
@@ -883,6 +886,15 @@ body {
 }
 .ledger .ring-grad::before {
   display: none;
+}
+
+/* The nav goes opaque here. A translucent blurred bar is the one piece of glass that
+   normally earns its place, but this page has no depth for it to sit above -- the
+   backdrop is a printed grid, and blurring it just smears the rules. */
+.ledger header {
+  background: var(--void);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 .ledger header nav,
 .ledger header a[href="/signup"],
