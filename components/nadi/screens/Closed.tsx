@@ -1,0 +1,366 @@
+"use client";
+
+/**
+ * The quarter, closed.
+ *
+ * Every headline figure here is the API's, not a projection: the report returned by
+ * `POST .../lock` is folded into the result before this screen renders it. The management
+ * assessment is the backend's `decision_quality`, rendered in the original's card idiom, and
+ * the criteria it declines to score are shown as "not yet assessed" rather than dropped --
+ * the integration guide is explicit that folding them into a lower score misrepresents what
+ * the engine knows.
+ */
+
+import { useState } from "react";
+import { BUFFER, PRIORITY_BY_ID, QUARTER_BRIEFS, TONE_CARD, TONE_TEXT } from "@/lib/nadi/constants";
+import { cr, inr, n0, n1, pct } from "@/lib/nadi/format";
+import { balanceClosing, balanceOpening } from "@/lib/nadi/engine";
+import { lessons, whatHappened } from "@/lib/nadi/insights";
+import { priorityMatch, traitVerdicts } from "@/lib/nadi/scoring";
+import { Eyebrow, LedgerRow, Panel, Stat, TeachingNote } from "@/components/nadi/Kit";
+import { BalanceSheet, CashFlow, ConstraintChain, ProfitAndLoss } from "@/components/nadi/Statements";
+import type { QuarterReportResponse } from "@/lib/api/types";
+import type {
+  Constraint,
+  PriorityId,
+  QuarterResultShape,
+  Reflection,
+  Tone,
+} from "@/lib/nadi/types";
+
+const v = (r: QuarterResultShape, k: string) => r[k] as number;
+
+/** The backend's own read on how the quarter was run. */
+function Assessment({ report }: { report: QuarterReportResponse }) {
+  const dq = report.decision_quality;
+  const verdicts = traitVerdicts(dq);
+  const fired = dq.modifiers.filter((m) => m.fired);
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Panel
+      eyebrow="Management assessment"
+      title="How you ran the company this quarter"
+      right={
+        <div className="text-right">
+          <Eyebrow>Scoreable portion</Eyebrow>
+          <div className="font-mono text-2xl">
+            {n1(Number(dq.ceo_score))} <span className="text-stone-400 text-sm">{dq.band}</span>
+          </div>
+        </div>
+      }
+    >
+      <div className="grid gap-3 sm:grid-cols-2">
+        {verdicts.map((t) => (
+          <div key={t.name} className={"border p-3 " + TONE_CARD[t.tone as Tone]}>
+            <div className="flex items-baseline justify-between">
+              <span className="font-serif text-base">{t.name}</span>
+              <span className={"text-xs uppercase tracking-widest font-semibold " + TONE_TEXT[t.tone as Tone]}>
+                {t.verdict}
+              </span>
+            </div>
+            <div className="text-xs text-stone-600 mt-1">{t.line}</div>
+          </div>
+        ))}
+      </div>
+
+      {fired.length > 0 && (
+        <div className="mt-4">
+          <Eyebrow tone="text-rose-800">Adjustments that fired</Eyebrow>
+          <ul className="mt-1 space-y-0.5">
+            {fired.map((m) => (
+              <li
+                key={m.id}
+                className={"text-xs font-mono " + (Number(m.applied_points) >= 0 ? "text-teal-800" : "text-rose-800")}
+              >
+                {(Number(m.applied_points) >= 0 ? "+" : "") + m.applied_points} {m.id.replace(/_/g, " ")} — {m.detail}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="mt-4 border-t border-stone-200 pt-3">
+        <button
+          onClick={() => setOpen(!open)}
+          className="text-xs uppercase tracking-widest font-semibold text-stone-500 hover:text-rose-800 border-b border-dotted border-stone-400"
+        >
+          {open ? "Hide" : "Show"} the {dq.unscored_criteria.length} criteria not yet assessed
+        </button>
+        <p className="text-xs text-stone-500 mt-2">
+          {n1(Number(dq.mechanical_points_available))} of the rubric&apos;s points are decided by formula. The remaining{" "}
+          {n1(Number(dq.unscored_points))} need a human read and are deliberately left unscored rather than counted
+          against you.
+        </p>
+        {open && (
+          <ul className="mt-2 space-y-1">
+            {dq.unscored_criteria.map((c) => (
+              <li key={c.id} className="text-xs text-stone-600 border-l-2 border-stone-300 pl-2">
+                <span className="font-mono text-stone-800">{c.id}</span> — {c.reason}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </Panel>
+  );
+}
+
+export function ClosedScreen({
+  r,
+  prior,
+  report,
+  constraint,
+  priority,
+  reflection,
+  onNext,
+  busy,
+}: {
+  r: QuarterResultShape;
+  prior: QuarterResultShape | undefined;
+  report: QuarterReportResponse;
+  constraint: Constraint | null;
+  priority: PriorityId | null;
+  reflection: Reflection;
+  onNext: () => void;
+  busy?: boolean;
+}) {
+  const [statement, setStatement] = useState<string | null>(null);
+  const read = whatHappened(r);
+  const match = priorityMatch(priority, r.A);
+  const primary = constraint ? constraint.primary : null;
+  const declared = priority ? PRIORITY_BY_ID[priority] : null;
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-stone-900 text-white p-6">
+        <Eyebrow tone="text-rose-400">
+          Quarter {r.q} closed · {QUARTER_BRIEFS[r.q - 1].title}
+        </Eyebrow>
+        <h2 className="font-serif text-4xl mt-1">
+          {n0(v(r, "unitsSold"))} units, {cr(v(r, "revenueT"))} of revenue
+        </h2>
+      </div>
+
+      <div>
+        <Eyebrow tone="text-rose-800">What happened</Eyebrow>
+        <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-4 mt-2">
+          <Stat label="Revenue" value={cr(v(r, "revenueT"))} sub={n0(v(r, "unitsSold")) + " units"} />
+          <Stat
+            label="Market share"
+            value={pct(v(r, "marketShare") * 100)}
+            tone={TONE_TEXT[v(r, "shareDelta") >= 0 ? "good" : "bad"]}
+            sub={
+              (v(r, "shareDelta") >= 0 ? "+" : "") +
+              n1(v(r, "shareDelta") * 100) +
+              " pts of a " +
+              n0(v(r, "mktDemand")) +
+              "-unit category"
+            }
+          />
+          <Stat
+            label="Gross margin"
+            value={pct(v(r, "revenueT") > 0 ? (v(r, "grossProfit") / v(r, "revenueT")) * 100 : 0)}
+            sub={"cost " + inr(r.wac.pulse as number) + " a unit"}
+          />
+          <Stat
+            label="Net cash flow"
+            value={inr(v(r, "netCF"))}
+            tone={TONE_TEXT[v(r, "netCF") >= 0 ? "good" : "bad"]}
+          />
+          <Stat
+            label="Cash"
+            value={inr(v(r, "cash"))}
+            tone={TONE_TEXT[v(r, "cash") < BUFFER ? "bad" : "flat"]}
+            sub={"moved " + inr(v(r, "netCF"))}
+          />
+          <Stat label="Customers" value={n0(v(r, "customers"))} sub={"repeat " + pct(v(r, "repeatRate"))} />
+          <Stat
+            label="Valuation"
+            value={cr(v(r, "valuation"))}
+            tone={TONE_TEXT[prior ? (v(r, "valuation") > v(prior, "valuation") ? "good" : "bad") : "flat"]}
+          />
+          <Stat
+            label="Headcount"
+            value={n0(v(r, "headcount"))}
+            sub={"attrition " + pct(v(r, "attritionNext")) + " next quarter"}
+          />
+        </div>
+      </div>
+
+      {report.binding_constraints.length > 0 && (
+        <Panel eyebrow="What the engine says bound this quarter" title="Hard gates that actually limited you">
+          {report.binding_constraints.map((b) => (
+            <LedgerRow
+              key={b.gate}
+              label={b.gate.replace(/_/g, " ")}
+              working={b.detail}
+              value={n1(Number(b.demand_lost)) + " " + b.demand_lost_unit}
+              strong
+              tone="text-rose-800"
+            />
+          ))}
+        </Panel>
+      )}
+
+      {(r.notes as string[]).length > 0 && (
+        <Panel eyebrow="Events" title="Things that happened without being asked">
+          <ul className="space-y-1">
+            {(r.notes as string[]).map((note, i) => (
+              <li key={i} className="text-sm text-stone-700 border-b border-stone-200 pb-1">
+                {note}
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      )}
+
+      <div className="grid gap-5 lg:grid-cols-2">
+        <div className="bg-white border border-stone-300">
+          <header className="border-b border-stone-300 px-4 py-3">
+            <Eyebrow tone="text-rose-800">What went wrong</Eyebrow>
+          </header>
+          <ul className="p-4 space-y-2">
+            {read.wrong.map((line, i) => (
+              <li key={i} className="text-sm text-stone-800 flex gap-2">
+                <span className="text-rose-700">—</span>
+                <span>{line}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="bg-white border border-stone-300">
+          <header className="border-b border-stone-300 px-4 py-3">
+            <Eyebrow tone="text-teal-800">What went right</Eyebrow>
+          </header>
+          <ul className="p-4 space-y-2">
+            {read.right.map((line, i) => (
+              <li key={i} className="text-sm text-stone-800 flex gap-2">
+                <span className="text-teal-700">—</span>
+                <span>{line}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      {primary && (
+        <Panel eyebrow="Your biggest bottleneck" title={primary.label}>
+          <div className="space-y-3">
+            <div>
+              <Eyebrow>Why</Eyebrow>
+              <p className="text-sm text-stone-800 mt-0.5">{primary.why}</p>
+            </div>
+            <div>
+              <Eyebrow>Impact</Eyebrow>
+              <p className="text-sm text-stone-800 mt-0.5">{primary.impact}</p>
+            </div>
+            <div>
+              <Eyebrow>Next quarter</Eyebrow>
+              <p className="text-sm text-stone-800 mt-0.5">{primary.next}</p>
+            </div>
+            <TeachingNote id="constraint" />
+          </div>
+        </Panel>
+      )}
+
+      {declared && (
+        <Panel eyebrow="Said, did, needed" title="Were you consistent?">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div>
+              <Eyebrow>You said you would prioritise</Eyebrow>
+              <div className="font-serif text-lg mt-1">{declared.name}</div>
+            </div>
+            <div>
+              <Eyebrow>What your money actually did</Eyebrow>
+              <div className="font-serif text-lg mt-1">
+                {match ? (match.ok ? "Matched it" : "Went elsewhere") : "Nothing committed"}
+              </div>
+              <div className="text-xs text-stone-500 font-mono">{match ? match.note : ""}</div>
+            </div>
+            <div>
+              <Eyebrow>What the company needed</Eyebrow>
+              <div className="font-serif text-lg mt-1">{primary ? primary.label : "—"}</div>
+              <div className="text-xs text-stone-500">
+                {reflection.constraint === (primary && primary.id) ? "You read it correctly." : "You read it differently."}
+              </div>
+            </div>
+          </div>
+        </Panel>
+      )}
+
+      <div>
+        <Eyebrow tone="text-rose-800">How the quarter narrowed</Eyebrow>
+        <h3 className="font-serif text-xl mb-2">The constraint chain</h3>
+        <ConstraintChain r={r} />
+        <TeachingNote id="constraint" />
+      </div>
+
+      <Panel eyebrow="What this quarter taught you" title="Principles the numbers just demonstrated">
+        <div className="space-y-3">
+          {lessons(r, prior).map((l, i) => (
+            <div key={i} className="border-l-2 border-stone-800 pl-3">
+              <div className="font-serif text-base text-stone-900">{l.title}</div>
+              <p className="text-sm text-stone-700 mt-0.5 leading-snug">{l.body}</p>
+            </div>
+          ))}
+        </div>
+      </Panel>
+
+      <Assessment report={report} />
+
+      <div className="bg-white border border-stone-300">
+        <div className="px-4 pt-3">
+          <TeachingNote id="statements" inline />
+        </div>
+        {[
+          ["pl", "Profit and loss"],
+          ["cf", "Cash flow"],
+          ["bs", "Balance sheet"],
+        ].map(([key, label]) => (
+          <div key={key} className="border-b border-stone-200 last:border-b-0">
+            <button
+              onClick={() => setStatement(statement === key ? null : key)}
+              className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-stone-50"
+            >
+              <span className="font-serif text-base">{label}</span>
+              <span className="font-mono text-sm text-stone-500">{statement === key ? "−" : "+"}</span>
+            </button>
+            {statement === key && (
+              <div className="border-t border-stone-200">
+                {key === "pl" && <ProfitAndLoss r={r} />}
+                {key === "cf" && <CashFlow r={r} />}
+                {key === "bs" && (
+                  <BalanceSheet
+                    eyebrow="Balance sheet"
+                    title={"Quarter " + r.q}
+                    open={balanceOpening(r.entering)}
+                    close={balanceClosing(r)}
+                  />
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <button
+        onClick={onNext}
+        disabled={busy}
+        className={
+          "w-full py-4 font-serif text-xl " +
+          (busy ? "bg-stone-200 text-stone-400" : "bg-stone-900 text-white hover:bg-rose-900")
+        }
+      >
+        {busy
+          ? "Opening the next quarter…"
+          : r.q === 3
+            ? "The board has called a meeting"
+            : r.q === 4
+              ? "See how the year closed"
+              : "Open quarter " + (r.q + 1)}
+      </button>
+    </div>
+  );
+}

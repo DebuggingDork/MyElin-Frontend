@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { Loader2, LogOut } from "lucide-react";
+import { NADI_TABS } from "@/components/nadi/NadiApp";
 import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Pill } from "@/components/ui/Kit";
@@ -21,6 +22,8 @@ import { cn } from "@/lib/utils";
 export function RunShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeNadiTab = searchParams.get("tab");
   const { user, ready } = useAuth();
   const { companyId, company, run, report, loading, error, can, financeUnlocked } =
     useRun();
@@ -52,6 +55,11 @@ export function RunShell({ children }: { children: React.ReactNode }) {
   const qBase = qid ? `/run/${companyId}/quarter/${qid}` : null;
   const terminal =
     run?.run_status === "completed" || run?.run_status === "failed";
+
+  // The Nadi Wear simulation ships its own full-width chrome (header, tab bar, ticker) and a
+  // light surface, so it renders flush inside `main` rather than in the shared max-w column.
+  const nadiBase = `/run/${companyId}/nadi`;
+  const onNadi = pathname === nadiBase || pathname.startsWith(nadiBase + "/");
 
   const links: {
     href: string;
@@ -116,6 +124,17 @@ export function RunShell({ children }: { children: React.ReactNode }) {
     },
   ];
 
+  /**
+   * Nadi Wear's own screens. One page holds all four quarters -- the quarter you are in is
+   * the run's, and these are the surfaces within it -- so each entry deep-links to a tab
+   * rather than to a separate route.
+   */
+  const nadiLinks = NADI_TABS.map((t) => ({
+    href: `${nadiBase}?tab=${t.id}`,
+    label: t.label,
+    id: t.id,
+  }));
+
   return (
     <div className="flex h-[100dvh] overflow-hidden bg-void text-ink">
       <aside className="hidden w-[268px] shrink-0 flex-col border-r border-line bg-gradient-to-b from-raise/60 via-base to-base lg:flex">
@@ -168,6 +187,29 @@ export function RunShell({ children }: { children: React.ReactNode }) {
               </Link>
             );
           })}
+
+          <div className="mt-4 border-t border-line pt-3">
+            <p className="px-3 pb-1.5 text-[10.5px] uppercase tracking-[0.18em] text-faint">
+              Nadi Wear · 4 quarters
+            </p>
+            {nadiLinks.map((link) => {
+              const active = onNadi && (activeNadiTab ?? "dashboard") === link.id;
+              return (
+                <Link
+                  key={link.id}
+                  href={link.href}
+                  className={cn(
+                    "block rounded-lg px-3 py-2.5 text-[13.5px] transition-all duration-200",
+                    active
+                      ? "border border-teal/30 bg-teal/[0.1] font-medium text-ink shadow-[0_0_0_1px_rgba(20,184,166,0.06),0_4px_16px_-8px_rgba(20,184,166,0.35)]"
+                      : "border border-transparent text-dim hover:bg-[var(--panel-2)]",
+                  )}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+          </div>
         </nav>
 
         <div className="border-t border-line p-3">
@@ -232,18 +274,31 @@ export function RunShell({ children }: { children: React.ReactNode }) {
                 </Link>
               );
             })}
+          <Link
+            href={nadiBase}
+            className={cn(
+              "shrink-0 rounded-full border px-3 py-1.5 text-[12px]",
+              onNadi ? "border-teal/40 bg-teal/10 text-ink" : "border-line text-dim",
+            )}
+          >
+            Nadi Wear
+          </Link>
         </div>
 
-        <main className="flex-1 overflow-y-auto px-4 py-8 sm:px-8">
-          <div className="mx-auto max-w-4xl">
-            {error && (
-              <p className="mb-6 rounded-xl border border-rose/30 bg-rose/[0.07] px-4 py-3 text-[13px] text-rose">
-                {error}
-              </p>
-            )}
-            {children}
-          </div>
-        </main>
+        {onNadi ? (
+          <main className="flex-1 overflow-y-auto">{children}</main>
+        ) : (
+          <main className="flex-1 overflow-y-auto px-4 py-8 sm:px-8">
+            <div className="mx-auto max-w-4xl">
+              {error && (
+                <p className="mb-6 rounded-xl border border-rose/30 bg-rose/[0.07] px-4 py-3 text-[13px] text-rose">
+                  {error}
+                </p>
+              )}
+              {children}
+            </div>
+          </main>
+        )}
       </div>
     </div>
   );

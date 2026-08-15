@@ -1,0 +1,376 @@
+"use client";
+
+/**
+ * The CEO performance report.
+ *
+ * The seven-dimension profile, the composite score and the per-quarter breakdown all come
+ * from the backend's locked reports. Management style, the most important decision, the
+ * delayed consequence, the missed opportunity and the decision/consequence timeline are read
+ * from the local history, which is the only place those questions have an answer.
+ */
+
+import { useState } from "react";
+import {
+  BUFFER,
+  PRIORITY_BY_ID,
+  TONE_BAR,
+  TONE_TEXT,
+  headcount,
+} from "@/lib/nadi/constants";
+import { cr, inr, n0, n1, pct } from "@/lib/nadi/format";
+import { balanceClosing, balanceOpening } from "@/lib/nadi/engine";
+import { lessons } from "@/lib/nadi/insights";
+import {
+  biggestMistake,
+  biggestStrength,
+  decisionTimeline,
+  delayedConsequence,
+  managementStyle,
+  missedOpportunity,
+  mostImportantDecision,
+  traitRollup,
+} from "@/lib/nadi/scoring";
+import { Bar, Eyebrow, LedgerRow, Panel, Stat } from "@/components/nadi/Kit";
+import { BalanceSheet } from "@/components/nadi/Statements";
+import type { QuarterReportResponse } from "@/lib/api/types";
+import type {
+  CompanyState,
+  EndgameOutcome,
+  PriorityId,
+  QuarterResultShape,
+  TermSheet,
+  Tone,
+} from "@/lib/nadi/types";
+
+const v = (r: QuarterResultShape, k: string) => r[k] as number;
+const traitTone = (p: number): Tone => (p >= 70 ? "good" : p >= 45 ? "watch" : "bad");
+
+export function FinalScreen({
+  ts,
+  eg,
+  reports,
+  history,
+  priorities,
+  s,
+  onRestart,
+  busy,
+}: {
+  ts: TermSheet | null;
+  eg: EndgameOutcome | null;
+  reports: QuarterReportResponse[];
+  history: QuarterResultShape[];
+  priorities: (PriorityId | null)[];
+  s: CompanyState;
+  onRestart: () => void;
+  busy?: boolean;
+}) {
+  const [openRecord, setOpenRecord] = useState(false);
+  const last = history[history.length - 1];
+
+  const scores = reports.map((r) => Number(r.decision_quality.ceo_score));
+  const composite = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+  const compositeBand =
+    composite >= 90 ? "Exceptional" : composite >= 75 ? "Strong" : composite >= 60 ? "Competent" : composite >= 40 ? "Weak" : "Poor";
+
+  const profile = traitRollup(reports);
+  const style = managementStyle(history);
+  const strength = biggestStrength(reports);
+  const mistake = biggestMistake(reports);
+  const decision = mostImportantDecision(history);
+  const consequence = delayedConsequence(history);
+  const missed = missedOpportunity(history, s);
+  const timeline = decisionTimeline(history, priorities);
+  const sold = Boolean(eg && eg.deal === "B");
+
+  const runSummary = reports[reports.length - 1]?.run_summary ?? null;
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-stone-900 text-white p-6">
+        <Eyebrow tone="text-rose-400">CEO performance report</Eyebrow>
+        <h2 className="font-serif text-4xl mt-1">
+          {sold
+            ? "You sold the company."
+            : eg && eg.gameOver
+              ? "The company did not make it."
+              : eg && eg.deal === "A"
+                ? eg.covenantHit
+                  ? "You took the money and hit the covenant."
+                  : "You took the money and missed the covenant."
+                : "You finished the year independent."}
+        </h2>
+        <p className="text-sm text-stone-300 mt-2">{style.why}</p>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <div className="inline-block border border-stone-600 px-3 py-1">
+            <Eyebrow tone="text-stone-400">Management style</Eyebrow>
+            <div className="font-serif text-xl">{style.label}</div>
+          </div>
+          <div className="inline-block border border-stone-600 px-3 py-1">
+            <Eyebrow tone="text-stone-400">Composite score</Eyebrow>
+            <div className="font-serif text-xl">
+              {n1(composite)} <span className="text-stone-400 text-sm">{compositeBand}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <Panel eyebrow="Final company outcome" title="Where twelve months left the business">
+        <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          <Stat label="Revenue, final quarter" value={cr(v(last, "revenueT"))} sub={n0(v(last, "unitsSold")) + " units"} />
+          <Stat
+            label="Net cash flow"
+            value={inr(v(last, "netCF"))}
+            tone={TONE_TEXT[v(last, "netCF") >= 0 ? "good" : "bad"]}
+          />
+          <Stat label="Cash" value={inr(v(last, "cash"))} tone={TONE_TEXT[v(last, "cash") < BUFFER ? "bad" : "flat"]} />
+          <Stat label="Customers" value={n0(v(last, "customers"))} sub={"repeat " + pct(v(last, "repeatRate"))} />
+          <Stat
+            label="Market share"
+            value={pct(v(last, "marketShare") * 100)}
+            sub={"of a " + n0(v(last, "mktDemand")) + "-unit category"}
+          />
+          <Stat
+            label="Valuation"
+            value={cr(
+              eg && eg.finalValuation != null
+                ? eg.finalValuation
+                : runSummary && runSummary.final_valuation_inr != null
+                  ? Number(runSummary.final_valuation_inr)
+                  : v(last, "valuation"),
+            )}
+          />
+          <Stat label="Headcount" value={n0(headcount(s.staff))} sub={"morale " + n0(s.empSat)} />
+          <Stat
+            label="Market position"
+            value={pct(v(last, "attractShare") * 100)}
+            sub="share your standing could reach"
+          />
+        </div>
+      </Panel>
+
+      <Panel eyebrow="Market share" title="Across the year">
+        {history.map((h) => (
+          <LedgerRow
+            key={h.q}
+            label={"Quarter " + h.q}
+            working={n0(v(h, "unitsSold")) + " units of a " + n0(v(h, "mktDemand")) + "-unit category"}
+            value={pct(v(h, "marketShare") * 100)}
+            tone={v(h, "shareDelta") >= 0 ? "text-teal-800" : "text-rose-800"}
+          />
+        ))}
+      </Panel>
+
+      <Panel eyebrow="Management profile" title="How you ran it, across seven dimensions">
+        <p className="text-xs text-stone-500 mb-3">
+          Share of the criteria the engine could score mechanically. Criteria that need a human read are excluded rather
+          than counted as failures — and a dimension with no mechanical criteria at all is reported as unassessed, not
+          as zero.
+        </p>
+        <div className="space-y-3">
+          {profile.map((t) =>
+            t.pct === null ? (
+              <div key={t.name}>
+                <div className="flex items-baseline justify-between">
+                  <span className="text-sm text-stone-500">{t.name}</span>
+                  <span className="text-xs uppercase tracking-widest text-stone-400">Not yet assessed</span>
+                </div>
+                <div className="h-1.5 w-full border-b border-dashed border-stone-300" />
+                <div className="text-xs text-stone-400 mt-1">
+                  Every sub-criterion here is a judgment call the engine does not make.
+                </div>
+              </div>
+            ) : (
+              <div key={t.name}>
+                <div className="flex items-baseline justify-between">
+                  <span className="text-sm text-stone-800">{t.name}</span>
+                  <span className={"text-xs font-mono " + TONE_TEXT[traitTone(t.pct)]}>{n0(t.pct)}%</span>
+                </div>
+                <Bar value={t.pct} max={100} tone={TONE_BAR[traitTone(t.pct)]} />
+              </div>
+            ),
+          )}
+        </div>
+      </Panel>
+
+      <div className="grid gap-5 lg:grid-cols-2">
+        <Panel eyebrow="Biggest strength" title={strength.name}>
+          <p className="text-sm text-stone-700">{strength.why}</p>
+        </Panel>
+        <Panel eyebrow="Biggest mistake" title={mistake.title}>
+          <p className="text-sm text-stone-700">{mistake.why}</p>
+        </Panel>
+        <Panel eyebrow="Most important decision" title={"Quarter " + decision.q + ": " + decision.label}>
+          <p className="text-sm text-stone-700">{decision.effect}</p>
+        </Panel>
+        <Panel eyebrow="Unexpected consequence" title={consequence.title}>
+          <p className="text-sm text-stone-700">{consequence.body}</p>
+        </Panel>
+        <Panel eyebrow="Missed opportunity" title={missed.title} className="lg:col-span-2">
+          <p className="text-sm text-stone-700">{missed.body}</p>
+        </Panel>
+      </div>
+
+      <Panel eyebrow="Principles this year demonstrated" title="What the company taught you">
+        <div className="space-y-3">
+          {history
+            .flatMap((h, i) => lessons(h, history[i - 1]).map((l) => ({ ...l, q: i + 1 })))
+            .filter((l, i, all) => all.findIndex((x) => x.title === l.title) === i)
+            .slice(0, 6)
+            .map((l, i) => (
+              <div key={i} className="border-l-2 border-stone-800 pl-3">
+                <div className="flex flex-wrap items-baseline gap-x-2">
+                  <span className="font-serif text-base text-stone-900">{l.title}</span>
+                  <span className="text-xs uppercase tracking-widest text-stone-500">first seen in Q{l.q}</span>
+                </div>
+                <p className="text-sm text-stone-700 mt-0.5 leading-snug">{l.body}</p>
+              </div>
+            ))}
+        </div>
+      </Panel>
+
+      <Panel eyebrow="How the year ran" title="Decision and consequence">
+        <div className="space-y-3">
+          {timeline.map((t) => (
+            <div key={t.q} className="border-l-2 border-stone-800 pl-4">
+              <div className="flex flex-wrap items-baseline gap-x-3">
+                <span className="font-serif text-lg">Quarter {t.q}</span>
+                {t.priority && (
+                  <span className="text-xs uppercase tracking-widest text-stone-500">said: {t.priority}</span>
+                )}
+              </div>
+              <div className="text-sm text-stone-800 mt-1">
+                <span className="text-stone-500">Decision — </span>
+                {t.decision}
+              </div>
+              <div className="text-sm text-stone-700">
+                <span className="text-stone-500">Consequence — </span>
+                {t.consequence}
+              </div>
+            </div>
+          ))}
+        </div>
+      </Panel>
+
+      {sold && eg && ts && (
+        <Panel eyebrow="The reveal" title="What the business was worth if you had kept it">
+          <LedgerRow label="Offer accepted" working="all cash, signed at the term sheet" value={inr(eg.price as number)} strong />
+          <LedgerRow
+            label="True continuation value"
+            working={"Q3 valuation × (1 + momentum of " + n1(ts.M) + ")"}
+            value={inr(ts.trueContinuation)}
+            strong
+            tone={(eg.gap as number) > 0 ? "text-rose-800" : "text-teal-800"}
+          />
+          <LedgerRow
+            label={(eg.gap as number) > 0 ? "Value left on the table" : "Value captured above continuation"}
+            working="difference"
+            value={inr(Math.abs(eg.gap as number))}
+            strong
+            tone={(eg.gap as number) > 0 ? "text-rose-800" : "text-teal-800"}
+          />
+        </Panel>
+      )}
+
+      {eg && eg.deal === "A" && ts && (
+        <Panel eyebrow="Covenant settlement" title={eg.covenantHit ? "Covenant met" : "Covenant missed"}>
+          <LedgerRow
+            label="Target"
+            working={ts.tier === "DISTRESSED" ? "close the quarter solvent" : "units sold"}
+            value={ts.tier === "DISTRESSED" ? "solvency" : n0(eg.covenant as number) + " units"}
+          />
+          <LedgerRow
+            label="Delivered"
+            working="quarter four"
+            value={n0(v(last, "unitsSold")) + " units"}
+            strong
+            tone={eg.covenantHit ? "text-teal-800" : "text-rose-800"}
+          />
+          <LedgerRow
+            label="Equity given up"
+            working={eg.covenantHit ? "as signed" : "ratcheted on the miss"}
+            value={pct((eg.equity as number) * 100)}
+          />
+          <LedgerRow
+            label="Final valuation"
+            working={eg.covenantHit ? "marked up" : "haircut"}
+            value={cr(eg.finalValuation as number)}
+            strong
+          />
+        </Panel>
+      )}
+
+      <div className="bg-white border border-stone-300">
+        <button
+          onClick={() => setOpenRecord(!openRecord)}
+          className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-stone-50"
+        >
+          <div>
+            <Eyebrow>Facilitator record</Eyebrow>
+            <div className="font-serif text-base">Full scoring detail, quarter by quarter</div>
+          </div>
+          <span className="font-mono text-sm text-stone-500">{openRecord ? "−" : "+"}</span>
+        </button>
+
+        {openRecord && (
+          <div className="border-t border-stone-300 p-4 space-y-4">
+            <LedgerRow
+              label="Composite"
+              working={compositeBand + " · mean of the quarters played"}
+              value={n1(composite) + "/100"}
+              strong
+            />
+            {reports.map((rep, i) => {
+              const dq = rep.decision_quality;
+              const fired = dq.modifiers.filter((m) => m.fired);
+              return (
+                <div key={rep.quarter_id}>
+                  <LedgerRow
+                    label={"Quarter " + rep.quarter_number}
+                    working={
+                      n1(Number(dq.mechanical_points_available)) +
+                      " points scoreable, " +
+                      n1(Number(dq.unscored_points)) +
+                      " left to human review · declared: " +
+                      (priorities[i] ? PRIORITY_BY_ID[priorities[i]!].name : "—")
+                    }
+                    value={n1(Number(dq.ceo_score)) + " · " + dq.band}
+                    strong
+                  />
+                  <ul className="pl-4 py-1 space-y-0.5">
+                    {fired.map((m) => (
+                      <li
+                        key={m.id}
+                        className={
+                          "text-xs font-mono " + (Number(m.applied_points) > 0 ? "text-teal-800" : "text-rose-800")
+                        }
+                      >
+                        {(Number(m.applied_points) > 0 ? "+" : "") + m.applied_points} {m.id.replace(/_/g, " ")}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+            <BalanceSheet
+              eyebrow="Full year"
+              title="Opening to closing"
+              open={balanceOpening(history[0].entering)}
+              close={balanceClosing(last)}
+            />
+          </div>
+        )}
+      </div>
+
+      <button
+        onClick={onRestart}
+        disabled={busy}
+        className={
+          "w-full py-4 font-serif text-xl " +
+          (busy ? "bg-stone-200 text-stone-400" : "bg-stone-900 text-white hover:bg-rose-900")
+        }
+      >
+        {busy ? "Starting a new run…" : "Run the year again"}
+      </button>
+    </div>
+  );
+}
