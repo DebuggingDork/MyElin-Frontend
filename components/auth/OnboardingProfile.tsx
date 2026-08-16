@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ChevronDown } from "lucide-react";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { InstitutionSelect } from "@/components/auth/InstitutionSelect";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -100,43 +100,23 @@ export function OnboardingProfile({
           </div>
 
           <div className="grid gap-5 sm:grid-cols-2">
-            <div>
-              <label className="eyebrow text-faint" htmlFor="onboarding-degree">
-                Degree / Program
-              </label>
-              <select
-                id="onboarding-degree"
-                value={degree}
-                onChange={(e) => setDegree(e.target.value)}
-                className="mt-3 w-full appearance-none rounded-2xl border border-line bg-[var(--panel-2)] px-4 py-3.5 text-[14.5px] text-ink outline-none transition-colors focus:border-teal/60"
-              >
-                <option value="">Select your degree</option>
-                {degreeOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <SelectField
+              id="onboarding-degree"
+              label="Degree / Program"
+              placeholder="Select your degree"
+              value={degree}
+              options={degreeOptions}
+              onChange={setDegree}
+            />
 
-            <div>
-              <label className="eyebrow text-faint" htmlFor="onboarding-year">
-                Current year
-              </label>
-              <select
-                id="onboarding-year"
-                value={year}
-                onChange={(e) => setYear(e.target.value)}
-                className="mt-3 w-full appearance-none rounded-2xl border border-line bg-[var(--panel-2)] px-4 py-3.5 text-[14.5px] text-ink outline-none transition-colors focus:border-teal/60"
-              >
-                <option value="">Select your year</option>
-                {yearOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <SelectField
+              id="onboarding-year"
+              label="Current year"
+              placeholder="Select your year"
+              value={year}
+              options={yearOptions}
+              onChange={setYear}
+            />
           </div>
 
           <fieldset>
@@ -182,5 +162,58 @@ export function OnboardingProfile({
         </form>
       </motion.div>
     </AuthShell>
+  );
+}
+
+/**
+ * A themed native `<select>`.
+ *
+ * Native on purpose -- these are short, closed lists, and the platform picker is the better
+ * control on a phone. The cost is that the browser paints the popup itself: `.select-field`
+ * (globals.css) is what makes that popup follow the theme instead of falling back to a white
+ * sheet, and `appearance-none` means the chevron has to be drawn here, the same way the other
+ * fields on this screen carry their own leading icon.
+ */
+function SelectField({
+  id,
+  label,
+  placeholder,
+  value,
+  options,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  placeholder: string;
+  value: string;
+  options: readonly string[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div>
+      <label className="eyebrow text-faint" htmlFor={id}>
+        {label}
+      </label>
+      <div className="relative mt-3">
+        <select
+          id={id}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={cn(
+            "select-field w-full cursor-pointer appearance-none rounded-2xl border border-line py-3.5 pl-4 pr-11",
+            "text-[14.5px] outline-none transition-colors hover:border-line-2 focus:border-teal/60",
+            value ? "text-ink" : "text-faint",
+          )}
+        >
+          <option value="">{placeholder}</option>
+          {options.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
+      </div>
+    </div>
   );
 }

@@ -13,7 +13,15 @@ const figures = [
 
 export function Hero() {
   return (
-    <section id="home" className="relative border-b border-line pt-[68px]">
+    /* A column that is at least one screen tall, so the masthead pins to the top, the figures
+       to the bottom and the fold lands on the ledger footing rather than mid-headline. `svh`
+       and not `vh`: on mobile `vh` is the *largest* viewport, which hides the last band behind
+       the browser's own chrome until you scroll. It is a floor, never a cap -- past the `lg`
+       stack the content is taller than a phone screen and simply grows. */
+    <section
+      id="home"
+      className="relative flex min-h-svh flex-col border-b border-line pt-[68px]"
+    >
       <div className="grid-lines absolute inset-0" />
 
       {/* Masthead strip. A newspaper puts its edition line above the fold and so does
@@ -31,17 +39,26 @@ export function Hero() {
         </Container>
       </div>
 
+      {/* `flex-1` hands this row whatever the masthead and the footing leave, and `items-center`
+          settles the content in the middle of it -- so the hero re-centres as the viewport
+          changes instead of being held in place by a fixed block of padding. The padding is
+          viewport-relative for the same reason: it is the first thing that should give on a
+          short laptop screen. */}
       <Container
         wide
-        className="relative z-10 grid items-center gap-y-14 py-16 sm:py-20 lg:grid-cols-[1fr_auto] lg:gap-x-16 lg:py-24"
+        className="relative z-10 grid flex-1 items-center gap-y-12 py-[clamp(2rem,5.5vh,5rem)] sm:gap-y-14 lg:grid-cols-[1fr_auto] lg:gap-x-16"
       >
-        <div className="lg:max-w-[19ch]">
-          <h1 className="ledger-display rise text-balance text-[clamp(2.9rem,6.2vw,5.25rem)] text-ink">
+        <div>
+          {/* The measure belongs on the headline itself: `ch` resolves against the element's own
+              font, so on the wrapper it was 19 characters of 16px body text -- a 200px column
+              that broke the line after almost every word and stretched the hero to twice the
+              height of the screen. */}
+          <h1 className="ledger-display rise text-balance text-[clamp(2.6rem,5.6vw,4.75rem)] text-ink lg:max-w-[19ch]">
             The world&apos;s most immersive way to learn{" "}
             <span className="italic text-teal">how to think.</span>
           </h1>
 
-          <div className="rise rise-1 mt-9 max-w-[46ch] border-t border-line pt-6">
+          <div className="rise rise-1 mt-[clamp(1.75rem,4vh,2.25rem)] max-w-[46ch] border-t border-line pt-6">
             <p className="text-pretty text-[16.5px] leading-[1.7] text-dim">
               You are dropped into situations with no right answer and no
               instructions. You decide, the world reacts, and the judgment you
