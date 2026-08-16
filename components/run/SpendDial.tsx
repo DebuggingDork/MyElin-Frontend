@@ -1,8 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { Minus, Plus } from "lucide-react";
 import { formatLakhs } from "@/lib/api/catalog";
+import { SpendNumberInput } from "@/components/run/SpendNumberInput";
+import { clampSpend } from "@/components/run/spendValue";
 
 const CX = 60;
 const CY = 60;
@@ -26,10 +28,19 @@ function describeArc(startAngle: number, endAngle: number) {
 }
 
 /**
- * A drag-to-set radial dial with a real, always-editable number in the center -- neither a
- * slider (linear drag bar) nor the old fixed-block grid (click-only, 1L granularity). The dial is
- * a fast, tactile way to get roughly where you want; the input is how you land on an exact figure
- * like 1.74 -- backend spend columns are Numeric(10,4), so there's no reason to round to a step.
+ * A drag-to-set radial dial with a real, editable number beside it -- neither a slider (linear
+ * drag bar) nor the old fixed-block grid (click-only, 1L granularity). The dial is a fast,
+ * tactile way to get roughly where you want; the field is how you land on an exact figure like
+ * 1.74 -- backend spend columns are Numeric(10,4), so there's no reason to round to a step.
+ *
+ * The two halves drive one number and stay in step in both directions: dragging the arc rewrites
+ * the field on the same frame, typing in the field moves the arc on the same keystroke. That is
+ * the whole reason the field is `SpendNumberInput` rather than a local copy of one -- it is the
+ * same control the split rows and the columns use, so all three agree on what a typed figure
+ * means and all three look equally editable.
+ *
+ * `step` governs the arc's keyboard, the arrow keys and the +/- buttons; typed entry stays free
+ * to any 4dp figure. `min`/`max` are hard on every route in.
  */
 export function SpendDial({
   label,
@@ -38,6 +49,9 @@ export function SpendDial({
   color,
   disabled,
   referenceMax = 20,
+  min = 0,
+  max,
+  step = 0.25,
   onChange,
 }: {
   label: string;
@@ -47,16 +61,21 @@ export function SpendDial({
   disabled?: boolean;
   /** Visual scale for the ring only -- typed values aren't capped to this. */
   referenceMax?: number;
+  /** Floor for every route in (drag, type, arrows, buttons). */
+  min?: number;
+  /** Ceiling for every route in. Omitted means uncapped -- the ring's scale is not a cap. */
+  max?: number;
+  /** Granularity of the arc's keyboard and the +/- buttons. Not of typed entry. */
+  step?: number;
   onChange: (v: number) => void;
 }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const draggingRef = useRef(false);
-  const [text, setText] = useState(() => trimmed(value));
-  const [editing, setEditing] = useState(false);
 
-  function trimmed(v: number) {
-    return v === 0 ? "0" : String(Number(v.toFixed(4)));
-  }
+  const ceiling = max ?? Number.POSITIVE_INFINITY;
+  const commit = (v: number) => onChange(clampSpend(v, min, ceiling));
+  /** Where the arc's End key lands: the smaller of the ring's scale and a real ceiling. */
+  const arcMax = Math.min(ceiling, referenceMax);
 
   function angleFromPointer(clientX: number, clientY: number): number {
     const svg = svgRef.current;
@@ -71,7 +90,7 @@ export function SpendDial({
 
   function setFromAngle(angle: number) {
     const fraction = (angle - START_ANGLE) / SWEEP;
-    onChange(Number((fraction * referenceMax).toFixed(2)));
+    commit(fraction * referenceMax);
   }
 
   function onPointerDown(e: React.PointerEvent<SVGSVGElement>) {
@@ -89,16 +108,26 @@ export function SpendDial({
     svgRef.current?.releasePointerCapture(e.pointerId);
   }
 
+  /** The arc answers the keys a slider is expected to answer, so the pointer is not the only
+   *  way to reach it -- and so a screen reader announcing `role="slider"` is telling the truth. */
+  function onArcKeyDown(e: React.KeyboardEvent<SVGSVGElement>) {
+    if (disabled) return;
+    let next: number | null = null;
+    if (e.key === "ArrowUp" || e.key === "ArrowRight") next = value + step;
+    else if (e.key === "ArrowDown" || e.key === "ArrowLeft") next = value - step;
+    else if (e.key === "PageUp") next = value + step * 4;
+    else if (e.key === "PageDown") next = value - step * 4;
+    else if (e.key === "Home") next = min;
+    else if (e.key === "End") next = arcMax;
+    if (next === null) return;
+    e.preventDefault();
+    commit(next);
+  }
+
   const fraction = Math.max(0, Math.min(1, value / referenceMax));
   const valueAngle = START_ANGLE + fraction * SWEEP;
   const trackPath = describeArc(START_ANGLE, END_ANGLE);
   const valuePath = describeArc(START_ANGLE, Math.max(START_ANGLE, valueAngle));
-
-  function commitText(raw: string) {
-    const cleaned = raw.replace(/[^0-9.]/g, "");
-    const n = Number(cleaned);
-    onChange(Number.isFinite(n) && n >= 0 ? n : 0);
-  }
 
   return (
     <div className="rounded-xl border border-line bg-raise/50 p-4">
@@ -111,10 +140,23 @@ export function SpendDial({
           viewBox="0 0 120 120"
           width={92}
           height={92}
-          className={disabled ? "shrink-0 opacity-50" : "shrink-0 cursor-pointer touch-none"}
+          role="slider"
+          tabIndex={disabled ? -1 : 0}
+          aria-label={`${label} spend dial`}
+          aria-valuemin={min}
+          aria-valuemax={arcMax}
+          aria-valuenow={value}
+          aria-valuetext={formatLakhs(value)}
+          aria-disabled={disabled || undefined}
+          className={
+            disabled
+              ? "shrink-0 opacity-50"
+              : "shrink-0 cursor-pointer touch-none rounded-full"
+          }
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
+          onKeyDown={onArcKeyDown}
         >
           <path d={trackPath} fill="none" stroke="var(--line-2)" strokeWidth={9} strokeLinecap="round" />
           {value > 0 && (
@@ -137,52 +179,32 @@ export function SpendDial({
         </svg>
 
         <div className="min-w-0 flex-1">
-          <div className="flex items-baseline gap-1">
-            <span className="num text-[13px] text-faint">₹</span>
-            <input
-              type="text"
-              inputMode="decimal"
-              disabled={disabled}
-              value={editing ? text : trimmed(value)}
-              onFocus={() => {
-                setEditing(true);
-                setText(trimmed(value));
-              }}
-              onChange={(e) => {
-                setText(e.target.value);
-                // Commit as the user types too (not just on blur), so the running totals
-                // elsewhere on the page stay live -- but only once it's a real number; "1." or
-                // "" mid-keystroke is left alone rather than forced to 1 or 0.
-                const n = Number(e.target.value.replace(/[^0-9.]/g, ""));
-                if (e.target.value !== "" && Number.isFinite(n)) onChange(n);
-              }}
-              onBlur={() => {
-                setEditing(false);
-                commitText(text);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") e.currentTarget.blur();
-              }}
-              className="num w-full min-w-0 bg-transparent text-[22px] font-semibold text-ink outline-none disabled:cursor-not-allowed"
-              aria-label={`${label} spend in lakhs`}
-            />
-            <span className="num text-[13px] text-faint">L</span>
-          </div>
-          <p className="num mt-0.5 text-[11px] text-faint">{formatLakhs(value)} exactly</p>
-          <div className="mt-2 flex items-center gap-1.5">
+          <SpendNumberInput
+            label={label}
+            value={value}
+            disabled={disabled}
+            min={min}
+            max={max}
+            step={step}
+            onChange={commit}
+          />
+          <p className="num mt-1 px-3 text-[11px] text-faint">{formatLakhs(value)} exactly</p>
+          <div className="mt-2 flex items-center gap-1.5 px-3">
             <button
               type="button"
-              disabled={disabled || value <= 0}
-              onClick={() => onChange(Number(Math.max(0, value - 0.25).toFixed(2)))}
-              className="flex h-6 w-6 items-center justify-center rounded-md border border-line text-dim disabled:opacity-30"
+              disabled={disabled || value <= min}
+              aria-label={`Decrease ${label}`}
+              onClick={() => commit(value - step)}
+              className="flex h-8 w-8 items-center justify-center rounded-md border border-line text-dim transition-colors hover:border-line-2 hover:text-ink disabled:opacity-30 sm:h-6 sm:w-6"
             >
               <Minus className="h-3 w-3" />
             </button>
             <button
               type="button"
-              disabled={disabled}
-              onClick={() => onChange(Number((value + 0.25).toFixed(2)))}
-              className="flex h-6 w-6 items-center justify-center rounded-md border border-line text-dim disabled:opacity-30"
+              disabled={disabled || value >= ceiling}
+              aria-label={`Increase ${label}`}
+              onClick={() => commit(value + step)}
+              className="flex h-8 w-8 items-center justify-center rounded-md border border-line text-dim transition-colors hover:border-line-2 hover:text-ink disabled:opacity-30 sm:h-6 sm:w-6"
             >
               <Plus className="h-3 w-3" />
             </button>

@@ -437,6 +437,18 @@ body {
   color: var(--text);
 }
 
+/* SpendNumberInput draws its own bordered box around a bare input, so the box takes the focus
+   ring and the input inside it gives its own up -- otherwise the global `:focus-visible` rule
+   paints a second ring one border in from the first. Both rules have to live here rather than
+   as utilities: that global rule is unlayered and would outrank any Tailwind class. */
+.spend-field:has(input:focus-visible) {
+  box-shadow: var(--focus-ring);
+}
+
+.spend-field input:focus-visible {
+  box-shadow: none;
+}
+
 /* ───────────────────────── backdrops ───────────────────────── */
 
 .aurora {

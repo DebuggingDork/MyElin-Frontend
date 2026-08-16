@@ -79,18 +79,21 @@ export function AllocationWorkspace({ deptId }: { deptId: DeptId }) {
   // and a negative budget would make every slider jump backwards instead of simply refusing.
   const deptBudgetLakhs = Math.max(0, cashLakhs - otherDeptsLakhs);
 
+  // Headroom for one line = the department's budget minus every *other* line in it, so raising
+  // one line stops exactly where the quarter's cash runs out rather than borrowing from a
+  // sibling's saved value. Read both by `setField` (which enforces it) and by the controls
+  // (which show it).
+  const headroomFor = (key: string, from: SpendMap = spend) =>
+    Math.max(
+      0,
+      deptBudgetLakhs - keys.reduce((s, k) => (k === key ? s : s + (from[k] ?? 0)), 0),
+    );
+
   const setField = (key: string, value: number) => {
-    setSpend((prev) => {
-      // Headroom for this line = the department's budget minus every *other* line in it, so
-      // raising one line stops exactly where the quarter's cash runs out rather than borrowing
-      // from a sibling's saved value.
-      const otherLines = keys.reduce(
-        (s, k) => (k === key ? s : s + (prev[k] ?? 0)),
-        0,
-      );
-      const headroom = Math.max(0, deptBudgetLakhs - otherLines);
-      return { ...prev, [key]: Math.min(Math.max(0, value), headroom) };
-    });
+    setSpend((prev) => ({
+      ...prev,
+      [key]: Math.min(Math.max(0, value), headroomFor(key, prev)),
+    }));
     setSaved(false);
   };
 
@@ -240,6 +243,10 @@ export function AllocationWorkspace({ deptId }: { deptId: DeptId }) {
               value={spend[field.key] ?? 0}
               color={color}
               disabled={!enabled}
+              // The same headroom `setField` enforces, handed to the control so it can enforce
+              // it visibly -- the + button greys out at the cap instead of quietly doing
+              // nothing, and a typed figure lands on the ceiling rather than being swallowed.
+              max={headroomFor(field.key)}
               onChange={(v) => setField(field.key, v)}
             />
           ))}
