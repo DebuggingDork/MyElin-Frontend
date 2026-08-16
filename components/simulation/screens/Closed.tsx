@@ -11,6 +11,7 @@
 import { useState } from "react";
 import { BUFFER, PRIORITY_BY_ID, QUARTER_BRIEFS, TONE_CARD, TONE_TEXT } from "@/lib/simulation/constants";
 import { cr, inr, n0, n1, pct } from "@/lib/simulation/format";
+import { formatDisplayText, formatSigned, humanizeId } from "@/lib/format/display";
 import { balanceClosing, balanceOpening } from "@/lib/simulation/balance";
 import { lessons, whatHappened } from "@/lib/simulation/insights";
 import { priorityMatch, traitVerdicts } from "@/lib/simulation/scoring";
@@ -49,12 +50,12 @@ function Assessment({ score }: { score: QuarterScore }) {
         {verdicts.map((t) => (
           <div key={t.name} className={"border p-3 " + TONE_CARD[t.tone as Tone]}>
             <div className="flex items-baseline justify-between">
-              <span className="font-serif text-base">{t.name}</span>
+              <span className="font-serif text-base">{humanizeId(t.name)}</span>
               <span className={"text-xs uppercase tracking-widest font-semibold " + TONE_TEXT[t.tone as Tone]}>
                 {t.verdict}
               </span>
             </div>
-            <div className="text-xs text-stone-600 mt-1">{t.line}</div>
+            <div className="text-xs text-stone-600 mt-1">{formatDisplayText(t.line)}</div>
           </div>
         ))}
       </div>
@@ -68,7 +69,7 @@ function Assessment({ score }: { score: QuarterScore }) {
                 key={i}
                 className={"text-xs font-mono " + (Number(m.points) >= 0 ? "text-teal-800" : "text-rose-800")}
               >
-                {(Number(m.points) >= 0 ? "+" : "") + m.points} {m.why}
+                {formatSigned(m.points)} {formatDisplayText(m.why)}
               </li>
             ))}
           </ul>
@@ -92,7 +93,9 @@ function Assessment({ score }: { score: QuarterScore }) {
             {score.traits.map((t) => (
               <div key={t.name}>
                 <div className="flex items-baseline justify-between">
-                  <span className="text-sm font-semibold text-stone-900">{t.name}</span>
+                  <span className="text-sm font-semibold text-stone-900">
+                    {humanizeId(t.name)}
+                  </span>
                   <span className="font-mono text-xs text-stone-500">
                     {n1(Number(t.points))} / {n1(Number(t.weight))}
                   </span>
@@ -112,7 +115,7 @@ function Assessment({ score }: { score: QuarterScore }) {
                       >
                         {s.level === "full" ? "met" : s.level === "part" ? "part" : "not met"}
                       </span>
-                      {s.label} — {s.detail}
+                      {humanizeId(s.label)} — {formatDisplayText(s.detail)}
                     </li>
                   ))}
                 </ul>
@@ -212,7 +215,7 @@ export function ClosedScreen({
           <ul className="space-y-1">
             {(r.notes as string[]).map((note, i) => (
               <li key={i} className="text-sm text-stone-700 border-b border-stone-200 pb-1">
-                {note}
+                {formatDisplayText(note)}
               </li>
             ))}
           </ul>

@@ -9,6 +9,7 @@ import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Pill } from "@/components/ui/Kit";
 import { DEPARTMENTS } from "@/lib/api/catalog";
+import { humanizeId } from "@/lib/format/display";
 import { useRun } from "@/components/run/RunProvider";
 import { RunKpiBar } from "@/components/run/RunKpiBar";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
@@ -224,7 +225,9 @@ export function RunShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-[58px] shrink-0 items-center justify-between gap-4 border-b border-line bg-base/90 px-4 sm:px-6">
+        {/* Header, KPI strip and body share one gutter (px-4 / sm:px-6 / lg:px-8) so every
+            rule on the screen starts and ends on the same vertical line. */}
+        <header className="flex h-[58px] shrink-0 items-center justify-between gap-4 border-b border-line bg-base/90 px-4 sm:px-6 lg:px-8">
           <div className="min-w-0">
             <p className="truncate text-[14px] font-medium text-ink">
               {company?.name ?? "Company"}
@@ -242,7 +245,7 @@ export function RunShell({ children }: { children: React.ReactNode }) {
                   key={m}
                   className="num rounded-full border border-line px-2 py-1 text-[10px] text-faint"
                 >
-                  {m}
+                  {humanizeId(m)}
                 </span>
               ))}
             </div>
@@ -254,7 +257,7 @@ export function RunShell({ children }: { children: React.ReactNode }) {
 
         <RunKpiBar />
 
-        <div className="flex shrink-0 gap-1.5 overflow-x-auto border-b border-line px-3 py-2 lg:hidden">
+        <div className="flex shrink-0 gap-1.5 overflow-x-auto border-b border-line px-4 py-2 sm:px-6 lg:hidden">
           {links
             .filter((l) => l.enabled)
             .map((link) => {
@@ -288,8 +291,15 @@ export function RunShell({ children }: { children: React.ReactNode }) {
         {onSimulation ? (
           <main className="flex-1 overflow-y-auto">{children}</main>
         ) : (
-          <main className="flex-1 overflow-y-auto px-4 py-8 sm:px-8">
-            <div className="mx-auto max-w-4xl">
+          <main className="flex-1 overflow-y-auto px-4 py-8 sm:px-6 lg:px-8">
+            {/*
+              The gutter matches the header and the KPI strip above (px-4 / sm:px-6 / lg:px-8),
+              so the body starts on the same left rule as the chrome instead of sitting in a
+              narrow centred column with the strip running full-bleed past it. `max-w-[1440px]`
+              is the readability ceiling, not the layout: below it -- every laptop, and every
+              desktop once the 268px rail is subtracted -- the column simply fills the width.
+            */}
+            <div className="mx-auto w-full max-w-[1440px]">
               {error && (
                 <p className="mb-6 rounded-xl border border-rose/30 bg-rose/[0.07] px-4 py-3 text-[13px] text-rose">
                   {error}

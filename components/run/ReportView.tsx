@@ -5,6 +5,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Check, ChevronDown, Minus, ShieldAlert, X } from "lucide-react";
 import { easeOut } from "@/lib/media";
 import { asNumber, formatInr } from "@/lib/api/catalog";
+import {
+  formatDecimal,
+  formatDisplayText,
+  formatSigned,
+  humanizeId,
+} from "@/lib/format/display";
 import { BalanceSheet } from "@/components/run/BalanceSheet";
 import { ReportPdfExport } from "@/components/run/ReportPdfExport";
 import type {
@@ -26,7 +32,7 @@ export function ReportView({ report }: { report: QuarterReportResponse }) {
               Quarter {report.quarter_number} · Report
             </p>
             <span className="eyebrow rounded-full border border-emerald/30 bg-emerald/10 px-2.5 py-1 text-emerald">
-              {report.run_status}
+              {humanizeId(report.run_status)}
             </span>
           </div>
           <h2 className="display mt-3 text-[clamp(1.6rem,3vw,2.3rem)] text-ink">
@@ -36,7 +42,10 @@ export function ReportView({ report }: { report: QuarterReportResponse }) {
         <ReportPdfExport report={report} />
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      {/* Two readings of the same quarter, side by side from `lg` up. `xl` gives decision
+          quality the wider half: it carries the criterion rows, which are the longest lines
+          on the page, while the outcome column is a fixed-width printed statement. */}
+      <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         {/* outcome */}
         <section className="min-w-0 space-y-4">
           <h3 className="eyebrow text-faint">A · Business outcome</h3>
@@ -55,13 +64,13 @@ export function ReportView({ report }: { report: QuarterReportResponse }) {
           <h3 className="eyebrow text-faint">B · Decision quality</h3>
           <div className="glass-card px-5 py-6 text-center">
             <p className="display text-[48px] leading-none text-grad">
-              {asNumber(dq.ceo_score).toFixed(1)}
+              {formatDecimal(dq.ceo_score, 1)}
             </p>
-            <p className="eyebrow mt-3 text-ink">{dq.band}</p>
+            <p className="eyebrow mt-3 text-ink">{humanizeId(dq.band)}</p>
             <p className="mt-2 text-[11.5px] text-faint">
               Mechanical points available{" "}
-              {asNumber(dq.mechanical_points_available).toFixed(1)} · unscored{" "}
-              {asNumber(dq.unscored_points).toFixed(1)}
+              {formatDecimal(dq.mechanical_points_available, 1)} · unscored{" "}
+              {formatDecimal(dq.unscored_points, 1)}
             </p>
           </div>
 
@@ -76,7 +85,9 @@ export function ReportView({ report }: { report: QuarterReportResponse }) {
           <p className="eyebrow text-faint">Run summary · terminal quarter</p>
           <p className="mt-2 text-[13px] text-dim">
             Terminal status:{" "}
-            <span className="text-ink">{report.run_summary.terminal_status}</span>
+            <span className="text-ink">
+              {humanizeId(report.run_summary.terminal_status)}
+            </span>
             {report.run_summary.final_valuation_inr != null && (
               <>
                 {" "}
@@ -109,11 +120,11 @@ function GateList({ gates }: { gates: BindingConstraintSchema[] }) {
           className="rounded-xl border border-rose/30 bg-rose/[0.06] p-4"
         >
           <div className="flex items-center gap-2">
-            <ShieldAlert className="h-4 w-4 text-rose" />
-            <p className="text-[13px] font-medium text-rose">{g.gate}</p>
+            <ShieldAlert className="h-4 w-4 shrink-0 text-rose" />
+            <p className="text-[13px] font-medium text-rose">{humanizeId(g.gate)}</p>
           </div>
           <p className="mt-1.5 text-[12.5px] leading-relaxed text-dim">
-            {g.detail}
+            {formatDisplayText(g.detail)}
           </p>
         </div>
       ))}
@@ -139,13 +150,11 @@ function QualityPanel({ dq }: { dq: DecisionQualitySchema }) {
                     : "var(--faint)",
                 }}
               >
-                {m.fired
-                  ? `${asNumber(m.applied_points) >= 0 ? "+" : ""}${asNumber(m.applied_points)}`
-                  : "—"}
+                {m.fired ? formatSigned(m.applied_points) : "—"}
               </span>
-              <span className="text-dim">
-                <span className="text-ink">{m.id}</span>
-                {m.fired ? ` · ${m.detail}` : " · did not fire"}
+              <span className="min-w-0 text-dim">
+                <span className="text-ink">{humanizeId(m.id)}</span>
+                {m.fired ? ` · ${formatDisplayText(m.detail)}` : " · did not fire"}
               </span>
             </li>
           ))}
@@ -158,7 +167,7 @@ function QualityPanel({ dq }: { dq: DecisionQualitySchema }) {
           {dq.scored_criteria.map((c) => (
             <CriterionRow
               key={c.id}
-              title={`${c.trait} · ${c.id}`}
+              title={`${humanizeId(c.trait)} · ${humanizeId(c.id)}`}
               result={c.result}
               detail={c.detail}
               points={c.points}
@@ -178,9 +187,9 @@ function QualityPanel({ dq }: { dq: DecisionQualitySchema }) {
           {dq.unscored_criteria.map((c) => (
             <div key={c.id} className="glass-card-flat px-4 py-3">
               <p className="text-[12.5px] text-ink">
-                {c.trait} · {c.id}
+                {humanizeId(c.trait)} · {humanizeId(c.id)}
               </p>
-              <p className="mt-1 text-[12px] text-dim">{c.reason}</p>
+              <p className="mt-1 text-[12px] text-dim">{formatDisplayText(c.reason)}</p>
               <span className="eyebrow mt-2 inline-block text-amber">
                 not yet assessed
               </span>
@@ -220,19 +229,19 @@ function CriterionRow({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center gap-3 px-4 py-3 text-left"
+        className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 text-left"
       >
         <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: meta.color }} />
         <span className="min-w-0 flex-1 text-[12.5px] text-ink">{title}</span>
-        <span className="eyebrow" style={{ color: meta.color }}>
+        <span className="eyebrow shrink-0" style={{ color: meta.color }}>
           {meta.label}
         </span>
         {points != null && (
-          <span className="num text-[12px] text-faint">
-            {asNumber(points).toFixed(1)}
+          <span className="num shrink-0 text-[12px] text-faint">
+            {formatDecimal(points, 1)}
           </span>
         )}
-        <ChevronDown className="h-3.5 w-3.5 text-faint" />
+        <ChevronDown className="h-3.5 w-3.5 shrink-0 text-faint" />
       </button>
       <AnimatePresence initial={false}>
         {open && (
@@ -243,7 +252,7 @@ function CriterionRow({
             transition={{ duration: 0.25, ease: easeOut }}
             className="overflow-hidden border-t border-line px-4 py-3 text-[12px] text-dim"
           >
-            {detail}
+            {formatDisplayText(detail)}
           </motion.p>
         )}
       </AnimatePresence>
@@ -261,18 +270,21 @@ function EvidencePanel({
   return (
     <section>
       <h3 className="eyebrow text-faint">Evidence · observations, not grades</h3>
-      <div className="mt-3 grid gap-3 md:grid-cols-2">
+      {/* Same column rhythm as the two panels above: one column on phones, two from `md`,
+          three once the shell's content column is wide enough to keep each card readable. */}
+      <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {entries.map(([trait, rows]) => (
-          <div key={trait} className="glass-card-flat p-4">
-            <p className="text-[13px] font-medium text-ink">{trait}</p>
+          <div key={trait} className="glass-card-flat min-w-0 p-4">
+            <p className="text-[13px] font-medium text-ink">{humanizeId(trait)}</p>
             <ul className="mt-2 space-y-2">
               {rows.map((row) => (
                 <li key={row.evidence_key} className="text-[12px] text-dim">
                   <span className="text-faint">
-                    {row.department ?? "—"} · {row.evidence_key}
+                    {row.department ? humanizeId(row.department) : "—"} ·{" "}
+                    {humanizeId(row.evidence_key)}
                   </span>
                   <br />
-                  {row.detail}
+                  {formatDisplayText(row.detail)}
                 </li>
               ))}
             </ul>

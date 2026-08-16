@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { ArrowRight, Skull, Trophy } from "lucide-react";
 import { Action, Eyebrow, Pill } from "@/components/ui/Kit";
-import { asNumber, formatInr } from "@/lib/api/catalog";
+import { formatInr } from "@/lib/api/catalog";
+import { formatDecimal, formatDisplayText, humanizeId } from "@/lib/format/display";
 import { useRun } from "@/components/run/RunProvider";
 
 /** Terminal screen when run_status is completed or failed. */
@@ -31,7 +32,7 @@ export function CompleteScreen() {
         <div className="flex flex-wrap items-center gap-3">
           <Eyebrow accent={failed ? "rose" : "emerald"}>Run complete</Eyebrow>
           <Pill accent={failed ? "rose" : "emerald"}>
-            {run?.run_status}
+            {humanizeId(run?.run_status)}
           </Pill>
         </div>
         <h1 className="display mt-4 flex items-center gap-3 text-[clamp(1.7rem,3.4vw,2.5rem)] text-ink">
@@ -47,7 +48,9 @@ export function CompleteScreen() {
         </h1>
         <p className="mt-3 text-[14px] text-dim">{company?.name}</p>
         {company?.survival_detail && (
-          <p className="mt-2 text-[13px] text-dim">{company.survival_detail}</p>
+          <p className="mt-2 text-[13px] text-dim">
+            {formatDisplayText(company.survival_detail)}
+          </p>
         )}
       </header>
 
@@ -55,9 +58,11 @@ export function CompleteScreen() {
         <div className="rounded-xl border border-line bg-raise/50 p-4">
           <p className="eyebrow text-faint">Final CEO score</p>
           <p className="display mt-2 text-[28px] text-ink">
-            {last ? asNumber(last.ceo_score).toFixed(1) : "—"}
+            {last ? formatDecimal(last.ceo_score, 1) : "—"}
           </p>
-          <p className="eyebrow mt-1 text-faint">{last?.band ?? "—"}</p>
+          <p className="eyebrow mt-1 text-faint">
+            {last?.band ? humanizeId(last.band) : "—"}
+          </p>
         </div>
         <div className="rounded-xl border border-line bg-raise/50 p-4">
           <p className="eyebrow text-faint">Quarters scored</p>
@@ -86,7 +91,7 @@ export function CompleteScreen() {
               >
                 <span className="text-dim">Q{s.quarter_number}</span>
                 <span className="num text-ink">
-                  {asNumber(s.ceo_score).toFixed(1)} · {s.band}
+                  {formatDecimal(s.ceo_score, 1)} · {humanizeId(s.band)}
                 </span>
               </li>
             ))}
@@ -98,10 +103,10 @@ export function CompleteScreen() {
         <div className="rounded-xl border border-line bg-raise/50 p-5">
           <p className="eyebrow text-faint">Endgame tier</p>
           <p className="mt-2 text-[18px] font-medium text-ink">
-            {run.endgame_preview.tier}
+            {humanizeId(run.endgame_preview.tier)}
           </p>
           <p className="mt-1 text-[12.5px] text-dim">
-            {run.endgame_preview.tier_detail}
+            {formatDisplayText(run.endgame_preview.tier_detail)}
           </p>
         </div>
       )}

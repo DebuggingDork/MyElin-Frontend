@@ -8,6 +8,7 @@ import { api } from "@/lib/api/client";
 import type { CompanyListItem, RunStatus } from "@/lib/api/types";
 import { ApiError } from "@/lib/api/types";
 import { Meter, Pill, type Accent } from "@/components/ui/Kit";
+import { formatDecimal, humanizeId } from "@/lib/format/display";
 import { cn } from "@/lib/utils";
 
 const RUN_STATUS_LABEL: Record<RunStatus, string> = {
@@ -177,8 +178,8 @@ export function ProfileMenu() {
                 </div>
                 {active.latest_ceo_score != null && (
                   <p className="text-[11.5px] text-faint">
-                    Latest CEO score {String(active.latest_ceo_score)}
-                    {active.latest_band ? ` · ${active.latest_band}` : ""}
+                    Latest CEO score {formatDecimal(active.latest_ceo_score, 1)}
+                    {active.latest_band ? ` · ${humanizeId(active.latest_band)}` : ""}
                   </p>
                 )}
                 <p className="text-[11.5px] text-faint">

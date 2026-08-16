@@ -13,7 +13,8 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { Action, Pill, type Accent } from "@/components/ui/Kit";
-import { asNumber } from "@/lib/api/catalog";
+import { formatInr } from "@/lib/api/catalog";
+import { formatDecimal, formatDisplayText, humanizeId } from "@/lib/format/display";
 import { useRun } from "@/components/run/RunProvider";
 import { DashboardCharts } from "@/components/run/charts/DashboardCharts";
 import type { RunStatus } from "@/lib/api/types";
@@ -58,13 +59,13 @@ export function HubScreen() {
             {company?.name}
           </h1>
           <p className="mt-2 text-[13.5px] text-dim">
-            {company?.seed_name} · {company?.profile_name} profile ·{" "}
-            {company?.scenario_id}
+            {humanizeId(company?.seed_name)} · {humanizeId(company?.profile_name)}{" "}
+            profile · {humanizeId(company?.scenario_id)}
           </p>
         </div>
         {run && (
           <Pill accent={statusAccent} solid>
-            {run.run_status}
+            {humanizeId(run.run_status)}
           </Pill>
         )}
       </header>
@@ -73,7 +74,7 @@ export function HubScreen() {
         <Stat
           icon={Activity}
           label="Status"
-          value={run?.run_status ?? "—"}
+          value={run ? humanizeId(run.run_status) : "—"}
           accent={statusAccent}
         />
         <Stat
@@ -84,13 +85,17 @@ export function HubScreen() {
               ? `Q${run.current_quarter_number} / ${run.total_quarters}`
               : "None open"
           }
-          hint={run?.current_quarter_status}
+          hint={run?.current_quarter_status ? humanizeId(run.current_quarter_status) : null}
         />
         <Stat
           icon={TrendingUp}
           label="Latest CEO score"
-          value={latestScore ? asNumber(latestScore.ceo_score).toFixed(0) : "—"}
-          hint={latestScore ? `Q${latestScore.quarter_number} · ${latestScore.band}` : "No quarters scored yet"}
+          value={latestScore ? formatDecimal(latestScore.ceo_score, 0) : "—"}
+          hint={
+            latestScore
+              ? `Q${latestScore.quarter_number} · ${humanizeId(latestScore.band)}`
+              : "No quarters scored yet"
+          }
         />
       </div>
 
@@ -105,7 +110,8 @@ export function HubScreen() {
             <ul className="mt-2 space-y-1">
               {run.binding_constraint_hint.map((g) => (
                 <li key={g.gate} className="text-[12.5px] text-dim">
-                  <span className="text-ink">{g.gate}</span> — {g.detail}
+                  <span className="text-ink">{humanizeId(g.gate)}</span> —{" "}
+                  {formatDisplayText(g.detail)}
                 </li>
               ))}
             </ul>
@@ -182,10 +188,10 @@ export function HubScreen() {
                   className="w-full !justify-between"
                 >
                   <span>
-                    Q{q.number} · {q.status}
+                    Q{q.number} · {humanizeId(q.status)}
                   </span>
                   <span className="num text-[12px] text-faint">
-                    cash {String(q.cash_balance)}
+                    cash {formatInr(q.cash_balance)}
                   </span>
                 </Action>
               </li>
@@ -199,7 +205,7 @@ export function HubScreen() {
           Legal moves right now (debug)
         </summary>
         <p className="num mt-2 text-[12px] text-dim">
-          {run?.legal_moves.join(" · ") || "none"}
+          {run?.legal_moves.map(humanizeId).join(" · ") || "none"}
         </p>
       </details>
     </div>

@@ -25,7 +25,7 @@ export function RunKpiBar() {
   const lastScore = run.score_trajectory?.at(-1);
 
   return (
-    <div className="glass-strip flex shrink-0 flex-wrap items-center gap-x-7 gap-y-2 border-b border-line px-4 py-2.5 sm:px-6">
+    <div className="glass-strip flex shrink-0 flex-wrap items-center gap-x-7 gap-y-2 border-b border-line px-4 py-2.5 sm:px-6 lg:px-8">
       <Kpi icon={Wallet} label="Cash balance" value={formatInr(cash)} accent="teal" />
       <Kpi icon={TrendingUp} label="Revenue" value={formatInr(quarter.revenue)} accent="cyan" />
       <Kpi

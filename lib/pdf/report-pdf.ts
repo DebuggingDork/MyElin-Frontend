@@ -1,5 +1,11 @@
 import { jsPDF } from "jspdf";
 import { asNumber, formatInr } from "@/lib/api/catalog";
+import {
+  formatDecimal,
+  formatDisplayText,
+  formatSigned,
+  humanizeId,
+} from "@/lib/format/display";
 import type { CompanyOutcomeSchema, QuarterReportResponse } from "@/lib/api/types";
 
 const PAGE_W = 595.28; // A4 in pt
@@ -176,11 +182,14 @@ export function buildReportPdf(report: QuarterReportResponse, companyName: strin
       ensureSpace(c, 26);
       doc.setTextColor(BAD);
       doc.setFont("helvetica", "bold");
-      doc.text(g.gate, MARGIN, c.y);
+      doc.text(humanizeId(g.gate), MARGIN, c.y);
       c.y += 12;
       doc.setFont("helvetica", "normal");
       doc.setTextColor(INK_SOFT);
-      const lines = doc.splitTextToSize(g.detail, PAGE_W - MARGIN * 2) as string[];
+      const lines = doc.splitTextToSize(
+        formatDisplayText(g.detail),
+        PAGE_W - MARGIN * 2,
+      ) as string[];
       doc.text(lines, MARGIN, c.y);
       c.y += lines.length * 11 + 8;
     }
@@ -192,12 +201,12 @@ export function buildReportPdf(report: QuarterReportResponse, companyName: strin
   doc.setFont("helvetica", "bold");
   doc.setFontSize(28);
   doc.setTextColor(INK);
-  doc.text(asNumber(dq.ceo_score).toFixed(1), MARGIN, c.y + 20);
+  doc.text(formatDecimal(dq.ceo_score, 1), MARGIN, c.y + 20);
   doc.setFontSize(10.5);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(INK_SOFT);
   doc.text(
-    `${dq.band} · mechanical points available ${asNumber(dq.mechanical_points_available).toFixed(1)} · unscored ${asNumber(dq.unscored_points).toFixed(1)}`,
+    `${humanizeId(dq.band)} · mechanical points available ${formatDecimal(dq.mechanical_points_available, 1)} · unscored ${formatDecimal(dq.unscored_points, 1)}`,
     MARGIN,
     c.y + 38,
   );
@@ -210,11 +219,11 @@ export function buildReportPdf(report: QuarterReportResponse, companyName: strin
       doc.setFont("helvetica", "bold");
       doc.setFontSize(9.5);
       doc.setTextColor(m.fired ? (asNumber(m.applied_points) >= 0 ? GOOD : BAD) : INK_SOFT);
-      const pts = m.fired ? `${asNumber(m.applied_points) >= 0 ? "+" : ""}${asNumber(m.applied_points)}` : "—";
+      const pts = m.fired ? formatSigned(m.applied_points) : "—";
       doc.text(pts, MARGIN, c.y, { maxWidth: 30 });
       doc.setFont("helvetica", "normal");
       doc.setTextColor(INK_SOFT);
-      const text = `${m.id}${m.fired ? ` · ${m.detail}` : " · did not fire"}`;
+      const text = `${humanizeId(m.id)}${m.fired ? ` · ${formatDisplayText(m.detail)}` : " · did not fire"}`;
       const lines = doc.splitTextToSize(text, PAGE_W - MARGIN * 2 - 40) as string[];
       doc.text(lines, MARGIN + 40, c.y);
       c.y += Math.max(14, lines.length * 11 + 3);
@@ -231,7 +240,7 @@ export function buildReportPdf(report: QuarterReportResponse, companyName: strin
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9.5);
       doc.setTextColor(INK);
-      doc.text(`${cr.trait} · ${cr.id}`, MARGIN, c.y, { maxWidth: 300 });
+      doc.text(`${humanizeId(cr.trait)} · ${humanizeId(cr.id)}`, MARGIN, c.y, { maxWidth: 300 });
       doc.setTextColor(color);
       doc.text(label, PAGE_W - MARGIN, c.y, { align: "right" });
       c.y += 13;
