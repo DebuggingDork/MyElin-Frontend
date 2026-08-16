@@ -32,10 +32,10 @@ import {
   headcount,
   innoSum,
   numericAlloc,
-} from "@/lib/nadi/constants";
-import { inr, lakh, n0, n1, n2, num, pct, pw } from "@/lib/nadi/format";
-import { pipelineBoard } from "@/lib/nadi/insights";
-import { Bar, Eyebrow, Panel, TeachingNote } from "@/components/nadi/Kit";
+} from "@/lib/simulation/constants";
+import { inr, lakh, n0, n1, n2, num, pct, pw } from "@/lib/simulation/format";
+import { pipelineBoard } from "@/lib/simulation/insights";
+import { Bar, Eyebrow, Panel, TeachingNote } from "@/components/simulation/Kit";
 import type {
   Alloc,
   CompanyState,
@@ -48,7 +48,7 @@ import type {
   Reflection,
   Tone,
   WarrantyId,
-} from "@/lib/nadi/types";
+} from "@/lib/simulation/types";
 
 const v = (r: QuarterResultShape, k: string) => r[k] as number;
 

@@ -5,10 +5,10 @@
  * table wants, and the priority you have to declare before you see any of the levers.
  */
 
-import { BUFFER, PRIORITIES, QUARTER_BRIEFS, TONE_CARD, headcount } from "@/lib/nadi/constants";
-import { cr, inr, n0, n1, pct } from "@/lib/nadi/format";
-import { Eyebrow, HealthPanel, Panel, TeachingNote, TrendStat } from "@/components/nadi/Kit";
-import type { ChangeLine } from "@/lib/nadi/insights";
+import { BUFFER, PRIORITIES, QUARTER_BRIEFS, TONE_CARD, headcount } from "@/lib/simulation/constants";
+import { cr, inr, n0, n1, pct } from "@/lib/simulation/format";
+import { Eyebrow, HealthPanel, Panel, TeachingNote, TrendStat } from "@/components/simulation/Kit";
+import type { ChangeLine } from "@/lib/simulation/insights";
 import type {
   CompanyState,
   Constraint,
@@ -16,7 +16,7 @@ import type {
   PriorityId,
   QuarterResultShape,
   Tone,
-} from "@/lib/nadi/types";
+} from "@/lib/simulation/types";
 
 const v = (r: QuarterResultShape, k: string) => r[k] as number;
 

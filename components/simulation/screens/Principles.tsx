@@ -2,8 +2,8 @@
 
 /** The reference tab: every teaching note in one place, grouped by category. */
 
-import { TEACHING_NOTES } from "@/lib/nadi/constants";
-import { Eyebrow, Panel } from "@/components/nadi/Kit";
+import { TEACHING_NOTES } from "@/lib/simulation/constants";
+import { Eyebrow, Panel } from "@/components/simulation/Kit";
 
 export function PrinciplesScreen() {
   const categories: string[] = [];

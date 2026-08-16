@@ -17,8 +17,8 @@ import {
   PRODUCTS,
   headcount,
   marketDemand,
-} from "@/lib/nadi/constants";
-import { clamp, cr, inr, n0, n1, num, pct } from "@/lib/nadi/format";
+} from "@/lib/simulation/constants";
+import { clamp, cr, inr, n0, n1, num, pct } from "@/lib/simulation/format";
 import type {
   CompanyState,
   Constraint,
@@ -27,7 +27,7 @@ import type {
   QuarterResultShape,
   Readiness,
   Tone,
-} from "@/lib/nadi/types";
+} from "@/lib/simulation/types";
 
 const availTotal = (r: QuarterResultShape) => PRODUCTS.reduce((s, p) => s + (r.avail[p.id] as number), 0);
 

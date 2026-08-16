@@ -8,7 +8,7 @@
  * Nothing here is invented. Where a number looks odd it is the number the original ran on.
  */
 
-import { clamp, cr, inr, lakh, n0, n1, n2, num, pct, pw } from "@/lib/nadi/format";
+import { clamp, cr, inr, lakh, n0, n1, n2, num, pct, pw } from "@/lib/simulation/format";
 import type {
   ArchetypeId,
   CompanyState,
@@ -21,7 +21,7 @@ import type {
   StrategyId,
   Tone,
   WarrantyId,
-} from "@/lib/nadi/types";
+} from "@/lib/simulation/types";
 
 /* ── scale constants ──────────────────────────────────────────────── */
 

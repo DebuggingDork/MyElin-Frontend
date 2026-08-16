@@ -3,28 +3,24 @@
 /**
  * The market event: five steps from "something is happening" to a signed commitment.
  *
- * Which event fires is the backend's decision, not a local coin flip -- `GET .../crisis`
- * returns a scenario letter and `ARCHETYPE_FOR_SCENARIO` maps it onto the archetype whose
- * copy this screen renders. The commitment is posted to whichever response lines that
- * briefing says the engine actually reads, which the step-five record shows.
+ * Which event fires is the engine's decision, not a local coin flip -- the archetype is assigned
+ * from the company id and returned by the API, and the commitment is sent as a single figure
+ * against the chosen posture. Nothing here computes damage; it only reports what was decided.
  */
 
-import { useMemo, useState } from "react";
-import { ARCHETYPES, CRISIS_STEPS, DIAGNOSIS_LABELS, STRATEGY_BY_ID } from "@/lib/nadi/constants";
-import { inr, lakh, num } from "@/lib/nadi/format";
-import { commitReading, crisisChoices, crisisEvidence, crisisSituation } from "@/lib/nadi/engine";
-import { toCrisisAllocation } from "@/lib/nadi/backend";
-import { Eyebrow, LedgerRow, Panel, TeachingNote } from "@/components/nadi/Kit";
-import type { CrisisBriefingResponse } from "@/lib/api/types";
+import { useState } from "react";
+import { ARCHETYPES, CRISIS_STEPS, DIAGNOSIS_LABELS, STRATEGY_BY_ID } from "@/lib/simulation/constants";
+import { inr, lakh, num } from "@/lib/simulation/format";
+import { Eyebrow, LedgerRow, Panel, TeachingNote } from "@/components/simulation/Kit";
+import type { CrisisBriefing } from "@/lib/simulation/remote";
 import type {
   ArchetypeId,
   Budget,
   CompanyState,
   CrisisInput,
   DiagnosisId,
-  QuarterResultShape,
   StrategyId,
-} from "@/lib/nadi/types";
+} from "@/lib/simulation/types";
 
 const EVIDENCE_BORDER: Record<string, string> = {
   bad: "border-rose-700",
@@ -34,32 +30,32 @@ const EVIDENCE_BORDER: Record<string, string> = {
 
 export function CrisisScreen({
   s,
-  history,
   archId,
   crisis,
   setCrisis,
   locked,
   budget,
   briefing,
+  commitReading,
 }: {
   s: CompanyState;
-  history: QuarterResultShape[];
   archId: ArchetypeId;
   crisis: CrisisInput;
   setCrisis: (c: CrisisInput) => void;
   locked: boolean;
   budget: Budget;
-  briefing: CrisisBriefingResponse | null;
+  briefing: CrisisBriefing | null;
+  /** The server's read on the amount committed. Absent until a preview has run. */
+  commitReading: { band: string; strain: string; line: string; trade: string } | null;
 }) {
   const [step, setStep] = useState(crisis.strategy ? 4 : 0);
   const arch = ARCHETYPES[archId];
-  const last = history[history.length - 1];
-  const prior = history[history.length - 2];
 
-  const situation = useMemo(() => crisisSituation(archId, s), [archId, s]);
-  const evidence = useMemo(() => crisisEvidence(archId, s, last, prior), [archId, s, last, prior]);
-  const choices = useMemo(() => crisisChoices(archId, s, situation.factors), [archId, s, situation]);
-  const reading = commitReading(crisis.strategy, num(crisis.commit), s);
+  // All three come from the server. Exposure is deliberately NOT among them: the engine
+  // returns symptoms and a severity band, never the underlying number, because working out
+  // how badly this lands is the exercise.
+  const evidence = briefing?.evidence ?? [];
+  const choices = briefing?.strategies ?? [];
 
   const set = (key: keyof CrisisInput, value: unknown) => setCrisis({ ...crisis, [key]: value });
 
@@ -69,20 +65,14 @@ export function CrisisScreen({
 
   const canAdvance = [true, true, locked || Boolean(crisis.diagnosis), locked || Boolean(crisis.strategy), true][step];
 
-  /* What this commitment will actually be posted as, so the record is honest about it. */
-  const payload = toCrisisAllocation(crisis.strategy, num(crisis.commit), briefing);
-  const postedLines = Object.entries(payload)
-    .filter(([k, val]) => k !== "crisis_choice" && Number(val) > 0)
-    .map(([k]) => (briefing?.response_lines.find((l) => l.field === k)?.label ?? k));
-
   return (
     <div className="space-y-5">
       <div className="bg-stone-900 text-white p-5">
         <Eyebrow tone="text-rose-400">
           Quarter {s.quarter} · {locked ? "The situation is a quarter old" : "Something is happening"}
         </Eyebrow>
-        <h2 className="font-serif text-3xl mt-1">{arch.signal}</h2>
-        <p className="text-sm text-stone-300 mt-3 max-w-3xl leading-relaxed">{arch.body}</p>
+        <h2 className="font-serif text-3xl mt-1">{briefing?.signal ?? arch.signal}</h2>
+        <p className="text-sm text-stone-300 mt-3 max-w-3xl leading-relaxed">{briefing?.body ?? arch.body}</p>
         {locked && (
           <p className="text-sm text-amber-300 mt-3 max-w-3xl">
             You committed to{" "}
@@ -150,14 +140,14 @@ export function CrisisScreen({
             show whether you read it correctly.
           </p>
           <div className="grid gap-2 sm:grid-cols-2">
-            {arch.diagnoses.map((d: DiagnosisId) => (
+            {(briefing?.diagnoses ?? arch.diagnoses.map((id: DiagnosisId) => ({ id, label: DIAGNOSIS_LABELS[id] }))).map((d) => (
               <button
-                key={d}
+                key={d.id}
                 disabled={locked}
-                onClick={() => set("diagnosis", d)}
-                className={choiceClass(crisis.diagnosis === d)}
+                onClick={() => set("diagnosis", d.id)}
+                className={choiceClass(crisis.diagnosis === d.id)}
               >
-                {DIAGNOSIS_LABELS[d]}
+                {d.label}
               </button>
             ))}
           </div>
@@ -212,7 +202,6 @@ export function CrisisScreen({
                       {c.risk}
                     </div>
                   </div>
-                  {c.note && <div className="text-xs text-amber-700 mt-2">{c.note}</div>}
                 </button>
               );
             })}
@@ -250,8 +239,10 @@ export function CrisisScreen({
                   <span className="text-xs uppercase tracking-widest text-stone-500">lakh</span>
                 </div>
                 <div className="mt-3 border-l-4 border-stone-800 bg-stone-50 px-3 py-2">
-                  <div className="text-sm text-stone-900">{reading.line}</div>
-                  <div className="text-xs text-stone-600 mt-1">What you are accepting: {reading.trade}</div>
+                  <div className="text-sm text-stone-900">{commitReading?.line ?? "Nothing committed yet."}</div>
+                  <div className="text-xs text-stone-600 mt-1">
+                    What you are accepting: {commitReading?.trade ?? STRATEGY_BY_ID[crisis.strategy].risk}
+                  </div>
                 </div>
                 <div className="mt-3 text-xs text-stone-500 font-mono">
                   {inr(num(crisis.commit) * 1e5)} of a remaining {inr(budget.ceiling - budget.committed)}.
@@ -277,15 +268,8 @@ export function CrisisScreen({
               {briefing && (
                 <LedgerRow
                   label="Recorded against"
-                  working={
-                    postedLines.length
-                      ? "the only lines this event's recovery reads"
-                      : "no spend committed to a response line"
-                  }
-                  value={
-                    (payload.crisis_choice ? "Choice " + payload.crisis_choice : "No choice") +
-                    (postedLines.length ? " · " + postedLines.join(", ") : "")
-                  }
+                  working={"severity level " + briefing.level + " of 3, assessed from the company you built"}
+                  value={briefing.name}
                 />
               )}
               <p className="text-xs text-stone-500 mt-3 italic">

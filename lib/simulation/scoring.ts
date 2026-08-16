@@ -21,8 +21,8 @@ import {
   capexLakh,
   groupTotal,
   opexLakh,
-} from "@/lib/nadi/constants";
-import { clamp, cr, inr, lakh, n0, n1, n2, num, pct } from "@/lib/nadi/format";
+} from "@/lib/simulation/constants";
+import { clamp, cr, inr, lakh, n0, n1, n2, num, pct } from "@/lib/simulation/format";
 import type {
   Alloc,
   EndgameOutcome,
@@ -32,30 +32,22 @@ import type {
   QuarterResultShape,
   TermSheet,
   TermSheetOffer,
-} from "@/lib/nadi/types";
-import type { DecisionQualitySchema, QuarterReportResponse } from "@/lib/api/types";
+} from "@/lib/simulation/types";
+import type { QuarterScore } from "@/lib/simulation/remote";
 
-/** The seven traits, in the order the profile is rendered. */
-export const TRAIT_ORDER = [
-  "strategic_thinking",
-  "leadership",
-  "adaptability",
-  "systems_thinking",
-  "risk_management",
-  "capital_allocation",
-  "long_term_thinking",
+/**
+ * The seven traits, in the order the profile is rendered, spelled exactly as the engine
+ * returns them (`app/engines/simulation/scoring.py: TRAIT_WEIGHTS`).
+ */
+export const TRAIT_NAMES = [
+  "Strategic Thinking",
+  "Leadership",
+  "Adaptability",
+  "Systems Thinking",
+  "Risk Management",
+  "Capital Allocation",
+  "Long-Term Thinking",
 ] as const;
-
-export const TRAIT_LABELS: Record<string, string> = {
-  strategic_thinking: "Strategic Thinking",
-  leadership: "Leadership",
-  adaptability: "Adaptability",
-  systems_thinking: "Systems Thinking",
-  risk_management: "Risk Management",
-  capital_allocation: "Capital Allocation",
-  long_term_thinking: "Long-Term Thinking",
-  exit_growth: "Exit & Growth Judgment",
-};
 
 /* ── did the money follow the declared priority? ──────────────────── */
 
@@ -402,40 +394,39 @@ export function settleEndgame(
 }
 
 /* ── the seven-dimension profile, from the backend's own scoring ──── */
+/* ── the seven-dimension profile, from the engine's own scoring ───── */
 
-const RESULT_SHARE: Record<string, number> = { clearly_met: 1, partially_met: 0.5, not_met: 0 };
-
-/**
- * Rebuilds the year's seven-bar management profile from the backend reports. Each trait's
- * percentage is the share of its *scored* criteria actually earned, averaged over the
- * quarters that have locked. Criteria the backend leaves unscored (JUDGMENT) are excluded
- * rather than counted as zero -- a zero would read as a failure nobody earned.
- */
 export type TraitBar = {
   name: string;
-  /** null when the engine scored nothing for this trait -- say so, never draw a 0% bar. */
+  /** null when nothing scored for this trait -- say so, never draw a 0% bar. */
   pct: number | null;
-  /** How many sub-criteria the engine could score across the year. */
   scored: number;
 };
 
-export function traitRollup(reports: QuarterReportResponse[]): TraitBar[] {
+/**
+ * The year's seven-bar management profile, averaged over the quarters that have locked.
+ *
+ * Each trait's percentage is the points it earned as a share of the points it was worth. The
+ * Nadi engine evaluates all seven mechanically, so in practice none comes back null -- the
+ * null path is kept because a trait with no sub-criteria must never render as 0%, which would
+ * read as a failure nobody earned.
+ */
+export function traitRollup(scores: QuarterScore[]): TraitBar[] {
   const earned: Record<string, number> = {};
   const possible: Record<string, number> = {};
 
-  reports.forEach((rep) => {
-    rep.decision_quality.scored_criteria.forEach((c) => {
-      earned[c.trait] = (earned[c.trait] || 0) + (RESULT_SHARE[c.result] ?? 0);
-      possible[c.trait] = (possible[c.trait] || 0) + 1;
-    });
-  });
+  scores.forEach((s) =>
+    s.traits.forEach((t) => {
+      earned[t.name] = (earned[t.name] || 0) + Number(t.points);
+      possible[t.name] = (possible[t.name] || 0) + Number(t.weight);
+    }),
+  );
 
-  return TRAIT_ORDER.map((t) => ({
-    name: TRAIT_LABELS[t],
-    pct: possible[t] ? (earned[t] / possible[t]) * 100 : null,
-    scored: possible[t] || 0,
+  return TRAIT_NAMES.map((name) => ({
+    name,
+    pct: possible[name] ? (earned[name] / possible[name]) * 100 : null,
+    scored: possible[name] ? 1 : 0,
   })).sort((a, b) => {
-    // Assessed traits first, strongest to weakest; unassessed keep the rubric's own order.
     if (a.pct === null && b.pct === null) return 0;
     if (a.pct === null) return 1;
     if (b.pct === null) return -1;
@@ -443,15 +434,10 @@ export function traitRollup(reports: QuarterReportResponse[]): TraitBar[] {
   });
 }
 
-/**
- * Only the traits the engine actually scored. Three of the seven (strategic thinking,
- * adaptability, leadership) have no MECHANICAL criteria in the shipped rubric at all -- every
- * sub-criterion is JUDGMENT -- so they can never be ranked on, and naming one the year's
- * "biggest strength" or "biggest mistake" would be inventing a verdict the engine never gave.
- */
-const assessedTraits = (reports: QuarterReportResponse[]) =>
-  traitRollup(reports).filter((t): t is TraitBar & { pct: number } => t.pct !== null);
+const assessedTraits = (scores: QuarterScore[]) =>
+  traitRollup(scores).filter((t): t is TraitBar & { pct: number } => t.pct !== null);
 
+/** What each dimension means, for the year-end "biggest strength" card. */
 const STRENGTH_COPY: Record<string, string> = {
   "Systems Thinking": "You sized the stages of the business against each other rather than funding them in isolation.",
   "Capital Allocation": "Money went where it earned a return, and the balance sheet was never left to chance.",
@@ -464,58 +450,43 @@ const STRENGTH_COPY: Record<string, string> = {
     "You concentrated resources rather than spreading them thin, and said what you were doing before you did it.",
 };
 
-export function biggestStrength(reports: QuarterReportResponse[]) {
-  const top = assessedTraits(reports)[0];
+export function biggestStrength(scores: QuarterScore[]) {
+  const top = assessedTraits(scores)[0];
   if (!top) {
-    return {
-      name: "Not yet assessed",
-      pct: null,
-      why: "Nothing in this year's rubric scored mechanically, so the engine has no dimension to single out.",
-    };
+    return { name: "Not yet assessed", pct: null, why: "No quarter has been scored yet." };
   }
   return { name: top.name, pct: top.pct, why: STRENGTH_COPY[top.name] || "" };
 }
 
 /**
- * The heaviest penalty the backend actually applied across the year; if none fired, the
- * weakest of the seven dimensions instead.
+ * The heaviest penalty that actually fired across the year; if none did, the weakest of the
+ * seven dimensions instead.
  */
-export function biggestMistake(reports: QuarterReportResponse[]) {
-  let worst: { q: number; points: number; id: string; detail: string } | null = null;
+export function biggestMistake(scores: QuarterScore[]) {
+  let worst: { q: number; points: number; why: string } | null = null;
 
-  reports.forEach((rep) => {
-    rep.decision_quality.modifiers
-      .filter((m) => m.fired && Number(m.applied_points) < 0)
+  scores.forEach((s, i) =>
+    s.modifiers
+      .filter((m) => Number(m.points) < 0)
       .forEach((m) => {
-        const points = Number(m.applied_points);
-        if (!worst || points < worst.points) {
-          worst = { q: rep.quarter_number, points, id: m.id, detail: m.detail };
-        }
-      });
-  });
+        const points = Number(m.points);
+        if (!worst || points < worst.points) worst = { q: i + 1, points, why: m.why };
+      }),
+  );
 
   if (worst) {
-    const w = worst as { q: number; points: number; id: string; detail: string };
-    return {
-      title: "Quarter " + w.q,
-      why: w.id.replace(/_/g, " ") + " (" + w.points + ") — " + w.detail,
-    };
+    const w = worst as { q: number; points: number; why: string };
+    return { title: "Quarter " + w.q, why: `(${w.points}) ${w.why}` };
   }
 
-  const ranked = assessedTraits(reports);
+  const ranked = assessedTraits(scores);
   const weakest = ranked[ranked.length - 1];
   if (!weakest) {
-    return {
-      title: "Nothing the engine could fault",
-      why: "No penalty fired in any quarter, and no dimension scored mechanically, so there is nothing here the engine can call a mistake.",
-    };
+    return { title: "Nothing the engine could fault", why: "No penalty fired in any quarter." };
   }
   return {
     title: weakest.name,
-    why:
-      "The weakest of the dimensions the engine scores, at " +
-      n0(weakest.pct) +
-      "% of the criteria it could assess.",
+    why: "The weakest of the seven dimensions across the year, at " + n0(weakest.pct) + "% of its available marks.",
   };
 }
 
@@ -796,29 +767,24 @@ export function missedOpportunity(history: QuarterResultShape[], finalState: { n
   };
 }
 
-/* ── how the backend graded each quarter, in the original's idiom ── */
+/* ── how the engine graded the quarter, in the original's idiom ───── */
 
-/** Verdict cards for the closed-quarter screen, built from the backend's scored criteria. */
-export function traitVerdicts(dq: DecisionQualitySchema) {
-  const earned: Record<string, number> = {};
-  const possible: Record<string, number> = {};
-  const firstMiss: Record<string, string> = {};
-  const firstAny: Record<string, string> = {};
-
-  dq.scored_criteria.forEach((c) => {
-    earned[c.trait] = (earned[c.trait] || 0) + (RESULT_SHARE[c.result] ?? 0);
-    possible[c.trait] = (possible[c.trait] || 0) + 1;
-    if (!firstAny[c.trait]) firstAny[c.trait] = c.detail;
-    if (c.result !== "clearly_met" && !firstMiss[c.trait]) firstMiss[c.trait] = c.detail;
-  });
-
-  return TRAIT_ORDER.filter((t) => possible[t]).map((t) => {
-    const share = earned[t] / possible[t];
+/**
+ * Verdict cards for the closed-quarter screen.
+ *
+ * The line shown under each trait is the first sub-criterion it did *not* fully meet -- the
+ * most useful sentence on the card, because it names what to fix rather than what went right.
+ * A trait with nothing to fault falls back to its first sub-criterion.
+ */
+export function traitVerdicts(score: QuarterScore) {
+  return score.traits.map((t) => {
+    const share = Number(t.weight) ? Number(t.points) / Number(t.weight) : 0;
+    const miss = t.subs.find((s) => s.level !== "full");
     return {
-      name: TRAIT_LABELS[t],
+      name: t.name,
       verdict: share >= 0.8 ? "strong" : share >= 0.6 ? "sound" : share >= 0.4 ? "mixed" : "weak",
       tone: (share >= 0.7 ? "good" : share >= 0.45 ? "watch" : "bad") as "good" | "watch" | "bad",
-      line: firstMiss[t] || firstAny[t] || "",
+      line: (miss ?? t.subs[0])?.detail ?? "",
     };
   });
 }

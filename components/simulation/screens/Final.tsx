@@ -3,10 +3,9 @@
 /**
  * The CEO performance report.
  *
- * The seven-dimension profile, the composite score and the per-quarter breakdown all come
- * from the backend's locked reports. Management style, the most important decision, the
- * delayed consequence, the missed opportunity and the decision/consequence timeline are read
- * from the local history, which is the only place those questions have an answer.
+ * The seven-dimension profile, the composite score and the per-quarter breakdown all come from
+ * the engine's own scoring. Management style, the most important decision, the delayed
+ * consequence, the missed opportunity and the timeline are read from the run history.
  */
 
 import { useState } from "react";
@@ -16,10 +15,10 @@ import {
   TONE_BAR,
   TONE_TEXT,
   headcount,
-} from "@/lib/nadi/constants";
-import { cr, inr, n0, n1, pct } from "@/lib/nadi/format";
-import { balanceClosing, balanceOpening } from "@/lib/nadi/engine";
-import { lessons } from "@/lib/nadi/insights";
+} from "@/lib/simulation/constants";
+import { cr, inr, n0, n1, pct } from "@/lib/simulation/format";
+import { balanceClosing, balanceOpening } from "@/lib/simulation/balance";
+import { lessons } from "@/lib/simulation/insights";
 import {
   biggestMistake,
   biggestStrength,
@@ -29,18 +28,18 @@ import {
   missedOpportunity,
   mostImportantDecision,
   traitRollup,
-} from "@/lib/nadi/scoring";
-import { Bar, Eyebrow, LedgerRow, Panel, Stat } from "@/components/nadi/Kit";
-import { BalanceSheet } from "@/components/nadi/Statements";
-import type { QuarterReportResponse } from "@/lib/api/types";
+} from "@/lib/simulation/scoring";
+import { Bar, Eyebrow, LedgerRow, Panel, Stat } from "@/components/simulation/Kit";
+import { BalanceSheet } from "@/components/simulation/Statements";
+import type { QuarterScore } from "@/lib/simulation/remote";
 import type {
   CompanyState,
-  EndgameOutcome,
+
   PriorityId,
   QuarterResultShape,
   TermSheet,
   Tone,
-} from "@/lib/nadi/types";
+} from "@/lib/simulation/types";
 
 const v = (r: QuarterResultShape, k: string) => r[k] as number;
 const traitTone = (p: number): Tone => (p >= 70 ? "good" : p >= 45 ? "watch" : "bad");
@@ -48,7 +47,7 @@ const traitTone = (p: number): Tone => (p >= 70 ? "good" : p >= 45 ? "watch" : "
 export function FinalScreen({
   ts,
   eg,
-  reports,
+  scores,
   history,
   priorities,
   s,
@@ -56,8 +55,8 @@ export function FinalScreen({
   busy,
 }: {
   ts: TermSheet | null;
-  eg: EndgameOutcome | null;
-  reports: QuarterReportResponse[];
+  eg: Record<string, unknown> | null;
+  scores: QuarterScore[];
   history: QuarterResultShape[];
   priorities: (PriorityId | null)[];
   s: CompanyState;
@@ -67,22 +66,22 @@ export function FinalScreen({
   const [openRecord, setOpenRecord] = useState(false);
   const last = history[history.length - 1];
 
-  const scores = reports.map((r) => Number(r.decision_quality.ceo_score));
-  const composite = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+  const finals = scores.map((s) => Number(s.final));
+  const composite = finals.length ? finals.reduce((a, b) => a + b, 0) / finals.length : 0;
   const compositeBand =
     composite >= 90 ? "Exceptional" : composite >= 75 ? "Strong" : composite >= 60 ? "Competent" : composite >= 40 ? "Weak" : "Poor";
 
-  const profile = traitRollup(reports);
+  const profile = traitRollup(scores);
   const style = managementStyle(history);
-  const strength = biggestStrength(reports);
-  const mistake = biggestMistake(reports);
+  const strength = biggestStrength(scores);
+  const mistake = biggestMistake(scores);
   const decision = mostImportantDecision(history);
   const consequence = delayedConsequence(history);
   const missed = missedOpportunity(history, s);
   const timeline = decisionTimeline(history, priorities);
-  const sold = Boolean(eg && eg.deal === "B");
+  const sold = Boolean(eg && eg.path === "B");
 
-  const runSummary = reports[reports.length - 1]?.run_summary ?? null;
+  
 
   return (
     <div className="space-y-6">
@@ -93,7 +92,7 @@ export function FinalScreen({
             ? "You sold the company."
             : eg && eg.gameOver
               ? "The company did not make it."
-              : eg && eg.deal === "A"
+              : eg && eg.path === "A"
                 ? eg.covenantHit
                   ? "You took the money and hit the covenant."
                   : "You took the money and missed the covenant."
@@ -131,13 +130,7 @@ export function FinalScreen({
           />
           <Stat
             label="Valuation"
-            value={cr(
-              eg && eg.finalValuation != null
-                ? eg.finalValuation
-                : runSummary && runSummary.final_valuation_inr != null
-                  ? Number(runSummary.final_valuation_inr)
-                  : v(last, "valuation"),
-            )}
+            value={cr(eg && eg.finalValuation != null ? Number(eg.finalValuation) : v(last, "valuation"))}
           />
           <Stat label="Headcount" value={n0(headcount(s.staff))} sub={"morale " + n0(s.empSat)} />
           <Stat
@@ -162,9 +155,8 @@ export function FinalScreen({
 
       <Panel eyebrow="Management profile" title="How you ran it, across seven dimensions">
         <p className="text-xs text-stone-500 mb-3">
-          Share of the criteria the engine could score mechanically. Criteria that need a human read are excluded rather
-          than counted as failures — and a dimension with no mechanical criteria at all is reported as unassessed, not
-          as zero.
+          Share of each dimension’s available marks, averaged across the quarters played. Every
+          sub-criterion is evaluated from the numbers, and each one names the evidence it read.
         </p>
         <div className="space-y-3">
           {profile.map((t) =>
@@ -271,7 +263,7 @@ export function FinalScreen({
         </Panel>
       )}
 
-      {eg && eg.deal === "A" && ts && (
+      {eg && eg.path === "A" && ts && (
         <Panel eyebrow="Covenant settlement" title={eg.covenantHit ? "Covenant met" : "Covenant missed"}>
           <LedgerRow
             label="Target"
@@ -319,32 +311,30 @@ export function FinalScreen({
               value={n1(composite) + "/100"}
               strong
             />
-            {reports.map((rep, i) => {
-              const dq = rep.decision_quality;
-              const fired = dq.modifiers.filter((m) => m.fired);
+            {scores.map((sc, i) => {
+              const fired = sc.modifiers;
               return (
-                <div key={rep.quarter_id}>
+                <div key={i}>
                   <LedgerRow
-                    label={"Quarter " + rep.quarter_number}
+                    label={"Quarter " + (i + 1)}
                     working={
-                      n1(Number(dq.mechanical_points_available)) +
-                      " points scoreable, " +
-                      n1(Number(dq.unscored_points)) +
-                      " left to human review · declared: " +
+                      n1(Number(sc.traitTotal)) +
+                      " on traits, " +
+                      (Number(sc.modifierTotal) >= 0 ? "+" : "") +
+                      n1(Number(sc.modifierTotal)) +
+                      " modifiers · declared: " +
                       (priorities[i] ? PRIORITY_BY_ID[priorities[i]!].name : "—")
                     }
-                    value={n1(Number(dq.ceo_score)) + " · " + dq.band}
+                    value={n1(Number(sc.final)) + " · " + sc.band}
                     strong
                   />
                   <ul className="pl-4 py-1 space-y-0.5">
-                    {fired.map((m) => (
+                    {fired.map((m, j) => (
                       <li
-                        key={m.id}
-                        className={
-                          "text-xs font-mono " + (Number(m.applied_points) > 0 ? "text-teal-800" : "text-rose-800")
-                        }
+                        key={j}
+                        className={"text-xs font-mono " + (Number(m.points) > 0 ? "text-teal-800" : "text-rose-800")}
                       >
-                        {(Number(m.applied_points) > 0 ? "+" : "") + m.applied_points} {m.id.replace(/_/g, " ")}
+                        {(Number(m.points) > 0 ? "+" : "") + m.points} {m.why}
                       </li>
                     ))}
                   </ul>

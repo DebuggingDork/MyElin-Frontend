@@ -2,9 +2,9 @@
 
 /** The opening screen. Ported from the shipped `NadiWear.html` bundle. */
 
-import { OPENING_CASH, marketDemand } from "@/lib/nadi/constants";
-import { inr, n0 } from "@/lib/nadi/format";
-import { Eyebrow, Panel } from "@/components/nadi/Kit";
+import { OPENING_CASH, marketDemand } from "@/lib/simulation/constants";
+import { inr, n0 } from "@/lib/simulation/format";
+import { Eyebrow, Panel } from "@/components/simulation/Kit";
 
 export function IntroScreen({ onStart, busy }: { onStart: () => void; busy?: boolean }) {
   return (

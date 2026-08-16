@@ -10,11 +10,11 @@
  * marked where they occur. Every figure and every class is otherwise unchanged.
  */
 
-import { PRODUCTS } from "@/lib/nadi/constants";
-import { cr, inr, lakh, n0, n1, n2, pct } from "@/lib/nadi/format";
-import { Eyebrow, LedgerRow, Panel } from "@/components/nadi/Kit";
-import type { BalanceView } from "@/lib/nadi/engine";
-import type { QuarterResultShape } from "@/lib/nadi/types";
+import { PRODUCTS } from "@/lib/simulation/constants";
+import { cr, inr, lakh, n0, n1, n2, pct } from "@/lib/simulation/format";
+import { Eyebrow, LedgerRow, Panel } from "@/components/simulation/Kit";
+import type { BalanceView } from "@/lib/simulation/balance";
+import type { QuarterResultShape } from "@/lib/simulation/types";
 
 const v = (r: QuarterResultShape, k: string) => r[k] as number;
 

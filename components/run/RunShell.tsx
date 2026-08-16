@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { Loader2, LogOut } from "lucide-react";
-import { NADI_TABS } from "@/components/nadi/NadiApp";
+import { SIMULATION_TABS } from "@/components/simulation/SimulationApp";
 import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Pill } from "@/components/ui/Kit";
@@ -23,7 +23,7 @@ export function RunShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const activeNadiTab = searchParams.get("tab");
+  const activeSimulationTab = searchParams.get("tab");
   const { user, ready } = useAuth();
   const { companyId, company, run, report, loading, error, can, financeUnlocked } =
     useRun();
@@ -58,8 +58,8 @@ export function RunShell({ children }: { children: React.ReactNode }) {
 
   // The Nadi Wear simulation ships its own full-width chrome (header, tab bar, ticker) and a
   // light surface, so it renders flush inside `main` rather than in the shared max-w column.
-  const nadiBase = `/run/${companyId}/nadi`;
-  const onNadi = pathname === nadiBase || pathname.startsWith(nadiBase + "/");
+  const simulationBase = `/run/${companyId}/simulation`;
+  const onSimulation = pathname === simulationBase || pathname.startsWith(simulationBase + "/");
 
   const links: {
     href: string;
@@ -129,8 +129,8 @@ export function RunShell({ children }: { children: React.ReactNode }) {
    * the run's, and these are the surfaces within it -- so each entry deep-links to a tab
    * rather than to a separate route.
    */
-  const nadiLinks = NADI_TABS.map((t) => ({
-    href: `${nadiBase}?tab=${t.id}`,
+  const simulationLinks = SIMULATION_TABS.map((t) => ({
+    href: `${simulationBase}?tab=${t.id}`,
     label: t.label,
     id: t.id,
   }));
@@ -192,8 +192,8 @@ export function RunShell({ children }: { children: React.ReactNode }) {
             <p className="px-3 pb-1.5 text-[10.5px] uppercase tracking-[0.18em] text-faint">
               Nadi Wear · 4 quarters
             </p>
-            {nadiLinks.map((link) => {
-              const active = onNadi && (activeNadiTab ?? "dashboard") === link.id;
+            {simulationLinks.map((link) => {
+              const active = onSimulation && (activeSimulationTab ?? "dashboard") === link.id;
               return (
                 <Link
                   key={link.id}
@@ -275,17 +275,17 @@ export function RunShell({ children }: { children: React.ReactNode }) {
               );
             })}
           <Link
-            href={nadiBase}
+            href={simulationBase}
             className={cn(
               "shrink-0 rounded-full border px-3 py-1.5 text-[12px]",
-              onNadi ? "border-teal/40 bg-teal/10 text-ink" : "border-line text-dim",
+              onSimulation ? "border-teal/40 bg-teal/10 text-ink" : "border-line text-dim",
             )}
           >
             Nadi Wear
           </Link>
         </div>
 
-        {onNadi ? (
+        {onSimulation ? (
           <main className="flex-1 overflow-y-auto">{children}</main>
         ) : (
           <main className="flex-1 overflow-y-auto px-4 py-8 sm:px-8">

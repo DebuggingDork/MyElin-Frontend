@@ -16,9 +16,9 @@ import {
   TONE_BAR,
   TONE_CARD,
   TONE_TEXT,
-} from "@/lib/nadi/constants";
-import { clamp, inr, n0, n1 } from "@/lib/nadi/format";
-import type { Budget, HealthBar, InboxMessage, Readiness, Tone } from "@/lib/nadi/types";
+} from "@/lib/simulation/constants";
+import { clamp, inr, n0, n1 } from "@/lib/simulation/format";
+import type { Budget, HealthBar, InboxMessage, Readiness, Tone } from "@/lib/simulation/types";
 
 /* ── type and rules ───────────────────────────────────────────────── */
 
@@ -317,10 +317,10 @@ export function Ticker({ items }: { items: { label: string; value: string; tone:
     <div className="bg-stone-950 border-t border-b border-stone-700 overflow-hidden">
       <style>
         {
-          "@keyframes nadiTick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}.nadi-tick{animation:nadiTick 90s linear infinite;will-change:transform}.nadi-tick:hover{animation-play-state:paused}@media (prefers-reduced-motion:reduce){.nadi-tick{animation:none}}"
+          "@keyframes simTick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}.simulation-tick{animation:simTick 90s linear infinite;will-change:transform}.simulation-tick:hover{animation-play-state:paused}@media (prefers-reduced-motion:reduce){.simulation-tick{animation:none}}"
         }
       </style>
-      <div className="flex w-max nadi-tick py-1.5">
+      <div className="flex w-max sim-tick py-1.5">
         {run("a")}
         {run("b")}
       </div>

@@ -986,26 +986,26 @@ body {
    The four-quarter simulation ships as a light, ruled document: white
    panels, stone rules, a serif for headings and monospace for every
    number. It renders inside the run shell, so these rules stop the app's
-   dark tokens leaking into it. Scoped to `.nadi` only — nothing here
+   dark tokens leaking into it. Scoped to `.simulation` only — nothing here
    reaches the rest of the run screens.
 
    The border rule matters most: the global `* { border-color: var(--line) }`
    near the top paints every otherwise-unspecified border teal, which would
-   tint the whole simulation. `:where(.nadi)` keeps this selector at zero
+   tint the whole simulation. `:where(.simulation)` keeps this selector at zero
    specificity, so Tailwind's own `border-stone-300` utilities still win and
    only the unspecified case changes. */
 
-.nadi {
+.simulation {
   color-scheme: light;
   background: #f5f5f4;
   color: #1c1917;
 }
 
-:where(.nadi) * {
+:where(.simulation) * {
   border-color: #d6d3d1;
 }
 
-.nadi :focus-visible {
+.simulation :focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px rgba(28, 25, 23, 0.85);
 }

@@ -3,38 +3,33 @@
 /**
  * The quarter, closed.
  *
- * Every headline figure here is the API's, not a projection: the report returned by
- * `POST .../lock` is folded into the result before this screen renders it. The management
- * assessment is the backend's `decision_quality`, rendered in the original's card idiom, and
- * the criteria it declines to score are shown as "not yet assessed" rather than dropped --
- * the integration guide is explicit that folding them into a lower score misrepresents what
- * the engine knows.
+ * Every figure here is the engine's, computed server-side. The management assessment is the
+ * same seven-trait rubric the 22-line engine uses, and every sub-criterion states the evidence
+ * it read -- so a mark can always be traced back to a number rather than taken on trust.
  */
 
 import { useState } from "react";
-import { BUFFER, PRIORITY_BY_ID, QUARTER_BRIEFS, TONE_CARD, TONE_TEXT } from "@/lib/nadi/constants";
-import { cr, inr, n0, n1, pct } from "@/lib/nadi/format";
-import { balanceClosing, balanceOpening } from "@/lib/nadi/engine";
-import { lessons, whatHappened } from "@/lib/nadi/insights";
-import { priorityMatch, traitVerdicts } from "@/lib/nadi/scoring";
-import { Eyebrow, LedgerRow, Panel, Stat, TeachingNote } from "@/components/nadi/Kit";
-import { BalanceSheet, CashFlow, ConstraintChain, ProfitAndLoss } from "@/components/nadi/Statements";
-import type { QuarterReportResponse } from "@/lib/api/types";
+import { BUFFER, PRIORITY_BY_ID, QUARTER_BRIEFS, TONE_CARD, TONE_TEXT } from "@/lib/simulation/constants";
+import { cr, inr, n0, n1, pct } from "@/lib/simulation/format";
+import { balanceClosing, balanceOpening } from "@/lib/simulation/balance";
+import { lessons, whatHappened } from "@/lib/simulation/insights";
+import { priorityMatch, traitVerdicts } from "@/lib/simulation/scoring";
+import { Eyebrow, Panel, Stat, TeachingNote } from "@/components/simulation/Kit";
+import { BalanceSheet, CashFlow, ConstraintChain, ProfitAndLoss } from "@/components/simulation/Statements";
+import type { QuarterScore } from "@/lib/simulation/remote";
 import type {
   Constraint,
   PriorityId,
   QuarterResultShape,
   Reflection,
   Tone,
-} from "@/lib/nadi/types";
+} from "@/lib/simulation/types";
 
 const v = (r: QuarterResultShape, k: string) => r[k] as number;
 
-/** The backend's own read on how the quarter was run. */
-function Assessment({ report }: { report: QuarterReportResponse }) {
-  const dq = report.decision_quality;
-  const verdicts = traitVerdicts(dq);
-  const fired = dq.modifiers.filter((m) => m.fired);
+/** The engine's own read on how the quarter was run: seven traits, and what moved the score. */
+function Assessment({ score }: { score: QuarterScore }) {
+  const verdicts = traitVerdicts(score);
   const [open, setOpen] = useState(false);
 
   return (
@@ -43,9 +38,9 @@ function Assessment({ report }: { report: QuarterReportResponse }) {
       title="How you ran the company this quarter"
       right={
         <div className="text-right">
-          <Eyebrow>Scoreable portion</Eyebrow>
+          <Eyebrow>CEO score</Eyebrow>
           <div className="font-mono text-2xl">
-            {n1(Number(dq.ceo_score))} <span className="text-stone-400 text-sm">{dq.band}</span>
+            {n1(Number(score.final))} <span className="text-stone-400 text-sm">{score.band}</span>
           </div>
         </div>
       }
@@ -64,16 +59,16 @@ function Assessment({ report }: { report: QuarterReportResponse }) {
         ))}
       </div>
 
-      {fired.length > 0 && (
+      {score.modifiers.length > 0 && (
         <div className="mt-4">
           <Eyebrow tone="text-rose-800">Adjustments that fired</Eyebrow>
           <ul className="mt-1 space-y-0.5">
-            {fired.map((m) => (
+            {score.modifiers.map((m, i) => (
               <li
-                key={m.id}
-                className={"text-xs font-mono " + (Number(m.applied_points) >= 0 ? "text-teal-800" : "text-rose-800")}
+                key={i}
+                className={"text-xs font-mono " + (Number(m.points) >= 0 ? "text-teal-800" : "text-rose-800")}
               >
-                {(Number(m.applied_points) >= 0 ? "+" : "") + m.applied_points} {m.id.replace(/_/g, " ")} — {m.detail}
+                {(Number(m.points) >= 0 ? "+" : "") + m.points} {m.why}
               </li>
             ))}
           </ul>
@@ -85,21 +80,45 @@ function Assessment({ report }: { report: QuarterReportResponse }) {
           onClick={() => setOpen(!open)}
           className="text-xs uppercase tracking-widest font-semibold text-stone-500 hover:text-rose-800 border-b border-dotted border-stone-400"
         >
-          {open ? "Hide" : "Show"} the {dq.unscored_criteria.length} criteria not yet assessed
+          {open ? "Hide" : "Show"} how every mark was earned
         </button>
         <p className="text-xs text-stone-500 mt-2">
-          {n1(Number(dq.mechanical_points_available))} of the rubric&apos;s points are decided by formula. The remaining{" "}
-          {n1(Number(dq.unscored_points))} need a human read and are deliberately left unscored rather than counted
-          against you.
+          {n1(Number(score.traitTotal))} points from the seven traits,{" "}
+          {Number(score.modifierTotal) >= 0 ? "+" : ""}
+          {n1(Number(score.modifierTotal))} from adjustments. Every sub-criterion below names the evidence it read.
         </p>
         {open && (
-          <ul className="mt-2 space-y-1">
-            {dq.unscored_criteria.map((c) => (
-              <li key={c.id} className="text-xs text-stone-600 border-l-2 border-stone-300 pl-2">
-                <span className="font-mono text-stone-800">{c.id}</span> — {c.reason}
-              </li>
+          <div className="mt-3 space-y-3">
+            {score.traits.map((t) => (
+              <div key={t.name}>
+                <div className="flex items-baseline justify-between">
+                  <span className="text-sm font-semibold text-stone-900">{t.name}</span>
+                  <span className="font-mono text-xs text-stone-500">
+                    {n1(Number(t.points))} / {n1(Number(t.weight))}
+                  </span>
+                </div>
+                <ul className="mt-1 space-y-0.5">
+                  {t.subs.map((s, i) => (
+                    <li key={i} className="text-xs text-stone-600 border-l-2 border-stone-300 pl-2">
+                      <span
+                        className={
+                          "font-mono mr-1 " +
+                          (s.level === "full"
+                            ? "text-teal-800"
+                            : s.level === "part"
+                              ? "text-amber-700"
+                              : "text-rose-800")
+                        }
+                      >
+                        {s.level === "full" ? "met" : s.level === "part" ? "part" : "not met"}
+                      </span>
+                      {s.label} — {s.detail}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </div>
     </Panel>
@@ -109,7 +128,7 @@ function Assessment({ report }: { report: QuarterReportResponse }) {
 export function ClosedScreen({
   r,
   prior,
-  report,
+  score,
   constraint,
   priority,
   reflection,
@@ -118,7 +137,7 @@ export function ClosedScreen({
 }: {
   r: QuarterResultShape;
   prior: QuarterResultShape | undefined;
-  report: QuarterReportResponse;
+  score: QuarterScore;
   constraint: Constraint | null;
   priority: PriorityId | null;
   reflection: Reflection;
@@ -188,22 +207,7 @@ export function ClosedScreen({
         </div>
       </div>
 
-      {report.binding_constraints.length > 0 && (
-        <Panel eyebrow="What the engine says bound this quarter" title="Hard gates that actually limited you">
-          {report.binding_constraints.map((b) => (
-            <LedgerRow
-              key={b.gate}
-              label={b.gate.replace(/_/g, " ")}
-              working={b.detail}
-              value={n1(Number(b.demand_lost)) + " " + b.demand_lost_unit}
-              strong
-              tone="text-rose-800"
-            />
-          ))}
-        </Panel>
-      )}
-
-      {(r.notes as string[]).length > 0 && (
+            {(r.notes as string[]).length > 0 && (
         <Panel eyebrow="Events" title="Things that happened without being asked">
           <ul className="space-y-1">
             {(r.notes as string[]).map((note, i) => (
@@ -308,7 +312,7 @@ export function ClosedScreen({
         </div>
       </Panel>
 
-      <Assessment report={report} />
+      <Assessment score={score} />
 
       <div className="bg-white border border-stone-300">
         <div className="px-4 pt-3">

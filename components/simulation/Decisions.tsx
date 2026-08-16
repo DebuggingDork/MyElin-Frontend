@@ -16,11 +16,11 @@ import {
   groupTotal,
   numericAlloc,
   spreadGroup,
-} from "@/lib/nadi/constants";
-import { inr, lakh, num } from "@/lib/nadi/format";
-import { BudgetMeter, Eyebrow, Inbox, ReadinessGrid, TeachingNote } from "@/components/nadi/Kit";
-import type { DecisionItem, DetailLine } from "@/lib/nadi/constants";
-import type { Alloc, Budget, CompanyState, InboxMessage, PreviewCtx, Readiness } from "@/lib/nadi/types";
+} from "@/lib/simulation/constants";
+import { inr, lakh, num } from "@/lib/simulation/format";
+import { BudgetMeter, Eyebrow, Inbox, ReadinessGrid, TeachingNote } from "@/components/simulation/Kit";
+import type { DecisionItem, DetailLine } from "@/lib/simulation/constants";
+import type { Alloc, Budget, CompanyState, InboxMessage, PreviewCtx, Readiness } from "@/lib/simulation/types";
 
 /* ── one grouped decision ─────────────────────────────────────────── */
 

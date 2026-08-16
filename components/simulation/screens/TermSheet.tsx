@@ -8,10 +8,10 @@
  * Signing posts `{path, term_sheet_name, reasoning}` to `POST .../endgame`.
  */
 
-import { cr, n0, n2 } from "@/lib/nadi/format";
-import { Eyebrow, TeachingNote } from "@/components/nadi/Kit";
+import { cr, n0, n2 } from "@/lib/simulation/format";
+import { Eyebrow, TeachingNote } from "@/components/simulation/Kit";
 import { useState } from "react";
-import type { TermSheet } from "@/lib/nadi/types";
+import type { TermSheet } from "@/lib/simulation/types";
 
 const TIER_COPY: Record<string, string> = {
   THRIVING:

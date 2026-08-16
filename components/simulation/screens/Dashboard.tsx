@@ -11,8 +11,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { BUFFER, PRIORITY_BY_ID, QUARTER_BRIEFS } from "@/lib/nadi/constants";
-import { cr, inr, n0, n1, pct } from "@/lib/nadi/format";
+import { BUFFER, PRIORITY_BY_ID, QUARTER_BRIEFS } from "@/lib/simulation/constants";
+import { cr, inr, n0, n1, pct } from "@/lib/simulation/format";
 import {
   Eyebrow,
   HealthPanel,
@@ -23,7 +23,7 @@ import {
   Stat,
   TeachingNote,
   TrendStat,
-} from "@/components/nadi/Kit";
+} from "@/components/simulation/Kit";
 import type {
   Budget,
   CompanyState,
@@ -33,7 +33,7 @@ import type {
   PriorityId,
   QuarterResultShape,
   Readiness,
-} from "@/lib/nadi/types";
+} from "@/lib/simulation/types";
 
 const v = (r: QuarterResultShape, k: string) => r[k] as number;
 
