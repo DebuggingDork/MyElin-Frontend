@@ -42,7 +42,10 @@ export function ReportView({ report }: { report: QuarterReportResponse }) {
         <ReportPdfExport report={report} />
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      {/* Two readings of the same quarter, side by side from `lg` up. `xl` gives decision
+          quality the wider half: it carries the criterion rows, which are the longest lines
+          on the page, while the outcome column is a fixed-width printed statement. */}
+      <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         {/* outcome */}
         <section className="min-w-0 space-y-4">
           <h3 className="eyebrow text-faint">A · Business outcome</h3>
@@ -117,7 +120,7 @@ function GateList({ gates }: { gates: BindingConstraintSchema[] }) {
           className="rounded-xl border border-rose/30 bg-rose/[0.06] p-4"
         >
           <div className="flex items-center gap-2">
-            <ShieldAlert className="h-4 w-4 text-rose" />
+            <ShieldAlert className="h-4 w-4 shrink-0 text-rose" />
             <p className="text-[13px] font-medium text-rose">{humanizeId(g.gate)}</p>
           </div>
           <p className="mt-1.5 text-[12.5px] leading-relaxed text-dim">
@@ -149,7 +152,7 @@ function QualityPanel({ dq }: { dq: DecisionQualitySchema }) {
               >
                 {m.fired ? formatSigned(m.applied_points) : "—"}
               </span>
-              <span className="text-dim">
+              <span className="min-w-0 text-dim">
                 <span className="text-ink">{humanizeId(m.id)}</span>
                 {m.fired ? ` · ${formatDisplayText(m.detail)}` : " · did not fire"}
               </span>
@@ -226,19 +229,19 @@ function CriterionRow({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center gap-3 px-4 py-3 text-left"
+        className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 text-left"
       >
         <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: meta.color }} />
         <span className="min-w-0 flex-1 text-[12.5px] text-ink">{title}</span>
-        <span className="eyebrow" style={{ color: meta.color }}>
+        <span className="eyebrow shrink-0" style={{ color: meta.color }}>
           {meta.label}
         </span>
         {points != null && (
-          <span className="num text-[12px] text-faint">
+          <span className="num shrink-0 text-[12px] text-faint">
             {formatDecimal(points, 1)}
           </span>
         )}
-        <ChevronDown className="h-3.5 w-3.5 text-faint" />
+        <ChevronDown className="h-3.5 w-3.5 shrink-0 text-faint" />
       </button>
       <AnimatePresence initial={false}>
         {open && (
@@ -267,9 +270,11 @@ function EvidencePanel({
   return (
     <section>
       <h3 className="eyebrow text-faint">Evidence · observations, not grades</h3>
-      <div className="mt-3 grid gap-3 md:grid-cols-2">
+      {/* Same column rhythm as the two panels above: one column on phones, two from `md`,
+          three once the shell's content column is wide enough to keep each card readable. */}
+      <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {entries.map(([trait, rows]) => (
-          <div key={trait} className="glass-card-flat p-4">
+          <div key={trait} className="glass-card-flat min-w-0 p-4">
             <p className="text-[13px] font-medium text-ink">{humanizeId(trait)}</p>
             <ul className="mt-2 space-y-2">
               {rows.map((row) => (

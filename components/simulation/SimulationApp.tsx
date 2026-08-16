@@ -101,6 +101,14 @@ export const SIMULATION_TABS = [
 
 const emptyCrisis = (): CrisisInput => ({ diagnosis: null, reasoning: "", strategy: null, commit: "" });
 
+/**
+ * The simulation's own content column. It runs inside `RunShell`'s `main`, to the right of the
+ * 268px rail, so it carries the same gutter and the same 1440px ceiling as the shell's other
+ * screens -- otherwise the review and year-end screens sit in a narrower column than the report
+ * they are read next to, with the header's rules running past them on both sides.
+ */
+const COLUMN = "mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-8";
+
 const EMPTY_BUDGET: RemoteBudget = {
   opex: 0, capex: 0, inno: 0, people: 0, repay: 0, drawn: 0, committed: 0, ceiling: 0,
 };
@@ -400,7 +408,7 @@ export function SimulationApp() {
     <TeachingContext.Provider value={notesOn}>
       <div className="simulation min-h-full bg-stone-100 text-stone-900">
         <header className="bg-stone-900 text-white">
-          <div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+          <div className={COLUMN + " py-3 flex flex-wrap items-center justify-between gap-3"}>
             <div className="flex items-baseline gap-3">
               <span className="font-serif text-xl">Nadi Wear</span>
               <span className="text-xs uppercase tracking-widest text-stone-500">Chief Executive</span>
@@ -441,7 +449,7 @@ export function SimulationApp() {
 
           {showNav && (
             <nav className="border-t border-stone-700">
-              <div className="max-w-6xl mx-auto px-2 flex overflow-x-auto">
+              <div className="mx-auto w-full max-w-[1440px] px-1 sm:px-3 lg:px-5 flex overflow-x-auto">
                 {tabs.map((t) => (
                   <button
                     key={t.id}
@@ -466,9 +474,9 @@ export function SimulationApp() {
           {showNav && <Ticker items={ticker} />}
         </header>
 
-        <main className="max-w-6xl mx-auto px-4 py-6">{body}</main>
+        <main className={COLUMN + " py-6"}>{body}</main>
 
-        <footer className="max-w-6xl mx-auto px-4 pb-10 pt-2 text-xs text-stone-400 font-mono">
+        <footer className={COLUMN + " pb-10 pt-2 text-xs text-stone-400 font-mono"}>
           Teaching simulation. All figures fictional. Every number is computed by the MyElin engine.
         </footer>
       </div>
