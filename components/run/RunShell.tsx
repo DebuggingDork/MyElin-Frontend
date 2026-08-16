@@ -9,6 +9,7 @@ import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Pill } from "@/components/ui/Kit";
 import { DEPARTMENTS } from "@/lib/api/catalog";
+import { humanizeId } from "@/lib/format/display";
 import { useRun } from "@/components/run/RunProvider";
 import { RunKpiBar } from "@/components/run/RunKpiBar";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
@@ -242,7 +243,7 @@ export function RunShell({ children }: { children: React.ReactNode }) {
                   key={m}
                   className="num rounded-full border border-line px-2 py-1 text-[10px] text-faint"
                 >
-                  {m}
+                  {humanizeId(m)}
                 </span>
               ))}
             </div>

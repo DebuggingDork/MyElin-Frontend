@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api/client";
 import { asNumber, formatInr } from "@/lib/api/catalog";
+import { formatDisplayText, humanizeId } from "@/lib/format/display";
 import type {
   EndgamePath,
   EndgamePreviewResponse,
@@ -78,10 +79,10 @@ export function EndgameView() {
       <header>
         <p className="eyebrow text-amber">Endgame · Q{run?.current_quarter_number}</p>
         <h2 className="display mt-2 text-[28px] text-ink">
-          Tier: {preview.tier}
+          Tier: {humanizeId(preview.tier)}
         </h2>
         <p className="mt-2 max-w-2xl text-[13.5px] text-dim">
-          {preview.tier_detail}
+          {formatDisplayText(preview.tier_detail)}
         </p>
       </header>
 

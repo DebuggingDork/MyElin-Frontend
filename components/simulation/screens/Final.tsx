@@ -17,6 +17,7 @@ import {
   headcount,
 } from "@/lib/simulation/constants";
 import { cr, inr, n0, n1, pct } from "@/lib/simulation/format";
+import { formatDisplayText, formatSigned, humanizeId } from "@/lib/format/display";
 import { balanceClosing, balanceOpening } from "@/lib/simulation/balance";
 import { lessons } from "@/lib/simulation/insights";
 import {
@@ -163,7 +164,7 @@ export function FinalScreen({
             t.pct === null ? (
               <div key={t.name}>
                 <div className="flex items-baseline justify-between">
-                  <span className="text-sm text-stone-500">{t.name}</span>
+                  <span className="text-sm text-stone-500">{humanizeId(t.name)}</span>
                   <span className="text-xs uppercase tracking-widest text-stone-400">Not yet assessed</span>
                 </div>
                 <div className="h-1.5 w-full border-b border-dashed border-stone-300" />
@@ -174,7 +175,7 @@ export function FinalScreen({
             ) : (
               <div key={t.name}>
                 <div className="flex items-baseline justify-between">
-                  <span className="text-sm text-stone-800">{t.name}</span>
+                  <span className="text-sm text-stone-800">{humanizeId(t.name)}</span>
                   <span className={"text-xs font-mono " + TONE_TEXT[traitTone(t.pct)]}>{n0(t.pct)}%</span>
                 </div>
                 <Bar value={t.pct} max={100} tone={TONE_BAR[traitTone(t.pct)]} />
@@ -185,11 +186,13 @@ export function FinalScreen({
       </Panel>
 
       <div className="grid gap-5 lg:grid-cols-2">
-        <Panel eyebrow="Biggest strength" title={strength.name}>
+        <Panel eyebrow="Biggest strength" title={humanizeId(strength.name)}>
           <p className="text-sm text-stone-700">{strength.why}</p>
         </Panel>
-        <Panel eyebrow="Biggest mistake" title={mistake.title}>
-          <p className="text-sm text-stone-700">{mistake.why}</p>
+        {/* `mistake.why` quotes the engine's own modifier text, so it gets the same rounding
+            and de-underscoring as every other backend sentence on the page. */}
+        <Panel eyebrow="Biggest mistake" title={humanizeId(mistake.title)}>
+          <p className="text-sm text-stone-700">{formatDisplayText(mistake.why)}</p>
         </Panel>
         <Panel eyebrow="Most important decision" title={"Quarter " + decision.q + ": " + decision.label}>
           <p className="text-sm text-stone-700">{decision.effect}</p>
@@ -334,7 +337,7 @@ export function FinalScreen({
                         key={j}
                         className={"text-xs font-mono " + (Number(m.points) > 0 ? "text-teal-800" : "text-rose-800")}
                       >
-                        {(Number(m.points) > 0 ? "+" : "") + m.points} {m.why}
+                        {formatSigned(m.points)} {formatDisplayText(m.why)}
                       </li>
                     ))}
                   </ul>
