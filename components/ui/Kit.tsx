@@ -192,7 +192,11 @@ export function Action({
   const base = cn(
     // Named properties, not `all`: `transition-all` here also animated colour and border on
     // every state change, and fought the press feedback below. 160ms is the button-press band.
-    "sweep group relative inline-flex items-center justify-center gap-2 rounded-full font-medium",
+    // `shrink-0` and `whitespace-nowrap`: as a flex child (the report and complete footers put
+    // five of these in one wrapping row) the default `flex-shrink: 1` squeezed the pill narrower
+    // than its own label, so the text wrapped inside the rounded shape or spilled past it. A
+    // button should wrap to the next line, never compress.
+    "sweep group relative inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full font-medium",
     "transition-[background-color,border-color,color,box-shadow,transform] duration-200 ease-out",
     "active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-45 disabled:active:scale-100",
     size === "lg" ? "px-7 py-4 text-[15px]" : "px-5 py-3 text-[13.5px]",

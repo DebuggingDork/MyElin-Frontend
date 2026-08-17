@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { ArrowRight, Skull, Trophy } from "lucide-react";
 import { Action, Eyebrow, Pill } from "@/components/ui/Kit";
 import { formatInr } from "@/lib/api/catalog";
@@ -111,19 +110,21 @@ export function CompleteScreen() {
         </div>
       )}
 
-      <div className="flex flex-wrap gap-3">
+      {/* `items-center`, and "Back to hub" is an Action like its neighbours rather than a bare
+          link. As raw text in a stretch-aligned flex row it sat at the top of the row while the
+          two pills beside it were centred, so it read as misaligned and out of place -- most
+          visible on a failed run, where this footer is the last thing on the page. `ghost` keeps
+          it visually quieter than the other two without breaking the row's rhythm. */}
+      <div className="flex flex-wrap items-center gap-3">
         <Action href="/leaderboard">
           Leaderboard <ArrowRight className="h-4 w-4" />
         </Action>
         <Action href="/simulations" variant="outline">
           New simulation
         </Action>
-        <Link
-          href={`/run/${companyId}`}
-          className="text-[13px] text-dim hover:text-ink"
-        >
+        <Action href={`/run/${companyId}`} variant="ghost">
           Back to hub
-        </Link>
+        </Action>
       </div>
     </div>
   );

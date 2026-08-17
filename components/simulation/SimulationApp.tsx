@@ -102,6 +102,37 @@ export const SIMULATION_TABS = [
 const emptyCrisis = (): CrisisInput => ({ diagnosis: null, reasoning: "", strategy: null, commit: "" });
 
 /**
+ * Where an in-progress quarter's draft is kept.
+ *
+ * Only the *unlocked* quarter is ever stored, keyed by company and quarter number, so opening
+ * the next quarter starts clean without anything to clear. A locked quarter's decisions live on
+ * the server, which is the record that matters; this is purely so a reload, a sidebar
+ * deep-link or a closed laptop does not throw away numbers the CEO has already typed in.
+ */
+const draftKey = (companyId: string, quarter: number) => `simulation.draft.${companyId}.q${quarter}`;
+
+type Draft = {
+  lines: Alloc;
+  warranty: WarrantyId;
+  payTerms: PayTermsId;
+  startInno: string[];
+  products: Record<ProductId, ProductState> | null;
+  priority: PriorityId | null;
+  reflection: Reflection;
+  crisis: CrisisInput;
+};
+
+function readDraft(companyId: string, quarter: number): Draft | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(draftKey(companyId, quarter));
+    return raw ? (JSON.parse(raw) as Draft) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * The simulation's own content column. It runs inside `RunShell`'s `main`, to the right of the
  * 268px rail, so it carries the same gutter and the same 1440px ceiling as the shell's other
  * screens -- otherwise the review and year-end screens sit in a narrower column than the report
@@ -170,21 +201,40 @@ export function SimulationApp() {
     [pathname, router, searchParams],
   );
 
-  const resetPlan = useCallback((next: CompanyState) => {
-    setAlloc(emptyAlloc());
-    setWarranty("6mo");
-    setStartInno([]);
-    setProducts(next.products);
-    setPayTerms(next.payTerms);
-    setPriority(null);
-    setReflection({ sacrifice: [] });
-    setCrisis(emptyCrisis());
-    setAdvanced(false);
-    setProjection(null);
-  }, []);
+  /**
+   * Set the plan up for `next`, restoring any draft already saved for that quarter.
+   *
+   * Restoring rather than always clearing is the point: this runs on every load and after
+   * every close, so without it a reload halfway through a quarter silently discarded every
+   * number the CEO had entered.
+   */
+  const resetPlan = useCallback(
+    (next: CompanyState) => {
+      const draft = readDraft(companyId, next.quarter);
+      setAlloc(draft?.lines ?? emptyAlloc());
+      setWarranty(draft?.warranty ?? "6mo");
+      setStartInno(draft?.startInno ?? []);
+      setProducts(draft?.products ?? next.products);
+      setPayTerms(draft?.payTerms ?? next.payTerms);
+      setPriority(draft?.priority ?? null);
+      setReflection(draft?.reflection ?? { sacrifice: [] });
+      setCrisis(draft?.crisis ?? emptyCrisis());
+      setAdvanced(false);
+      setProjection(null);
+    },
+    [companyId],
+  );
 
   /* ── load the run ─────────────────────────────────────────────── */
 
+  /**
+   * Load the run, and the term sheet whenever one is outstanding.
+   *
+   * The term sheet is fetched here rather than only in the moment Q3 closes, because the run
+   * state is the single source of truth for where the CEO actually is: three quarters locked
+   * with no `endgamePath` means the decision is still owed, whether they got there by closing
+   * Q3 a second ago or by reloading the page a day later.
+   */
   const loadRun = useCallback(async () => {
     const run = await simulationApi.run(companyId);
     setState(run.state);
@@ -195,10 +245,36 @@ export function SimulationApp() {
     setPriorities(
       run.history.map((h) => ((h as Record<string, unknown>).priority as PriorityId | null) ?? null),
     );
+
+    if (run.quartersLocked >= 3 && run.history.length >= 3) {
+      try {
+        const eg = await simulationApi.endgame(companyId);
+        setTs({
+          tier: eg.tier,
+          V: eg.q3ValuationInr,
+          M: eg.momentum,
+          trueContinuation: eg.trueContinuationValueInr,
+          offers: eg.offers as unknown as TermSheet["offers"],
+          q1: run.history[0],
+          q2: run.history[1],
+          q3: run.history[2],
+        });
+      } catch {
+        /* Not readable yet. The rest of the run still works without it. */
+      }
+    }
     return run;
   }, [companyId]);
 
   /**
+   * Derive the phase from the run itself, never from wherever the user happened to be.
+   *
+   * This is what makes the term sheet impossible to lose: a reload, a sidebar deep-link and the
+   * browser back button all recompute the same answer from `quartersLocked` and `endgamePath`.
+   * The previous version fell back to the briefing whenever any quarter was locked, which
+   * silently skipped the Q4 term sheet -- and because the screen was only ever reachable from
+   * the moment Q3 closed, the endgame decision could then never be recorded at all.
+   *
    * No `didRun` ref guards this. Under StrictMode the effect is deliberately invoked twice, and
    * a ref guard would let the first (already-cancelled) pass claim the slot while the second
    * returned early -- leaving the page on its loading state forever.
@@ -210,8 +286,22 @@ export function SimulationApp() {
         const run = await loadRun();
         if (cancelled) return;
         resetPlan(run.state);
+        // A saved draft that already names a priority means this quarter was started, so
+        // resume on the decision screens rather than sending the CEO back through the
+        // briefing to re-declare something they have already committed to.
+        const started = Boolean(readDraft(companyId, run.state.quarter)?.priority);
+
         setPhase(
-          run.runStatus === "completed" ? "final" : run.quartersLocked === 0 ? "intro" : "briefing",
+          run.runStatus === "completed"
+            ? "final"
+            : run.quartersLocked === 0 && !started
+              ? "intro"
+              : // Q3 closed and nothing signed: the term sheet is owed before Q4 can be run.
+                run.quartersLocked === 3 && !run.endgamePath
+                ? "termsheet"
+                : started
+                  ? "play"
+                  : "briefing",
         );
       } catch (err) {
         if (!cancelled) setError(err instanceof ApiError ? err.message : "Could not load this run.");
@@ -222,7 +312,7 @@ export function SimulationApp() {
     return () => {
       cancelled = true;
     };
-  }, [loadRun, resetPlan]);
+  }, [companyId, loadRun, resetPlan]);
 
   /* ── the live projection, from the server ─────────────────────── */
 
@@ -230,6 +320,23 @@ export function SimulationApp() {
     () => ({ lines: alloc, warranty, payTerms, startInno, products, priority, reflection, crisis }),
     [alloc, warranty, payTerms, startInno, products, priority, reflection, crisis],
   );
+
+  /**
+   * Save the draft on every change, so nothing typed is ever only in memory.
+   *
+   * There is no "save" button by design: an allocation the CEO can lose by reloading is worse
+   * than one they have to remember to save, and the quarter is only *committed* when they close
+   * it. Skipped while booting so the freshly-restored draft is not immediately written back.
+   */
+  useEffect(() => {
+    if (booting || typeof window === "undefined") return;
+    if (phase !== "play" && phase !== "briefing") return;
+    try {
+      window.localStorage.setItem(draftKey(companyId, state.quarter), JSON.stringify(plan));
+    } catch {
+      /* A full or blocked localStorage must never break the run. */
+    }
+  }, [booting, companyId, phase, plan, state.quarter]);
 
   /**
    * Debounced so a spend box stays responsive: the CEO types, and 350ms after they stop the
@@ -309,6 +416,12 @@ export function SimulationApp() {
     setError(null);
     try {
       const locked = await simulationApi.lock(companyId, plan);
+      // Committed to the server, so the local draft has done its job.
+      try {
+        window.localStorage.removeItem(draftKey(companyId, locked.quarter));
+      } catch {
+        /* nothing to recover from */
+      }
       setClosed({ result: locked.result, score: locked.score });
       setHistory((h) => [...h, locked.result]);
       setScores((s) => [...s, locked.score]);
@@ -338,32 +451,17 @@ export function SimulationApp() {
     setBusy(true);
     setError(null);
     try {
+      // `loadRun` fetches the term sheet whenever one is outstanding, so Q3 needs no special
+      // case here beyond sending the CEO to it.
       const run = await loadRun();
       resetPlan(run.state);
-
-      if (justClosed === 3) {
-        // Q3 has closed: the term sheet is now real and has to be signed before Q4 locks.
-        const eg = await simulationApi.endgame(companyId);
-        setTs({
-          tier: eg.tier,
-          V: eg.q3ValuationInr,
-          M: eg.momentum,
-          trueContinuation: eg.trueContinuationValueInr,
-          offers: eg.offers as unknown as TermSheet["offers"],
-          q1: history[0],
-          q2: history[1],
-          q3: history[2],
-        });
-        setPhase("termsheet");
-      } else {
-        setPhase("briefing");
-      }
+      setPhase(justClosed === 3 && !run.endgamePath ? "termsheet" : "briefing");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not open the next quarter.");
     } finally {
       setBusy(false);
     }
-  }, [closed, companyId, history, loadRun, resetPlan]);
+  }, [closed, loadRun, resetPlan]);
 
   const acceptDeal = useCallback(
     async (path: "A" | "B" | "C", termSheetName: string, reasoning: string) => {
@@ -545,8 +643,24 @@ export function SimulationApp() {
     );
   }
 
-  if (phase === "termsheet" && ts) {
-    return chrome(<TermSheetScreen ts={ts} onAccept={acceptDeal} busy={busy} error={error} />, false);
+  if (phase === "termsheet") {
+    // `ts` should always be loaded by the time the phase is set, but say so plainly rather
+    // than falling through to the play surface -- a silent fall-through is exactly what made
+    // the term sheet look like a dead end before.
+    return chrome(
+      ts ? (
+        <TermSheetScreen ts={ts} onAccept={acceptDeal} busy={busy} error={error} />
+      ) : (
+        <div className="space-y-4">
+          {errorBanner}
+          <div className="border-l-4 border-amber-600 bg-amber-50 px-4 py-3 text-sm text-stone-800">
+            The board&apos;s term sheet could not be loaded. Reload the page to try again — your three
+            closed quarters are safe, and nothing is lost.
+          </div>
+        </div>
+      ),
+      false,
+    );
   }
 
   if (phase === "final") {

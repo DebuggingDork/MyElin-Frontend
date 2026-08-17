@@ -61,7 +61,10 @@ export function ReportScreen({ quarterId }: { quarterId: string }) {
   return (
     <div className="space-y-8">
       <ReportView report={report} />
-      <footer className="flex flex-wrap gap-3 border-t border-line pt-6">
+      {/* `items-center` so every pill shares one baseline as the row wraps -- a failed run shows
+          the most buttons here (hub, endgame, run complete, leaderboard) and is the case that
+          wraps first. */}
+      <footer className="flex flex-wrap items-center gap-3 border-t border-line pt-6">
         <Action href={`/run/${companyId}`}>Back to hub</Action>
         {canOpenNext && (
           <Action href={`/run/${companyId}`}>

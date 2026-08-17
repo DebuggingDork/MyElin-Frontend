@@ -45,7 +45,10 @@ export function ReportView({ report }: { report: QuarterReportResponse }) {
       {/* Two readings of the same quarter, side by side from `lg` up. `xl` gives decision
           quality the wider half: it carries the criterion rows, which are the longest lines
           on the page, while the outcome column is a fixed-width printed statement. */}
-      <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+      {/* `items-start`: the two columns are almost never the same length -- decision quality
+          carries the criterion rows -- and stretching the shorter one to match padded dead space
+          under it. Each column is now only as tall as its own content. */}
+      <div className="grid items-start gap-6 lg:grid-cols-2 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         {/* outcome */}
         <section className="min-w-0 space-y-4">
           <h3 className="eyebrow text-faint">A · Business outcome</h3>

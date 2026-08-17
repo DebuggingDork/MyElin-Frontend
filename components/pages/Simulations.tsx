@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
@@ -13,6 +13,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import { easeOut } from "@/lib/media";
+import { api, getToken } from "@/lib/api/client";
+import type { CompanyListItem } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import {
   Action,
@@ -127,6 +129,41 @@ const shelfStats = [
 export function Simulations() {
   const [filter, setFilter] = useState<(typeof filters)[number]>("All");
 
+  /**
+   * The run already in progress, if there is one.
+   *
+   * Without this the page always offered "Run the live case", which sends a returning CEO back
+   * through the entry gate and its "30 uninterrupted minutes" prompt -- asking them to commit
+   * the whole session again when they only have one quarter left to play. The API already
+   * reports progress per owned run, so the button can say what it actually does.
+   */
+  const [resumable, setResumable] = useState<CompanyListItem | null>(null);
+
+  useEffect(() => {
+    // Signed-out visitors see the marketing path; there is nothing of theirs to resume.
+    if (!getToken()) return;
+    let cancelled = false;
+    api
+      .listCompanies()
+      .then(({ entries }) => {
+        if (cancelled) return;
+        // Newest first from the API; the first still-running one is the one to offer.
+        setResumable(
+          entries.find((e) => e.run_status === "active" || e.run_status === "distressed") ?? null,
+        );
+      })
+      .catch(() => {
+        /* Offer the fresh-start path rather than an error on a marketing page. */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const resumeQuarter = resumable
+    ? (resumable.current_quarter_number ?? resumable.quarters_locked + 1)
+    : null;
+
   const visible =
     filter === "All"
       ? scenarios
@@ -166,14 +203,24 @@ export function Simulations() {
                 transition={{ duration: 0.6, delay: 0.2, ease: easeOut }}
                 className="mt-9 flex flex-wrap items-center gap-3"
               >
-                <Action href="/play/startup-survival" size="lg">
-                  <Play className="h-4 w-4" />
-                  Run the live case
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                </Action>
+                {resumable ? (
+                  <Action href={`/run/${resumable.id}/simulation`} size="lg">
+                    <Play className="h-4 w-4" />
+                    Resume quarter {resumeQuarter} of 4
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                  </Action>
+                ) : (
+                  <Action href="/play/startup-survival" size="lg">
+                    <Play className="h-4 w-4" />
+                    Run the live case
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                  </Action>
+                )}
                 <span className="flex items-center gap-2 text-[13px] text-faint">
                   <Sparkles className="h-3.5 w-3.5 text-pink" />
-                  6 scenarios in the catalogue
+                  {resumable
+                    ? `${resumable.quarters_locked} of 4 quarters closed`
+                    : "6 scenarios in the catalogue"}
                 </span>
               </motion.div>
             </div>
