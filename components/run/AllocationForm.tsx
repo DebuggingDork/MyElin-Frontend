@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Check } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Check, Loader2, TriangleAlert } from "lucide-react";
 import { api } from "@/lib/api/client";
 import {
   asNumber,
@@ -24,6 +24,7 @@ import { useRun } from "@/components/run/RunProvider";
 import { SpendDial } from "@/components/run/SpendDial";
 import { SpendSplit } from "@/components/run/SpendSplit";
 import { SpendColumns } from "@/components/run/SpendColumns";
+import { useAutosave, type SaveStatus } from "@/components/run/useAutosave";
 
 type SpendMap = Record<string, number>;
 
@@ -56,9 +57,6 @@ export function AllocationWorkspace({ deptId }: { deptId: DeptId }) {
     fromAlloc(quarter?.allocations, keys),
   );
   const [warranty, setWarranty] = useState(() => quarter?.warranty_years ?? 0);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const color = accentVar[catalog.accent];
   const enabled = can("submit_allocation");
   const quarterId = run?.current_quarter_id;
@@ -94,16 +92,23 @@ export function AllocationWorkspace({ deptId }: { deptId: DeptId }) {
       ...prev,
       [key]: Math.min(Math.max(0, value), headroomFor(key, prev)),
     }));
-    setSaved(false);
   };
 
-  async function submit() {
-    if (!quarterId || !enabled) return;
-    setSaving(true);
-    setError(null);
+  // One payload object covering every control on the form -- the dials, the split rows, the
+  // columns and R&D's warranty choice all land here, so autosave is driven by *what the form
+  // holds*, not by remembering to call a save from each control's handler.
+  const payload = useMemo(
+    () => (catalog.warranty ? { ...spend, warranty_years: warranty } : { ...spend }),
+    [spend, warranty, catalog.warranty],
+  );
+
+  // Takes the figures to save as an argument rather than reading `spend`/`warranty` off the
+  // closure: autosave hands it the value it captured at request time, which is the one thing
+  // that keeps a debounced write from persisting a stale render's numbers.
+  async function persist(body: SpendMap) {
+    if (!quarterId) throw new Error("No open quarter");
+    let res: QuarterAllocationResponse;
     try {
-      let res: QuarterAllocationResponse;
-      const body = { ...spend };
       switch (deptId) {
         case "marketing":
           res = await api.submitMarketing(companyId, quarterId, body);
@@ -114,7 +119,7 @@ export function AllocationWorkspace({ deptId }: { deptId: DeptId }) {
         case "rnd":
           res = await api.submitRnd(companyId, quarterId, {
             ...body,
-            warranty_years: warranty,
+            warranty_years: body.warranty_years ?? 0,
           });
           break;
         case "operations":
@@ -127,17 +132,33 @@ export function AllocationWorkspace({ deptId }: { deptId: DeptId }) {
           res = await api.submitFinanceAdmin(companyId, quarterId, body);
           break;
       }
-      setAllocations(res);
-      setSpend(fromAlloc(res, keys));
-      if (catalog.warranty) setWarranty(res.warranty_years);
-      setSaved(true);
-      await refresh();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Submit failed");
-    } finally {
-      setSaving(false);
+      // The API's own explanation ("quarter is locked", a validation message) is worth showing;
+      // a transport failure is not, and "Failed to fetch" would be the only technical string
+      // left on this screen.
+      throw new Error(
+        err instanceof ApiError ? err.message : "Couldn't reach the server",
+      );
     }
+    setAllocations(res);
+    // Deliberately *not* writing the response back over `spend`: with no Save button the user is
+    // quite likely mid-keystroke on the next line when this lands, and echoing the server's copy
+    // of the figures into the fields would undo that edit. The response carries the numbers we
+    // just sent, so there is nothing to gain by it.
+    // `refresh()` still runs, so the KPI bar, the remaining-cash figure and the nav's
+    // finance-unlocked gate all reflect the save that just happened.
+    await refresh();
   }
+
+  const {
+    status: saveStatus,
+    error: saveError,
+    retry,
+  } = useAutosave({
+    value: payload,
+    enabled: Boolean(quarterId) && enabled,
+    save: persist,
+  });
 
   const total = Object.values(spend).reduce((a, b) => a + b, 0);
   const projectedRemaining = (cashLakhs - otherDeptsLakhs - total) * 100_000;
@@ -165,8 +186,8 @@ export function AllocationWorkspace({ deptId }: { deptId: DeptId }) {
           </p>
           <p className="mt-2 max-w-md text-[12.5px] leading-relaxed text-dim">
             Every other department is spent against the cash picture Finance &
-            Admin establishes for the quarter. Save that allocation once,
-            then this and the remaining departments unlock.
+            Admin establishes for the quarter. Enter that allocation — it saves
+            itself — and this and the remaining departments unlock.
           </p>
           <Action
             className="mt-4"
@@ -216,7 +237,7 @@ export function AllocationWorkspace({ deptId }: { deptId: DeptId }) {
         <p className={`num mt-2 text-[12px] ${atCap ? "text-amber" : "text-faint"}`}>
           {atCap
             ? "Fully committed — lower another line here to raise this one"
-            : `Cash remaining if saved as-is · ${formatInr(projectedRemaining)}`}
+            : `Cash remaining after this department · ${formatInr(projectedRemaining)}`}
         </p>
         {otherDeptsLakhs > 0 && (
           <p className="num mt-1 text-[12px] text-faint">
@@ -290,10 +311,7 @@ export function AllocationWorkspace({ deptId }: { deptId: DeptId }) {
                 key={y}
                 type="button"
                 disabled={!enabled}
-                onClick={() => {
-                  setWarranty(y);
-                  setSaved(false);
-                }}
+                onClick={() => setWarranty(y)}
                 className="rounded-full border px-4 py-2 text-[13px]"
                 style={{
                   borderColor:
@@ -314,22 +332,70 @@ export function AllocationWorkspace({ deptId }: { deptId: DeptId }) {
         </div>
       )}
 
-      {error && (
+      {saveStatus === "error" && (
         <p className="rounded-xl border border-rose/30 bg-rose/[0.07] px-4 py-3 text-[13px] text-rose">
-          {error}
+          {saveError ?? "Could not save this allocation."} Your figures are still on screen —
+          change anything, or use Retry, to send them again.
         </p>
       )}
 
-      <div className="flex items-center gap-3">
-        <Action onClick={submit} disabled={!enabled || saving}>
-          {saving ? "Saving…" : saved ? "Saved — upsert again anytime" : "Save allocation"}
-          {saved && <Check className="h-4 w-4" />}
-        </Action>
-        <span className="text-[12px] text-faint">
-          POST …/allocations/{deptId}
-        </span>
-      </div>
+      {enabled && (
+        <AutosaveStatus status={saveStatus} onRetry={retry} />
+      )}
     </div>
+  );
+}
+
+/**
+ * The whole action area, now that there is no Save button: allocations persist on their own, so
+ * this reports *state* rather than offering work. Retry is the one thing still worth a button --
+ * a failed save is the only case where the user has something to do.
+ */
+function AutosaveStatus({
+  status,
+  onRetry,
+}: {
+  status: SaveStatus;
+  onRetry: () => void;
+}) {
+  if (status === "error") {
+    return (
+      <div className="flex items-center gap-3" role="status" aria-live="polite">
+        <span className="inline-flex items-center gap-1.5 text-[13px] text-rose">
+          <TriangleAlert className="h-3.5 w-3.5" />
+          Save failed
+        </span>
+        <button
+          type="button"
+          onClick={onRetry}
+          className="rounded-full border border-line px-3 py-1 text-[12px] text-dim transition-colors hover:border-line-2 hover:text-ink"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <p
+      className="flex items-center gap-1.5 text-[13px] text-faint"
+      role="status"
+      aria-live="polite"
+    >
+      {status === "saving" ? (
+        <>
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          Saving…
+        </>
+      ) : status === "saved" ? (
+        <>
+          <Check className="h-3.5 w-3.5 text-teal" />
+          Saved
+        </>
+      ) : (
+        "Changes save automatically"
+      )}
+    </p>
   );
 }
 
