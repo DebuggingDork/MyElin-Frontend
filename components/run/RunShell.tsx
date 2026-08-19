@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
-import { Loader2, LogOut } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Loader2, LogOut, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { SIMULATION_TABS } from "@/components/simulation/SimulationApp";
 import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -15,6 +15,18 @@ import { RunKpiBar } from "@/components/run/RunKpiBar";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { ProfileMenu } from "@/components/layout/ProfileMenu";
 import { cn } from "@/lib/utils";
+
+const SIDEBAR_STORAGE_KEY = "myelin_run_sidebar_open";
+
+function readSidebarOpen(): boolean {
+  if (typeof window === "undefined") return true;
+  try {
+    const raw = window.localStorage.getItem(SIDEBAR_STORAGE_KEY);
+    return raw === null ? true : raw === "1";
+  } catch {
+    return true;
+  }
+}
 
 /**
  * Persistent chrome for every run screen. Nav items are enabled from
@@ -28,6 +40,19 @@ export function RunShell({ children }: { children: React.ReactNode }) {
   const { user, ready } = useAuth();
   const { companyId, company, run, report, loading, error, can, financeUnlocked } =
     useRun();
+
+  const [sidebarOpen, setSidebarOpen] = useState(readSidebarOpen);
+  const toggleSidebar = useCallback(() => {
+    setSidebarOpen((open) => {
+      const next = !open;
+      try {
+        window.localStorage.setItem(SIDEBAR_STORAGE_KEY, next ? "1" : "0");
+      } catch {
+        /* private browsing / storage disabled -- the toggle still works, it just won't stick */
+      }
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     if (ready && !user) {
@@ -138,27 +163,64 @@ export function RunShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-[100dvh] overflow-hidden bg-void text-ink">
-      <aside className="hidden w-[268px] shrink-0 flex-col border-r border-line bg-gradient-to-b from-raise/60 via-base to-base lg:flex">
-        <div className="flex items-center justify-between border-b border-line px-4 py-4">
-          <Link href="/" aria-label="Myelin home">
-            <Logo variant="glyph" />
-          </Link>
-          <Pill
-            accent={
-              run?.run_status === "failed"
-                ? "rose"
-                : run?.run_status === "distressed"
-                  ? "amber"
-                  : run?.run_status === "completed"
-                    ? "emerald"
-                    : "cyan"
-            }
-          >
-            {run?.run_status ?? "—"}
-          </Pill>
+      <aside
+        className={cn(
+          "hidden shrink-0 flex-col border-r border-line bg-gradient-to-b from-raise/60 via-base to-base lg:flex",
+          "motion-safe:transition-[width] motion-safe:duration-200 motion-safe:ease-out",
+          sidebarOpen ? "w-[268px]" : "w-16",
+        )}
+      >
+        <div
+          className={cn(
+            "flex items-center border-b border-line px-4 py-4",
+            sidebarOpen ? "justify-between" : "justify-center px-0",
+          )}
+        >
+          {sidebarOpen && (
+            <Link href="/" aria-label="Myelin home">
+              <Logo variant="glyph" />
+            </Link>
+          )}
+          <div className={cn("flex items-center", sidebarOpen && "gap-2")}>
+            {sidebarOpen && (
+              <Pill
+                accent={
+                  run?.run_status === "failed"
+                    ? "rose"
+                    : run?.run_status === "distressed"
+                      ? "amber"
+                      : run?.run_status === "completed"
+                        ? "emerald"
+                        : "cyan"
+                }
+              >
+                {run?.run_status ?? "—"}
+              </Pill>
+            )}
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+              aria-expanded={sidebarOpen}
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-faint transition-colors hover:bg-[var(--panel-2)] hover:text-ink"
+            >
+              {sidebarOpen ? (
+                <PanelLeftClose className="h-4 w-4" />
+              ) : (
+                <PanelLeftOpen className="h-4 w-4" />
+              )}
+            </button>
+          </div>
         </div>
 
-        <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+        {!sidebarOpen && <div className="h-1.5" />}
+
+        <nav
+          className={cn(
+            "flex-1 space-y-1 overflow-y-auto p-3",
+            !sidebarOpen && "hidden",
+          )}
+        >
           {links.map((link) => {
             const active = link.match
               ? link.match(pathname)
@@ -216,10 +278,14 @@ export function RunShell({ children }: { children: React.ReactNode }) {
         <div className="border-t border-line p-3">
           <Link
             href="/simulations"
-            className="flex items-center gap-2 rounded-lg px-3 py-2 text-[13px] text-dim hover:bg-[var(--panel-2)] hover:text-ink"
+            aria-label="Exit run"
+            className={cn(
+              "flex items-center gap-2 rounded-lg px-3 py-2 text-[13px] text-dim hover:bg-[var(--panel-2)] hover:text-ink",
+              !sidebarOpen && "justify-center px-0",
+            )}
           >
-            <LogOut className="h-3.5 w-3.5" />
-            Exit run
+            <LogOut className="h-3.5 w-3.5 shrink-0" />
+            {sidebarOpen && "Exit run"}
           </Link>
         </div>
       </aside>
