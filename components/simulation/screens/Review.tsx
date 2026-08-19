@@ -58,14 +58,14 @@ export function ReviewScreen({
   return (
     <div className="space-y-5">
       <div>
-        <Eyebrow tone="text-rose-800">Before you commit</Eyebrow>
+        <Eyebrow tone="text-danger-deep">Before you commit</Eyebrow>
         <h2 className="font-serif text-3xl">Close quarter {quarter}</h2>
       </div>
 
       <ReadinessGrid dirs={dirs} />
 
       <Panel eyebrow="Likely effect" title="What this plan looks like from here">
-        <p className="text-sm text-stone-600">
+        <p className="text-sm text-dim">
           You will not see the revenue, profit or cash until the quarter closes. What you can see is where the plan is
           tight and where it has room, above. If three of those read CONSTRAINED or CRITICAL, the quarter will probably
           disappoint you somewhere.
@@ -85,24 +85,24 @@ export function ReviewScreen({
       <BudgetMeter budget={budget} />
 
       {budget.committed > budget.ceiling && (
-        <div className="border-l-4 border-rose-700 bg-rose-50 px-4 py-3 text-sm text-rose-900">
+        <div className="border-l-4 border-danger bg-danger/10 px-4 py-3 text-sm text-danger-deep">
           You are {inr(budget.committed - budget.ceiling)} beyond what the balance sheet supports. You can still commit —
           the buffer takes it, and the record will show it.
         </div>
       )}
 
       {crisisUnanswered && (
-        <div className="border-l-4 border-amber-600 bg-amber-50 px-4 py-3 text-sm text-stone-800">
+        <div className="border-l-4 border-ember bg-ember/10 px-4 py-3 text-sm text-ink">
           There is a market event live and you have not decided how to answer it.
         </div>
       )}
 
-      {error && <div className="border-l-4 border-rose-700 bg-rose-50 px-4 py-3 text-sm text-rose-900">{error}</div>}
+      {error && <div className="border-l-4 border-danger bg-danger/10 px-4 py-3 text-sm text-danger-deep">{error}</div>}
 
       <button
         onClick={onClose}
         disabled={blocked}
-        className={"w-full py-4 font-serif text-xl " + (blocked ? "bg-stone-200 text-stone-400" : "bg-stone-900 text-white hover:bg-rose-900")}
+        className={"w-full py-4 font-serif text-xl " + (blocked ? "bg-raise-2 text-faint" : "bg-chrome text-white hover:bg-danger-deep")}
       >
         {busy
           ? "Closing the quarter…"

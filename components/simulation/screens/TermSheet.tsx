@@ -38,21 +38,21 @@ export function TermSheetScreen({
 
   return (
     <div className="space-y-5">
-      <div className="bg-stone-900 text-white p-6">
-        <Eyebrow tone="text-rose-400">Quarter 4 · The term sheet</Eyebrow>
+      <div className="bg-chrome text-white p-6">
+        <Eyebrow tone="text-danger-soft">Quarter 4 · The term sheet</Eyebrow>
         <h2 className="font-serif text-3xl mt-1">You are classified {ts.tier.toLowerCase()}</h2>
-        <p className="text-sm text-stone-300 mt-3 max-w-3xl leading-relaxed">{TIER_COPY[ts.tier]}</p>
+        <p className="text-sm text-faint mt-3 max-w-3xl leading-relaxed">{TIER_COPY[ts.tier]}</p>
         <div className="mt-4 grid gap-4 sm:grid-cols-3 font-mono text-sm">
           <div>
-            <span className="block text-xs uppercase tracking-widest text-stone-500">Q3 valuation</span>
+            <span className="block text-xs uppercase tracking-widest text-dim">Q3 valuation</span>
             {cr(ts.V)}
           </div>
           <div>
-            <span className="block text-xs uppercase tracking-widest text-stone-500">Momentum</span>
+            <span className="block text-xs uppercase tracking-widest text-dim">Momentum</span>
             {n2(ts.M)}
           </div>
           <div>
-            <span className="block text-xs uppercase tracking-widest text-stone-500">Q1 → Q3 units</span>
+            <span className="block text-xs uppercase tracking-widest text-dim">Q1 → Q3 units</span>
             {n0(ts.q1.unitsSold as number)} → {n0(ts.q3.unitsSold as number)}
           </div>
         </div>
@@ -67,22 +67,22 @@ export function TermSheetScreen({
               onClick={() => setPicked(offer.id)}
               className={
                 "text-left border flex flex-col " +
-                (on ? "border-stone-900 border-2 bg-white" : "border-stone-300 bg-white hover:border-stone-800")
+                (on ? "border-line-2 border-2 bg-raise" : "border-line bg-raise hover:border-line-2")
               }
             >
-              <div className={"px-4 py-3 border-b " + (on ? "bg-stone-900 text-white border-stone-900" : "border-stone-200")}>
-                <Eyebrow tone={on ? "text-stone-400" : "text-stone-500"}>
+              <div className={"px-4 py-3 border-b " + (on ? "bg-chrome text-white border-line-2" : "border-line")}>
+                <Eyebrow tone={on ? "text-faint" : "text-dim"}>
                   Path {offer.id} · {offer.who}
                 </Eyebrow>
                 <div className="font-serif text-xl leading-snug">{offer.title}</div>
               </div>
               <div className="p-4 flex-1">
-                <p className="text-sm text-stone-600 leading-relaxed">{offer.pitch}</p>
+                <p className="text-sm text-dim leading-relaxed">{offer.pitch}</p>
                 <dl className="mt-4 space-y-2">
                   {offer.terms.map(([label, value], i) => (
-                    <div key={i} className="border-b border-stone-200 pb-2">
-                      <dt className="text-xs uppercase tracking-widest text-stone-500">{label}</dt>
-                      <dd className="font-mono text-sm text-stone-900">{value}</dd>
+                    <div key={i} className="border-b border-line pb-2">
+                      <dt className="text-xs uppercase tracking-widest text-dim">{label}</dt>
+                      <dd className="font-mono text-sm text-ink">{value}</dd>
                     </div>
                   ))}
                 </dl>
@@ -92,9 +92,9 @@ export function TermSheetScreen({
         })}
       </div>
 
-      <div className="bg-white border border-stone-300 px-4 py-4 space-y-4">
+      <div className="bg-raise border border-line px-4 py-4 space-y-4">
         <div className="max-w-xl">
-          <p className="text-sm text-stone-600">
+          <p className="text-sm text-dim">
             Your choice is final and it is graded. Read the covenant arithmetic, not the headline number.
           </p>
           <TeachingNote id="covenant" inline />
@@ -103,18 +103,18 @@ export function TermSheetScreen({
 
         <div>
           <div className="font-serif text-base">
-            Why this path? <span className="text-stone-500 text-sm">(recorded with the decision)</span>
+            Why this path? <span className="text-dim text-sm">(recorded with the decision)</span>
           </div>
           <textarea
             value={reasoning}
             onChange={(e) => setReasoning(e.target.value)}
             rows={2}
             placeholder="A sentence on what in the last three quarters makes this the right call."
-            className="w-full border border-stone-400 p-3 text-sm bg-white mt-2 focus:outline-none focus:ring-2 focus:ring-stone-800"
+            className="w-full border border-line-2 p-3 text-sm bg-raise mt-2 focus:outline-none focus:ring-2 focus:ring-ink"
           />
         </div>
 
-        {error && <div className="border-l-4 border-rose-700 bg-rose-50 px-4 py-3 text-sm text-rose-900">{error}</div>}
+        {error && <div className="border-l-4 border-danger bg-danger/10 px-4 py-3 text-sm text-danger-deep">{error}</div>}
 
         <div className="flex justify-end">
           <button
@@ -122,7 +122,7 @@ export function TermSheetScreen({
             onClick={() => chosen && onAccept(chosen.id, chosen.title, reasoning)}
             className={
               "px-6 py-3 font-serif text-lg " +
-              (chosen && !busy ? "bg-rose-800 text-white hover:bg-rose-900" : "bg-stone-200 text-stone-400")
+              (chosen && !busy ? "bg-danger-deep text-white hover:bg-danger-deep" : "bg-raise-2 text-faint")
             }
           >
             {busy ? "Signing…" : chosen ? "Sign path " + chosen.id : "Choose a path"}

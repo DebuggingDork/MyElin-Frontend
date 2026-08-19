@@ -23,9 +23,9 @@ import type {
 } from "@/lib/simulation/types";
 
 const EVIDENCE_BORDER: Record<string, string> = {
-  bad: "border-rose-700",
-  watch: "border-amber-600",
-  flat: "border-stone-400",
+  bad: "border-danger",
+  watch: "border-ember",
+  flat: "border-line-2",
 };
 
 export function CrisisScreen({
@@ -61,20 +61,20 @@ export function CrisisScreen({
 
   const choiceClass = (on: boolean) =>
     "text-left border px-3 py-2 text-sm " +
-    (on ? "border-stone-900 bg-stone-900 text-white" : "border-stone-300 bg-white hover:border-stone-800");
+    (on ? "border-line-2 bg-chrome text-white" : "border-line bg-raise hover:border-line-2");
 
   const canAdvance = [true, true, locked || Boolean(crisis.diagnosis), locked || Boolean(crisis.strategy), true][step];
 
   return (
     <div className="space-y-5">
-      <div className="bg-stone-900 text-white p-5">
-        <Eyebrow tone="text-rose-400">
+      <div className="bg-chrome text-white p-5">
+        <Eyebrow tone="text-danger-soft">
           Quarter {s.quarter} · {locked ? "The situation is a quarter old" : "Something is happening"}
         </Eyebrow>
         <h2 className="font-serif text-3xl mt-1">{briefing?.signal ?? arch.signal}</h2>
-        <p className="text-sm text-stone-300 mt-3 max-w-3xl leading-relaxed">{briefing?.body ?? arch.body}</p>
+        <p className="text-sm text-faint mt-3 max-w-3xl leading-relaxed">{briefing?.body ?? arch.body}</p>
         {locked && (
-          <p className="text-sm text-amber-300 mt-3 max-w-3xl">
+          <p className="text-sm text-ember-soft mt-3 max-w-3xl">
             You committed to{" "}
             {crisis.strategy && STRATEGY_BY_ID[crisis.strategy]
               ? STRATEGY_BY_ID[crisis.strategy].name.toLowerCase()
@@ -91,10 +91,10 @@ export function CrisisScreen({
               className={
                 "px-3 py-1 text-xs uppercase tracking-widest border " +
                 (i === step
-                  ? "border-rose-500 text-white"
+                  ? "border-danger text-white"
                   : i < step
-                    ? "border-stone-600 text-stone-300 hover:text-white"
-                    : "border-stone-800 text-stone-600")
+                    ? "border-line-2 text-faint hover:text-white"
+                    : "border-line-2 text-dim")
               }
             >
               {i + 1}. {label}
@@ -105,7 +105,7 @@ export function CrisisScreen({
 
       {step === 0 && (
         <Panel eyebrow="Step one" title="You do not yet know what this is">
-          <p className="text-sm text-stone-700">
+          <p className="text-sm text-ink">
             Something has changed outside the company. What it costs you depends on the company you have spent two
             quarters building, and you will not be told the number in advance. Start by looking at what each part of the
             business is actually seeing.
@@ -117,17 +117,17 @@ export function CrisisScreen({
       {step === 1 && (
         <div className="space-y-3">
           <div>
-            <Eyebrow tone="text-rose-800">Step two</Eyebrow>
+            <Eyebrow tone="text-danger-deep">Step two</Eyebrow>
             <h3 className="font-serif text-xl">What each function is seeing</h3>
-            <p className="text-sm text-stone-600 mt-1">Some of this is relevant. Some of it is not.</p>
+            <p className="text-sm text-dim mt-1">Some of this is relevant. Some of it is not.</p>
           </div>
           {evidence.map((line, i) => (
-            <div key={i} className={"bg-white border border-stone-300 border-l-4 px-4 py-3 " + EVIDENCE_BORDER[line.tone]}>
+            <div key={i} className={"bg-raise border border-line border-l-4 px-4 py-3 " + EVIDENCE_BORDER[line.tone]}>
               <div className="flex flex-wrap items-baseline gap-x-3">
-                <span className="text-xs uppercase tracking-widest text-stone-500 w-32">{line.fn}</span>
-                <span className="font-mono text-base text-stone-900">{line.line}</span>
+                <span className="text-xs uppercase tracking-widest text-dim w-32">{line.fn}</span>
+                <span className="font-mono text-base text-ink">{line.line}</span>
               </div>
-              <p className="text-sm text-stone-700 mt-1">{line.detail}</p>
+              <p className="text-sm text-ink mt-1">{line.detail}</p>
             </div>
           ))}
         </div>
@@ -135,7 +135,7 @@ export function CrisisScreen({
 
       {step === 2 && (
         <Panel eyebrow="Step three" title="What do you believe is happening?">
-          <p className="text-sm text-stone-600 mb-3">
+          <p className="text-sm text-dim mb-3">
             Nobody will confirm this for you. Your reading is recorded either way, and how the quarter turns out will
             show whether you read it correctly.
           </p>
@@ -159,7 +159,7 @@ export function CrisisScreen({
               rows={2}
               disabled={locked}
               placeholder="A sentence on what in the evidence points you there."
-              className="w-full border border-stone-400 p-3 text-sm bg-white mt-2 focus:outline-none focus:ring-2 focus:ring-stone-800"
+              className="w-full border border-line-2 p-3 text-sm bg-raise mt-2 focus:outline-none focus:ring-2 focus:ring-ink"
             />
           </div>
         </Panel>
@@ -168,9 +168,9 @@ export function CrisisScreen({
       {step === 3 && (
         <div className="space-y-3">
           <div>
-            <Eyebrow tone="text-rose-800">Step four</Eyebrow>
+            <Eyebrow tone="text-danger-deep">Step four</Eyebrow>
             <h3 className="font-serif text-xl">How will you respond?</h3>
-            <p className="text-sm text-stone-600 mt-1">
+            <p className="text-sm text-dim mt-1">
               These are directions, not budgets. You decide how much to put behind it next.
             </p>
           </div>
@@ -184,19 +184,19 @@ export function CrisisScreen({
                   onClick={() => set("strategy", c.id as StrategyId)}
                   className={
                     "text-left border p-4 " +
-                    (on ? "border-stone-900 border-2 bg-white" : "border-stone-300 bg-white hover:border-stone-800") +
+                    (on ? "border-line-2 border-2 bg-raise" : "border-line bg-raise hover:border-line-2") +
                     (locked && !on ? " opacity-40" : "")
                   }
                 >
                   <div className="font-serif text-xl">{c.name}</div>
-                  <p className="text-sm text-stone-700 mt-1">{c.thesis}</p>
+                  <p className="text-sm text-ink mt-1">{c.thesis}</p>
                   <div className="grid gap-x-4 gap-y-1 sm:grid-cols-2 mt-3">
-                    <div className="text-xs text-teal-800">
+                    <div className="text-xs text-teal-deep">
                       <span className="uppercase tracking-widest font-semibold">Upside</span>
                       <br />
                       {c.gain}
                     </div>
-                    <div className="text-xs text-rose-800">
+                    <div className="text-xs text-danger-deep">
                       <span className="uppercase tracking-widest font-semibold">Exposure</span>
                       <br />
                       {c.risk}
@@ -221,12 +221,12 @@ export function CrisisScreen({
           >
             {crisis.strategy && (
               <>
-                <p className="text-sm text-stone-600 mb-3">
+                <p className="text-sm text-dim mb-3">
                   This comes out of the same cash as everything else this quarter. Nobody can tell you in advance how far
                   it will go.
                 </p>
                 <div className="flex items-center gap-2">
-                  <span className="text-stone-500 font-mono">₹</span>
+                  <span className="text-dim font-mono">₹</span>
                   <input
                     type="number"
                     min="0"
@@ -234,17 +234,17 @@ export function CrisisScreen({
                     value={crisis.commit}
                     placeholder="0"
                     onChange={(e) => set("commit", e.target.value.replace(/^-/, ""))}
-                    className="w-32 border border-stone-400 px-2 py-1 text-right font-mono text-lg focus:outline-none focus:ring-2 focus:ring-stone-800"
+                    className="w-32 border border-line-2 px-2 py-1 text-right font-mono text-lg focus:outline-none focus:ring-2 focus:ring-ink"
                   />
-                  <span className="text-xs uppercase tracking-widest text-stone-500">lakh</span>
+                  <span className="text-xs uppercase tracking-widest text-dim">lakh</span>
                 </div>
-                <div className="mt-3 border-l-4 border-stone-800 bg-stone-50 px-3 py-2">
-                  <div className="text-sm text-stone-900">{commitReading?.line ?? "Nothing committed yet."}</div>
-                  <div className="text-xs text-stone-600 mt-1">
+                <div className="mt-3 border-l-4 border-line-2 bg-raise px-3 py-2">
+                  <div className="text-sm text-ink">{commitReading?.line ?? "Nothing committed yet."}</div>
+                  <div className="text-xs text-dim mt-1">
                     What you are accepting: {commitReading?.trade ?? STRATEGY_BY_ID[crisis.strategy].risk}
                   </div>
                 </div>
-                <div className="mt-3 text-xs text-stone-500 font-mono">
+                <div className="mt-3 text-xs text-dim font-mono">
                   {inr(num(crisis.commit) * 1e5)} of a remaining {inr(budget.ceiling - budget.committed)}.
                 </div>
               </>
@@ -272,7 +272,7 @@ export function CrisisScreen({
                   value={briefing.name}
                 />
               )}
-              <p className="text-xs text-stone-500 mt-3 italic">
+              <p className="text-xs text-dim mt-3 italic">
                 This is kept and shown back to you at the end of the year, next to what actually happened.
               </p>
             </Panel>
@@ -284,7 +284,7 @@ export function CrisisScreen({
         {step > 0 && (
           <button
             onClick={() => setStep(step - 1)}
-            className="px-5 py-3 border border-stone-400 bg-white font-serif hover:border-stone-800"
+            className="px-5 py-3 border border-line-2 bg-raise font-serif hover:border-line-2"
           >
             Back
           </button>
@@ -295,7 +295,7 @@ export function CrisisScreen({
             disabled={!canAdvance}
             className={
               "flex-1 py-3 font-serif text-lg " +
-              (canAdvance ? "bg-stone-900 text-white hover:bg-rose-900" : "bg-stone-200 text-stone-400")
+              (canAdvance ? "bg-chrome text-white hover:bg-danger-deep" : "bg-raise-2 text-faint")
             }
           >
             {step === 0
