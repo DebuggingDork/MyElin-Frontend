@@ -15,7 +15,7 @@ import { formatDisplayText, formatSigned, humanizeId } from "@/lib/format/displa
 import { balanceClosing, balanceOpening } from "@/lib/simulation/balance";
 import { lessons, whatHappened } from "@/lib/simulation/insights";
 import { priorityMatch, traitVerdicts } from "@/lib/simulation/scoring";
-import { Eyebrow, Panel, Stat, TeachingNote } from "@/components/simulation/Kit";
+import { Eyebrow, Panel, Stat, TeachingNote, ValuationTrendChart } from "@/components/simulation/Kit";
 import { BalanceSheet, CashFlow, ConstraintChain, ProfitAndLoss } from "@/components/simulation/Statements";
 import type { QuarterScore } from "@/lib/simulation/remote";
 import type {
@@ -131,6 +131,7 @@ function Assessment({ score }: { score: QuarterScore }) {
 export function ClosedScreen({
   r,
   prior,
+  history,
   score,
   constraint,
   priority,
@@ -140,6 +141,10 @@ export function ClosedScreen({
 }: {
   r: QuarterResultShape;
   prior: QuarterResultShape | undefined;
+  /** Every quarter closed so far, oldest first, ending at `r` -- what the trajectory chart
+   * below is drawn from. Never re-derived or estimated: the same engine-computed valuation
+   * the headline Stat above reads. */
+  history: QuarterResultShape[];
   score: QuarterScore;
   constraint: Constraint | null;
   priority: PriorityId | null;
@@ -209,6 +214,8 @@ export function ClosedScreen({
           />
         </div>
       </div>
+
+      <ValuationTrendChart history={history} />
 
             {(r.notes as string[]).length > 0 && (
         <Panel eyebrow="Events" title="Things that happened without being asked">

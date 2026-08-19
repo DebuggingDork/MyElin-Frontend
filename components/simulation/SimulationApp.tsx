@@ -635,6 +635,7 @@ export function SimulationApp() {
       <ClosedScreen
         r={closed.result}
         prior={history[history.length - 2]}
+        history={history}
         score={closed.score}
         constraint={bindingConstraint(closed.result, closed.result.entering)}
         priority={priorities[priorities.length - 1] ?? null}
