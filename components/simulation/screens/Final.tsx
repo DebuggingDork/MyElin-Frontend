@@ -30,7 +30,7 @@ import {
   mostImportantDecision,
   traitRollup,
 } from "@/lib/simulation/scoring";
-import { Bar, Eyebrow, LedgerRow, Panel, Stat } from "@/components/simulation/Kit";
+import { Bar, Eyebrow, LedgerRow, Panel, Stat, ValuationTrendChart } from "@/components/simulation/Kit";
 import { BalanceSheet } from "@/components/simulation/Statements";
 import type { QuarterScore } from "@/lib/simulation/remote";
 import type {
@@ -141,6 +141,8 @@ export function FinalScreen({
           />
         </div>
       </Panel>
+
+      <ValuationTrendChart history={history} />
 
       <Panel eyebrow="Market share" title="Across the year">
         {history.map((h) => (
