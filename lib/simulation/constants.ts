@@ -155,13 +155,13 @@ export const BASE_STAFF = Object.fromEntries(
 export const DEPT_LOAD: Record<DeptId, { keys: string[]; per: number }> = {
   marketing: {
     keys: ["google", "meta", "social", "content", "events", "email", "direct", "referral", "prelaunch"],
-    per: 1595000,
+    per: 1100000,
   },
-  sales: { keys: ["reps", "crm", "onboarding", "salesTraining", "channel"], per: 1377500 },
-  engineering: { keys: ["quality", "npd", "design"], per: 1595000 },
-  operations: { keys: ["production", "capex", "supplier", "logistics", "warehouse"], per: 1885000 },
-  support: { keys: ["cx", "onboarding"], per: 1160000 },
-  admin: { keys: ["compliance", "planning", "audit", "workingCapital", "treasury"], per: 1305000 },
+  sales: { keys: ["reps", "crm", "onboarding", "salesTraining", "channel"], per: 950000 },
+  engineering: { keys: ["quality", "npd", "design"], per: 1100000 },
+  operations: { keys: ["production", "capex", "supplier", "logistics", "warehouse"], per: 1300000 },
+  support: { keys: ["cx", "onboarding"], per: 800000 },
+  admin: { keys: ["compliance", "planning", "audit", "workingCapital", "treasury"], per: 900000 },
 };
 
 /* ── products ─────────────────────────────────────────────────────── */
