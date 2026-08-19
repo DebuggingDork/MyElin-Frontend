@@ -504,42 +504,42 @@ export function SimulationApp() {
 
   const chrome = (body: React.ReactNode, showNav: boolean) => (
     <TeachingContext.Provider value={notesOn}>
-      <div className="simulation min-h-full bg-stone-100 text-stone-900">
-        <header className="bg-stone-900 text-white">
+      <div className="simulation min-h-full bg-base text-ink">
+        <header className="bg-chrome text-white">
           <div className={COLUMN + " py-3 flex flex-wrap items-center justify-between gap-3"}>
             <div className="flex items-baseline gap-3">
               <span className="font-serif text-xl">Nadi Wear</span>
-              <span className="text-xs uppercase tracking-widest text-stone-500">Chief Executive</span>
+              <span className="text-xs uppercase tracking-widest text-dim">Chief Executive</span>
             </div>
 
             {showNav && (
               <div className="flex flex-wrap items-center gap-x-5 gap-y-1 font-mono text-sm">
                 <span>
-                  <span className="text-stone-500 text-xs uppercase tracking-widest mr-2">Quarter</span>
+                  <span className="text-dim text-xs uppercase tracking-widest mr-2">Quarter</span>
                   {state.quarter}/4
                 </span>
                 <span>
-                  <span className="text-stone-500 text-xs uppercase tracking-widest mr-2">Cash</span>
+                  <span className="text-dim text-xs uppercase tracking-widest mr-2">Cash</span>
                   {inr(state.cash)}
                   {state.pendingInvestment > 0 && (
-                    <span className="text-teal-300 ml-1">+{inr(state.pendingInvestment)} pending</span>
+                    <span className="text-teal-bright ml-1">+{inr(state.pendingInvestment)} pending</span>
                   )}
                 </span>
                 {priority && (
-                  <span className="text-teal-300">
-                    <span className="text-stone-500 text-xs uppercase tracking-widest mr-2">Priority</span>
+                  <span className="text-teal-bright">
+                    <span className="text-dim text-xs uppercase tracking-widest mr-2">Priority</span>
                     {PRIORITY_BY_ID[priority].name}
                   </span>
                 )}
-                <span className={budget.committed > budget.ceiling ? "text-rose-400" : "text-stone-300"}>
-                  <span className="text-stone-500 text-xs uppercase tracking-widest mr-2">Left</span>
+                <span className={budget.committed > budget.ceiling ? "text-danger-soft" : "text-faint"}>
+                  <span className="text-dim text-xs uppercase tracking-widest mr-2">Left</span>
                   {inr(budget.ceiling - budget.committed)}
                 </span>
                 <button
                   onClick={() => setNotesOn(!notesOn)}
                   className={
                     "px-2 py-0.5 text-xs uppercase tracking-widest border " +
-                    (notesOn ? "border-teal-500 text-teal-300" : "border-stone-600 text-stone-500")
+                    (notesOn ? "border-teal text-teal-bright" : "border-line-2 text-dim")
                   }
                 >
                   Notes {notesOn ? "on" : "off"}
@@ -549,7 +549,7 @@ export function SimulationApp() {
           </div>
 
           {showNav && (
-            <nav className="border-t border-stone-700">
+            <nav className="border-t border-line-2">
               <div className="mx-auto w-full max-w-[1440px] px-1 sm:px-3 lg:px-5 flex overflow-x-auto">
                 {tabs.map((t) => (
                   <button
@@ -558,14 +558,14 @@ export function SimulationApp() {
                     className={
                       "px-3 py-2 text-sm whitespace-nowrap border-b-2 flex items-center gap-1.5 " +
                       (tab === t.id
-                        ? "border-rose-500 text-white"
+                        ? "border-danger text-white"
                         : t.hot
-                          ? "border-transparent text-rose-400 hover:text-rose-200"
-                          : "border-transparent text-stone-400 hover:text-white")
+                          ? "border-transparent text-danger-soft hover:text-danger-soft"
+                          : "border-transparent text-faint hover:text-white")
                     }
                   >
                     {t.label}
-                    {t.badge > 0 && <span className="px-1.5 bg-rose-700 text-white text-xs font-mono">{t.badge}</span>}
+                    {t.badge > 0 && <span className="px-1.5 bg-danger text-white text-xs font-mono">{t.badge}</span>}
                   </button>
                 ))}
               </div>
@@ -577,7 +577,7 @@ export function SimulationApp() {
 
         <main className={COLUMN + " py-6"}>{body}</main>
 
-        <footer className={COLUMN + " pb-10 pt-2 text-xs text-stone-400 font-mono"}>
+        <footer className={COLUMN + " pb-10 pt-2 text-xs text-faint font-mono"}>
           Teaching simulation. All figures fictional. Every number is computed by the MyElin engine.
         </footer>
       </div>
@@ -585,14 +585,14 @@ export function SimulationApp() {
   );
 
   const errorBanner = error && (
-    <div className="border-l-4 border-rose-700 bg-rose-50 px-4 py-3 text-sm text-rose-900">{error}</div>
+    <div className="border-l-4 border-danger bg-danger/10 px-4 py-3 text-sm text-danger-deep">{error}</div>
   );
 
   /* ── render ───────────────────────────────────────────────────── */
 
   if (booting) {
     return (
-      <div className="simulation flex min-h-[60vh] items-center justify-center bg-stone-100 text-stone-600">
+      <div className="simulation flex min-h-[60vh] items-center justify-center bg-base text-dim">
         <Loader2 className="mr-2 h-5 w-5 animate-spin" />
         Loading your company…
       </div>
@@ -657,7 +657,7 @@ export function SimulationApp() {
       ) : (
         <div className="space-y-4">
           {errorBanner}
-          <div className="border-l-4 border-amber-600 bg-amber-50 px-4 py-3 text-sm text-stone-800">
+          <div className="border-l-4 border-ember bg-ember/10 px-4 py-3 text-sm text-ink">
             The board&apos;s term sheet could not be loaded. Reload the page to try again — your three
             closed quarters are safe, and nothing is lost.
           </div>
@@ -717,7 +717,7 @@ export function SimulationApp() {
     );
   } else if (tab === "crisis") {
     body = (
-      <div className="border-l-4 border-stone-400 bg-white px-4 py-3 text-sm text-stone-700">
+      <div className="border-l-4 border-line-2 bg-raise px-4 py-3 text-sm text-ink">
         No market event is live this quarter.
       </div>
     );
@@ -783,14 +783,14 @@ export function SimulationApp() {
       />
     );
   } else {
-    body = <div className="text-sm text-stone-600">Pick a screen above.</div>;
+    body = <div className="text-sm text-dim">Pick a screen above.</div>;
   }
 
   return chrome(
     <div className="space-y-5">
       {errorBanner}
       {!projection && (
-        <div className="border-l-4 border-stone-400 bg-white px-4 py-3 text-sm text-stone-600">
+        <div className="border-l-4 border-line-2 bg-raise px-4 py-3 text-sm text-dim">
           Running the plan…
         </div>
       )}
