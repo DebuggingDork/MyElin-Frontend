@@ -32,6 +32,31 @@ export type ForgotPasswordRequest = { email: string };
 export type ResetPasswordRequest = { access_token: string; new_password: string };
 export type MessageResponse = { message: string };
 
+/** Mirrors `lib/institutions.ts`'s own `InstitutionRef` exactly -- same shape on both sides
+ * of the wire on purpose. */
+export type ProfileInstitution = { id: string; name: string; verified: boolean };
+
+export type ProfileResponse = {
+  user_id: string;
+  email: string;
+  role: string;
+  created_at: string;
+  first_name: string | null;
+  institution: ProfileInstitution | null;
+  degree: string | null;
+  current_year: string | null;
+  goals: string[];
+};
+
+/** Every field optional -- omit to leave unchanged, send `null` to clear. */
+export type ProfileUpdate = {
+  first_name?: string | null;
+  institution?: ProfileInstitution | null;
+  degree?: string | null;
+  current_year?: string | null;
+  goals?: string[] | null;
+};
+
 export type CompanyCreate = {
   name: string;
   scenario_id?: string | null;
