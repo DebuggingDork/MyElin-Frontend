@@ -15,7 +15,7 @@ import { formatDisplayText, formatSigned, humanizeId } from "@/lib/format/displa
 import { balanceClosing, balanceOpening } from "@/lib/simulation/balance";
 import { lessons, whatHappened } from "@/lib/simulation/insights";
 import { priorityMatch, traitVerdicts } from "@/lib/simulation/scoring";
-import { Eyebrow, Panel, Stat, TeachingNote } from "@/components/simulation/Kit";
+import { Eyebrow, Panel, Stat, TeachingNote, ValuationTrendChart } from "@/components/simulation/Kit";
 import { BalanceSheet, CashFlow, ConstraintChain, ProfitAndLoss } from "@/components/simulation/Statements";
 import type { QuarterScore } from "@/lib/simulation/remote";
 import type {
@@ -41,7 +41,7 @@ function Assessment({ score }: { score: QuarterScore }) {
         <div className="text-right">
           <Eyebrow>CEO score</Eyebrow>
           <div className="font-mono text-2xl">
-            {n1(Number(score.final))} <span className="text-stone-400 text-sm">{score.band}</span>
+            {n1(Number(score.final))} <span className="text-faint text-sm">{score.band}</span>
           </div>
         </div>
       }
@@ -55,19 +55,19 @@ function Assessment({ score }: { score: QuarterScore }) {
                 {t.verdict}
               </span>
             </div>
-            <div className="text-xs text-stone-600 mt-1">{formatDisplayText(t.line)}</div>
+            <div className="text-xs text-dim mt-1">{formatDisplayText(t.line)}</div>
           </div>
         ))}
       </div>
 
       {score.modifiers.length > 0 && (
         <div className="mt-4">
-          <Eyebrow tone="text-rose-800">Adjustments that fired</Eyebrow>
+          <Eyebrow tone="text-danger-deep">Adjustments that fired</Eyebrow>
           <ul className="mt-1 space-y-0.5">
             {score.modifiers.map((m, i) => (
               <li
                 key={i}
-                className={"text-xs font-mono " + (Number(m.points) >= 0 ? "text-teal-800" : "text-rose-800")}
+                className={"text-xs font-mono " + (Number(m.points) >= 0 ? "text-teal-deep" : "text-danger-deep")}
               >
                 {formatSigned(m.points)} {formatDisplayText(m.why)}
               </li>
@@ -76,14 +76,14 @@ function Assessment({ score }: { score: QuarterScore }) {
         </div>
       )}
 
-      <div className="mt-4 border-t border-stone-200 pt-3">
+      <div className="mt-4 border-t border-line pt-3">
         <button
           onClick={() => setOpen(!open)}
-          className="text-xs uppercase tracking-widest font-semibold text-stone-500 hover:text-rose-800 border-b border-dotted border-stone-400"
+          className="text-xs uppercase tracking-widest font-semibold text-dim hover:text-danger-deep border-b border-dotted border-line-2"
         >
           {open ? "Hide" : "Show"} how every mark was earned
         </button>
-        <p className="text-xs text-stone-500 mt-2">
+        <p className="text-xs text-dim mt-2">
           {n1(Number(score.traitTotal))} points from the seven traits,{" "}
           {Number(score.modifierTotal) >= 0 ? "+" : ""}
           {n1(Number(score.modifierTotal))} from adjustments. Every sub-criterion below names the evidence it read.
@@ -93,24 +93,24 @@ function Assessment({ score }: { score: QuarterScore }) {
             {score.traits.map((t) => (
               <div key={t.name}>
                 <div className="flex items-baseline justify-between">
-                  <span className="text-sm font-semibold text-stone-900">
+                  <span className="text-sm font-semibold text-ink">
                     {humanizeId(t.name)}
                   </span>
-                  <span className="font-mono text-xs text-stone-500">
+                  <span className="font-mono text-xs text-dim">
                     {n1(Number(t.points))} / {n1(Number(t.weight))}
                   </span>
                 </div>
                 <ul className="mt-1 space-y-0.5">
                   {t.subs.map((s, i) => (
-                    <li key={i} className="text-xs text-stone-600 border-l-2 border-stone-300 pl-2">
+                    <li key={i} className="text-xs text-dim border-l-2 border-line pl-2">
                       <span
                         className={
                           "font-mono mr-1 " +
                           (s.level === "full"
-                            ? "text-teal-800"
+                            ? "text-teal-deep"
                             : s.level === "part"
-                              ? "text-amber-700"
-                              : "text-rose-800")
+                              ? "text-ember-deep"
+                              : "text-danger-deep")
                         }
                       >
                         {s.level === "full" ? "met" : s.level === "part" ? "part" : "not met"}
@@ -131,6 +131,7 @@ function Assessment({ score }: { score: QuarterScore }) {
 export function ClosedScreen({
   r,
   prior,
+  history,
   score,
   constraint,
   priority,
@@ -140,6 +141,10 @@ export function ClosedScreen({
 }: {
   r: QuarterResultShape;
   prior: QuarterResultShape | undefined;
+  /** Every quarter closed so far, oldest first, ending at `r` -- what the trajectory chart
+   * below is drawn from. Never re-derived or estimated: the same engine-computed valuation
+   * the headline Stat above reads. */
+  history: QuarterResultShape[];
   score: QuarterScore;
   constraint: Constraint | null;
   priority: PriorityId | null;
@@ -155,8 +160,8 @@ export function ClosedScreen({
 
   return (
     <div className="space-y-6">
-      <div className="bg-stone-900 text-white p-6">
-        <Eyebrow tone="text-rose-400">
+      <div className="bg-chrome text-white p-6">
+        <Eyebrow tone="text-danger-soft">
           Quarter {r.q} closed · {QUARTER_BRIEFS[r.q - 1].title}
         </Eyebrow>
         <h2 className="font-serif text-4xl mt-1">
@@ -165,7 +170,7 @@ export function ClosedScreen({
       </div>
 
       <div>
-        <Eyebrow tone="text-rose-800">What happened</Eyebrow>
+        <Eyebrow tone="text-danger-deep">What happened</Eyebrow>
         <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-4 mt-2">
           <Stat label="Revenue" value={cr(v(r, "revenueT"))} sub={n0(v(r, "unitsSold")) + " units"} />
           <Stat
@@ -210,11 +215,13 @@ export function ClosedScreen({
         </div>
       </div>
 
+      <ValuationTrendChart history={history} />
+
             {(r.notes as string[]).length > 0 && (
         <Panel eyebrow="Events" title="Things that happened without being asked">
           <ul className="space-y-1">
             {(r.notes as string[]).map((note, i) => (
-              <li key={i} className="text-sm text-stone-700 border-b border-stone-200 pb-1">
+              <li key={i} className="text-sm text-ink border-b border-line pb-1">
                 {formatDisplayText(note)}
               </li>
             ))}
@@ -223,28 +230,28 @@ export function ClosedScreen({
       )}
 
       <div className="grid gap-5 lg:grid-cols-2">
-        <div className="bg-white border border-stone-300">
-          <header className="border-b border-stone-300 px-4 py-3">
-            <Eyebrow tone="text-rose-800">What went wrong</Eyebrow>
+        <div className="bg-raise border border-line">
+          <header className="border-b border-line px-4 py-3">
+            <Eyebrow tone="text-danger-deep">What went wrong</Eyebrow>
           </header>
           <ul className="p-4 space-y-2">
             {read.wrong.map((line, i) => (
-              <li key={i} className="text-sm text-stone-800 flex gap-2">
-                <span className="text-rose-700">—</span>
+              <li key={i} className="text-sm text-ink flex gap-2">
+                <span className="text-danger">—</span>
                 <span>{line}</span>
               </li>
             ))}
           </ul>
         </div>
 
-        <div className="bg-white border border-stone-300">
-          <header className="border-b border-stone-300 px-4 py-3">
-            <Eyebrow tone="text-teal-800">What went right</Eyebrow>
+        <div className="bg-raise border border-line">
+          <header className="border-b border-line px-4 py-3">
+            <Eyebrow tone="text-teal-deep">What went right</Eyebrow>
           </header>
           <ul className="p-4 space-y-2">
             {read.right.map((line, i) => (
-              <li key={i} className="text-sm text-stone-800 flex gap-2">
-                <span className="text-teal-700">—</span>
+              <li key={i} className="text-sm text-ink flex gap-2">
+                <span className="text-teal-deep">—</span>
                 <span>{line}</span>
               </li>
             ))}
@@ -257,15 +264,15 @@ export function ClosedScreen({
           <div className="space-y-3">
             <div>
               <Eyebrow>Why</Eyebrow>
-              <p className="text-sm text-stone-800 mt-0.5">{primary.why}</p>
+              <p className="text-sm text-ink mt-0.5">{primary.why}</p>
             </div>
             <div>
               <Eyebrow>Impact</Eyebrow>
-              <p className="text-sm text-stone-800 mt-0.5">{primary.impact}</p>
+              <p className="text-sm text-ink mt-0.5">{primary.impact}</p>
             </div>
             <div>
               <Eyebrow>Next quarter</Eyebrow>
-              <p className="text-sm text-stone-800 mt-0.5">{primary.next}</p>
+              <p className="text-sm text-ink mt-0.5">{primary.next}</p>
             </div>
             <TeachingNote id="constraint" />
           </div>
@@ -284,12 +291,12 @@ export function ClosedScreen({
               <div className="font-serif text-lg mt-1">
                 {match ? (match.ok ? "Matched it" : "Went elsewhere") : "Nothing committed"}
               </div>
-              <div className="text-xs text-stone-500 font-mono">{match ? match.note : ""}</div>
+              <div className="text-xs text-dim font-mono">{match ? match.note : ""}</div>
             </div>
             <div>
               <Eyebrow>What the company needed</Eyebrow>
               <div className="font-serif text-lg mt-1">{primary ? primary.label : "—"}</div>
-              <div className="text-xs text-stone-500">
+              <div className="text-xs text-dim">
                 {reflection.constraint === (primary && primary.id) ? "You read it correctly." : "You read it differently."}
               </div>
             </div>
@@ -298,7 +305,7 @@ export function ClosedScreen({
       )}
 
       <div>
-        <Eyebrow tone="text-rose-800">How the quarter narrowed</Eyebrow>
+        <Eyebrow tone="text-danger-deep">How the quarter narrowed</Eyebrow>
         <h3 className="font-serif text-xl mb-2">The constraint chain</h3>
         <ConstraintChain r={r} />
         <TeachingNote id="constraint" />
@@ -307,9 +314,9 @@ export function ClosedScreen({
       <Panel eyebrow="What this quarter taught you" title="Principles the numbers just demonstrated">
         <div className="space-y-3">
           {lessons(r, prior).map((l, i) => (
-            <div key={i} className="border-l-2 border-stone-800 pl-3">
-              <div className="font-serif text-base text-stone-900">{l.title}</div>
-              <p className="text-sm text-stone-700 mt-0.5 leading-snug">{l.body}</p>
+            <div key={i} className="border-l-2 border-line-2 pl-3">
+              <div className="font-serif text-base text-ink">{l.title}</div>
+              <p className="text-sm text-ink mt-0.5 leading-snug">{l.body}</p>
             </div>
           ))}
         </div>
@@ -317,7 +324,7 @@ export function ClosedScreen({
 
       <Assessment score={score} />
 
-      <div className="bg-white border border-stone-300">
+      <div className="bg-raise border border-line">
         <div className="px-4 pt-3">
           <TeachingNote id="statements" inline />
         </div>
@@ -326,16 +333,16 @@ export function ClosedScreen({
           ["cf", "Cash flow"],
           ["bs", "Balance sheet"],
         ].map(([key, label]) => (
-          <div key={key} className="border-b border-stone-200 last:border-b-0">
+          <div key={key} className="border-b border-line last:border-b-0">
             <button
               onClick={() => setStatement(statement === key ? null : key)}
-              className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-stone-50"
+              className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-raise"
             >
               <span className="font-serif text-base">{label}</span>
-              <span className="font-mono text-sm text-stone-500">{statement === key ? "−" : "+"}</span>
+              <span className="font-mono text-sm text-dim">{statement === key ? "−" : "+"}</span>
             </button>
             {statement === key && (
-              <div className="border-t border-stone-200">
+              <div className="border-t border-line">
                 {key === "pl" && <ProfitAndLoss r={r} />}
                 {key === "cf" && <CashFlow r={r} />}
                 {key === "bs" && (
@@ -357,7 +364,7 @@ export function ClosedScreen({
         disabled={busy}
         className={
           "w-full py-4 font-serif text-xl " +
-          (busy ? "bg-stone-200 text-stone-400" : "bg-stone-900 text-white hover:bg-rose-900")
+          (busy ? "bg-raise-2 text-faint" : "bg-chrome text-white hover:bg-danger-deep")
         }
       >
         {busy

@@ -30,7 +30,7 @@ import {
   mostImportantDecision,
   traitRollup,
 } from "@/lib/simulation/scoring";
-import { Bar, Eyebrow, LedgerRow, Panel, Stat } from "@/components/simulation/Kit";
+import { Bar, Eyebrow, LedgerRow, Panel, Stat, ValuationTrendChart } from "@/components/simulation/Kit";
 import { BalanceSheet } from "@/components/simulation/Statements";
 import type { QuarterScore } from "@/lib/simulation/remote";
 import type {
@@ -86,8 +86,8 @@ export function FinalScreen({
 
   return (
     <div className="space-y-6">
-      <div className="bg-stone-900 text-white p-6">
-        <Eyebrow tone="text-rose-400">CEO performance report</Eyebrow>
+      <div className="bg-chrome text-white p-6">
+        <Eyebrow tone="text-danger-soft">CEO performance report</Eyebrow>
         <h2 className="font-serif text-4xl mt-1">
           {sold
             ? "You sold the company."
@@ -99,16 +99,16 @@ export function FinalScreen({
                   : "You took the money and missed the covenant."
                 : "You finished the year independent."}
         </h2>
-        <p className="text-sm text-stone-300 mt-2">{style.why}</p>
+        <p className="text-sm text-faint mt-2">{style.why}</p>
         <div className="mt-4 flex flex-wrap gap-3">
-          <div className="inline-block border border-stone-600 px-3 py-1">
-            <Eyebrow tone="text-stone-400">Management style</Eyebrow>
+          <div className="inline-block border border-line-2 px-3 py-1">
+            <Eyebrow tone="text-faint">Management style</Eyebrow>
             <div className="font-serif text-xl">{style.label}</div>
           </div>
-          <div className="inline-block border border-stone-600 px-3 py-1">
-            <Eyebrow tone="text-stone-400">Composite score</Eyebrow>
+          <div className="inline-block border border-line-2 px-3 py-1">
+            <Eyebrow tone="text-faint">Composite score</Eyebrow>
             <div className="font-serif text-xl">
-              {n1(composite)} <span className="text-stone-400 text-sm">{compositeBand}</span>
+              {n1(composite)} <span className="text-faint text-sm">{compositeBand}</span>
             </div>
           </div>
         </div>
@@ -142,6 +142,8 @@ export function FinalScreen({
         </div>
       </Panel>
 
+      <ValuationTrendChart history={history} />
+
       <Panel eyebrow="Market share" title="Across the year">
         {history.map((h) => (
           <LedgerRow
@@ -149,13 +151,13 @@ export function FinalScreen({
             label={"Quarter " + h.q}
             working={n0(v(h, "unitsSold")) + " units of a " + n0(v(h, "mktDemand")) + "-unit category"}
             value={pct(v(h, "marketShare") * 100)}
-            tone={v(h, "shareDelta") >= 0 ? "text-teal-800" : "text-rose-800"}
+            tone={v(h, "shareDelta") >= 0 ? "text-teal-deep" : "text-danger-deep"}
           />
         ))}
       </Panel>
 
       <Panel eyebrow="Management profile" title="How you ran it, across seven dimensions">
-        <p className="text-xs text-stone-500 mb-3">
+        <p className="text-xs text-dim mb-3">
           Share of each dimension’s available marks, averaged across the quarters played. Every
           sub-criterion is evaluated from the numbers, and each one names the evidence it read.
         </p>
@@ -164,18 +166,18 @@ export function FinalScreen({
             t.pct === null ? (
               <div key={t.name}>
                 <div className="flex items-baseline justify-between">
-                  <span className="text-sm text-stone-500">{humanizeId(t.name)}</span>
-                  <span className="text-xs uppercase tracking-widest text-stone-400">Not yet assessed</span>
+                  <span className="text-sm text-dim">{humanizeId(t.name)}</span>
+                  <span className="text-xs uppercase tracking-widest text-faint">Not yet assessed</span>
                 </div>
-                <div className="h-1.5 w-full border-b border-dashed border-stone-300" />
-                <div className="text-xs text-stone-400 mt-1">
+                <div className="h-1.5 w-full border-b border-dashed border-line" />
+                <div className="text-xs text-faint mt-1">
                   Every sub-criterion here is a judgment call the engine does not make.
                 </div>
               </div>
             ) : (
               <div key={t.name}>
                 <div className="flex items-baseline justify-between">
-                  <span className="text-sm text-stone-800">{humanizeId(t.name)}</span>
+                  <span className="text-sm text-ink">{humanizeId(t.name)}</span>
                   <span className={"text-xs font-mono " + TONE_TEXT[traitTone(t.pct)]}>{n0(t.pct)}%</span>
                 </div>
                 <Bar value={t.pct} max={100} tone={TONE_BAR[traitTone(t.pct)]} />
@@ -187,21 +189,21 @@ export function FinalScreen({
 
       <div className="grid gap-5 lg:grid-cols-2">
         <Panel eyebrow="Biggest strength" title={humanizeId(strength.name)}>
-          <p className="text-sm text-stone-700">{strength.why}</p>
+          <p className="text-sm text-ink">{strength.why}</p>
         </Panel>
         {/* `mistake.why` quotes the engine's own modifier text, so it gets the same rounding
             and de-underscoring as every other backend sentence on the page. */}
         <Panel eyebrow="Biggest mistake" title={humanizeId(mistake.title)}>
-          <p className="text-sm text-stone-700">{formatDisplayText(mistake.why)}</p>
+          <p className="text-sm text-ink">{formatDisplayText(mistake.why)}</p>
         </Panel>
         <Panel eyebrow="Most important decision" title={"Quarter " + decision.q + ": " + decision.label}>
-          <p className="text-sm text-stone-700">{decision.effect}</p>
+          <p className="text-sm text-ink">{decision.effect}</p>
         </Panel>
         <Panel eyebrow="Unexpected consequence" title={consequence.title}>
-          <p className="text-sm text-stone-700">{consequence.body}</p>
+          <p className="text-sm text-ink">{consequence.body}</p>
         </Panel>
         <Panel eyebrow="Missed opportunity" title={missed.title} className="lg:col-span-2">
-          <p className="text-sm text-stone-700">{missed.body}</p>
+          <p className="text-sm text-ink">{missed.body}</p>
         </Panel>
       </div>
 
@@ -212,12 +214,12 @@ export function FinalScreen({
             .filter((l, i, all) => all.findIndex((x) => x.title === l.title) === i)
             .slice(0, 6)
             .map((l, i) => (
-              <div key={i} className="border-l-2 border-stone-800 pl-3">
+              <div key={i} className="border-l-2 border-line-2 pl-3">
                 <div className="flex flex-wrap items-baseline gap-x-2">
-                  <span className="font-serif text-base text-stone-900">{l.title}</span>
-                  <span className="text-xs uppercase tracking-widest text-stone-500">first seen in Q{l.q}</span>
+                  <span className="font-serif text-base text-ink">{l.title}</span>
+                  <span className="text-xs uppercase tracking-widest text-dim">first seen in Q{l.q}</span>
                 </div>
-                <p className="text-sm text-stone-700 mt-0.5 leading-snug">{l.body}</p>
+                <p className="text-sm text-ink mt-0.5 leading-snug">{l.body}</p>
               </div>
             ))}
         </div>
@@ -226,19 +228,19 @@ export function FinalScreen({
       <Panel eyebrow="How the year ran" title="Decision and consequence">
         <div className="space-y-3">
           {timeline.map((t) => (
-            <div key={t.q} className="border-l-2 border-stone-800 pl-4">
+            <div key={t.q} className="border-l-2 border-line-2 pl-4">
               <div className="flex flex-wrap items-baseline gap-x-3">
                 <span className="font-serif text-lg">Quarter {t.q}</span>
                 {t.priority && (
-                  <span className="text-xs uppercase tracking-widest text-stone-500">said: {t.priority}</span>
+                  <span className="text-xs uppercase tracking-widest text-dim">said: {t.priority}</span>
                 )}
               </div>
-              <div className="text-sm text-stone-800 mt-1">
-                <span className="text-stone-500">Decision — </span>
+              <div className="text-sm text-ink mt-1">
+                <span className="text-dim">Decision — </span>
                 {t.decision}
               </div>
-              <div className="text-sm text-stone-700">
-                <span className="text-stone-500">Consequence — </span>
+              <div className="text-sm text-ink">
+                <span className="text-dim">Consequence — </span>
                 {t.consequence}
               </div>
             </div>
@@ -254,14 +256,14 @@ export function FinalScreen({
             working={"Q3 valuation × (1 + momentum of " + n1(ts.M) + ")"}
             value={inr(ts.trueContinuation)}
             strong
-            tone={(eg.gap as number) > 0 ? "text-rose-800" : "text-teal-800"}
+            tone={(eg.gap as number) > 0 ? "text-danger-deep" : "text-teal-deep"}
           />
           <LedgerRow
             label={(eg.gap as number) > 0 ? "Value left on the table" : "Value captured above continuation"}
             working="difference"
             value={inr(Math.abs(eg.gap as number))}
             strong
-            tone={(eg.gap as number) > 0 ? "text-rose-800" : "text-teal-800"}
+            tone={(eg.gap as number) > 0 ? "text-danger-deep" : "text-teal-deep"}
           />
         </Panel>
       )}
@@ -278,7 +280,7 @@ export function FinalScreen({
             working="quarter four"
             value={n0(v(last, "unitsSold")) + " units"}
             strong
-            tone={eg.covenantHit ? "text-teal-800" : "text-rose-800"}
+            tone={eg.covenantHit ? "text-teal-deep" : "text-danger-deep"}
           />
           <LedgerRow
             label="Equity given up"
@@ -294,20 +296,20 @@ export function FinalScreen({
         </Panel>
       )}
 
-      <div className="bg-white border border-stone-300">
+      <div className="bg-raise border border-line">
         <button
           onClick={() => setOpenRecord(!openRecord)}
-          className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-stone-50"
+          className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-raise"
         >
           <div>
             <Eyebrow>Facilitator record</Eyebrow>
             <div className="font-serif text-base">Full scoring detail, quarter by quarter</div>
           </div>
-          <span className="font-mono text-sm text-stone-500">{openRecord ? "−" : "+"}</span>
+          <span className="font-mono text-sm text-dim">{openRecord ? "−" : "+"}</span>
         </button>
 
         {openRecord && (
-          <div className="border-t border-stone-300 p-4 space-y-4">
+          <div className="border-t border-line p-4 space-y-4">
             <LedgerRow
               label="Composite"
               working={compositeBand + " · mean of the quarters played"}
@@ -335,7 +337,7 @@ export function FinalScreen({
                     {fired.map((m, j) => (
                       <li
                         key={j}
-                        className={"text-xs font-mono " + (Number(m.points) > 0 ? "text-teal-800" : "text-rose-800")}
+                        className={"text-xs font-mono " + (Number(m.points) > 0 ? "text-teal-deep" : "text-danger-deep")}
                       >
                         {formatSigned(m.points)} {formatDisplayText(m.why)}
                       </li>
@@ -359,7 +361,7 @@ export function FinalScreen({
         disabled={busy}
         className={
           "w-full py-4 font-serif text-xl " +
-          (busy ? "bg-stone-200 text-stone-400" : "bg-stone-900 text-white hover:bg-rose-900")
+          (busy ? "bg-raise-2 text-faint" : "bg-chrome text-white hover:bg-danger-deep")
         }
       >
         {busy ? "Starting a new run…" : "Run the year again"}

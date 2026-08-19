@@ -155,13 +155,13 @@ export const BASE_STAFF = Object.fromEntries(
 export const DEPT_LOAD: Record<DeptId, { keys: string[]; per: number }> = {
   marketing: {
     keys: ["google", "meta", "social", "content", "events", "email", "direct", "referral", "prelaunch"],
-    per: 1595000,
+    per: 1100000,
   },
-  sales: { keys: ["reps", "crm", "onboarding", "salesTraining", "channel"], per: 1377500 },
-  engineering: { keys: ["quality", "npd", "design"], per: 1595000 },
-  operations: { keys: ["production", "capex", "supplier", "logistics", "warehouse"], per: 1885000 },
-  support: { keys: ["cx", "onboarding"], per: 1160000 },
-  admin: { keys: ["compliance", "planning", "audit", "workingCapital", "treasury"], per: 1305000 },
+  sales: { keys: ["reps", "crm", "onboarding", "salesTraining", "channel"], per: 950000 },
+  engineering: { keys: ["quality", "npd", "design"], per: 1100000 },
+  operations: { keys: ["production", "capex", "supplier", "logistics", "warehouse"], per: 1300000 },
+  support: { keys: ["cx", "onboarding"], per: 800000 },
+  admin: { keys: ["compliance", "planning", "audit", "workingCapital", "treasury"], per: 900000 },
 };
 
 /* ── products ─────────────────────────────────────────────────────── */
@@ -434,6 +434,7 @@ const OPENING_ASSETS = OPENING_CASH + 8e5 + 600 * 3250 + 2.5e6 + 1e6;
 export const INITIAL_STATE: CompanyState = {
   quarter: 1,
   cash: OPENING_CASH,
+  pendingInvestment: 0,
   ar: 8e5,
   ap: 0,
   debt: 0,
@@ -448,8 +449,7 @@ export const INITIAL_STATE: CompanyState = {
   },
   innovations: [],
   pipeline: {},
-  launchHype: 0,
-  launchBoostLeft: 0,
+  buzzHist: {},
   customers: 4000,
   priorUnits: 0,
   brand: 0,
@@ -1277,14 +1277,14 @@ export const DETAIL_SCREENS: DetailScreen[] = [
       },
       {
         key: "prelaunch",
-        name: "Pre-launch marketing",
-        formula: "Anticipation +5√x · no leads until the new product is on sale",
+        name: "Pre-Launch Buzz",
+        formula: "Buzz +4√x · no leads this quarter",
         preview: (v, c) => {
-          const hype = c.s.launchHype + 5 * pw(v, 0.5);
+          const b = 4 * pw(v, 0.5);
           return [
-            "anticipation " + n1(hype),
-            c.s.products.pro.live ? "the Pro is already on sale" : "lands with the Pro when it launches",
-            "launch demand ×" + n2(Math.min(1.9, 1 + hype / 60)) + " for two quarters",
+            "+" + n1(b) + " buzz",
+            n0(b * 15) + " free leads in Q" + (c.s.quarter + 1),
+            n0(b * 25) + " leads and +" + n1(b * 0.3) + "pts conversion in Q" + (c.s.quarter + 2),
           ];
         },
       },

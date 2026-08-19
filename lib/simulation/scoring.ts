@@ -692,7 +692,7 @@ export function delayedConsequence(history: QuarterResultShape[]) {
     }
     if (
       (a.A.content as number) + (a.A.prelaunch as number) > 3 &&
-      (b.seoFree as number) + (b.hypeFree as number) > 500
+      (b.seoFree as number) + (b.buzzFree as number) > 500
     ) {
       return {
         title: "The assets you built in Q" + i + " paid out in Q" + (i + 1),
@@ -700,7 +700,7 @@ export function delayedConsequence(history: QuarterResultShape[]) {
           "Search and pre-launch spend in Q" +
           i +
           " delivered " +
-          n0((b.seoFree as number) + (b.hypeFree as number)) +
+          n0((b.seoFree as number) + (b.buzzFree as number)) +
           " leads in Q" +
           (i + 1) +
           " that cost nothing. Almost nobody funds these because they show no return in the quarter they are bought.",

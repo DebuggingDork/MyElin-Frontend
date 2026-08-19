@@ -106,12 +106,12 @@ export function DashboardScreen({
       </div>
 
       {constraint && (
-        <div className="bg-white border-2 border-rose-800">
+        <div className="bg-raise border-2 border-danger-deep">
           <div className="px-4 py-3 flex flex-wrap items-baseline justify-between gap-2">
             <div>
-              <Eyebrow tone="text-rose-800">Your biggest constraint right now</Eyebrow>
+              <Eyebrow tone="text-danger-deep">Your biggest constraint right now</Eyebrow>
               <h3 className="font-serif text-2xl">{constraint.primary.label}</h3>
-              <p className="text-sm text-stone-700 mt-1 max-w-2xl">{constraint.primary.why}</p>
+              <p className="text-sm text-ink mt-1 max-w-2xl">{constraint.primary.why}</p>
             </div>
             <div className="text-right">
               <Eyebrow>You said you would prioritise</Eyebrow>
@@ -122,10 +122,10 @@ export function DashboardScreen({
       )}
 
       <div>
-        <Eyebrow tone="text-rose-800">Where the plan puts pressure</Eyebrow>
+        <Eyebrow tone="text-danger-deep">Where the plan puts pressure</Eyebrow>
         <h3 className="font-serif text-xl mb-2">Operating readiness</h3>
         <ReadinessGrid dirs={dirs} />
-        <p className="text-xs text-stone-500 mt-2 italic">
+        <p className="text-xs text-dim mt-2 italic">
           Direction only. You will not know the exact revenue, profit or cash until the quarter closes — which is the
           situation you would actually be in.
         </p>
@@ -168,7 +168,7 @@ export function DashboardScreen({
         </Panel>
       )}
 
-      <button onClick={onGo} className="w-full bg-stone-900 text-white py-4 font-serif text-xl hover:bg-rose-900">
+      <button onClick={onGo} className="w-full bg-chrome text-white py-4 font-serif text-xl hover:bg-danger-deep">
         Go to review and close the quarter
       </button>
     </div>

@@ -54,7 +54,7 @@ const v = (r: QuarterResultShape, k: string) => r[k] as number;
 
 const choiceClass = (on: boolean) =>
   "text-left border px-3 py-2 text-sm " +
-  (on ? "border-stone-900 bg-stone-900 text-white" : "border-stone-300 bg-white hover:border-stone-800");
+  (on ? "border-line-2 bg-chrome text-white" : "border-line bg-raise hover:border-line-2");
 
 /* ── the innovation board ─────────────────────────────────────────── */
 
@@ -96,7 +96,7 @@ export function InnovationBoard({
         </div>
       }
     >
-      <p className="text-sm text-stone-600 mb-4">
+      <p className="text-sm text-dim mb-4">
         Every card is capitalised to the balance sheet and amortised at 8% a quarter, not expensed. Cards marked with a
         lead time are paid for now and land later — you are choosing what the product will be next quarter, not this one.
       </p>
@@ -105,7 +105,7 @@ export function InnovationBoard({
 
       {INNOVATION_CATEGORIES.map((cat) => (
         <div key={cat} className="mb-5 last:mb-0">
-          <Eyebrow tone="text-rose-800">{cat}</Eyebrow>
+          <Eyebrow tone="text-danger-deep">{cat}</Eyebrow>
           <div className="grid gap-3 sm:grid-cols-2 mt-2">
             {INNOVATIONS.filter((c) => c.cat === cat).map((card) => {
               const shipped = s.innovations.indexOf(card.id) >= 0;
@@ -120,12 +120,12 @@ export function InnovationBoard({
                   className={
                     "text-left border p-3 " +
                     (shipped
-                      ? "border-teal-700 bg-teal-50"
+                      ? "border-teal-deep bg-teal/10"
                       : inFlight
-                        ? "border-amber-600 bg-amber-50"
+                        ? "border-ember bg-ember/10"
                         : picked
-                          ? "border-stone-900 bg-stone-900 text-white"
-                          : "border-stone-300 bg-white hover:border-stone-800")
+                          ? "border-line-2 bg-chrome text-white"
+                          : "border-line bg-raise hover:border-line-2")
                   }
                 >
                   <div className="flex items-baseline justify-between gap-2">
@@ -134,7 +134,7 @@ export function InnovationBoard({
                       {shipped ? "Shipped" : inFlight ? n0(s.pipeline[card.id]) + "q left" : inr(card.cost)}
                     </div>
                   </div>
-                  <div className={"text-xs mt-1 " + (picked ? "text-stone-300" : "text-stone-500")}>{card.blurb}</div>
+                  <div className={"text-xs mt-1 " + (picked ? "text-faint" : "text-dim")}>{card.blurb}</div>
                   <div className="flex flex-wrap gap-x-3 mt-2">
                     {EFFECT_ORDER.filter((k) => card.effect[k]).map((k) => {
                       const amount = card.effect[k] as number;
@@ -145,11 +145,11 @@ export function InnovationBoard({
                             "text-xs font-mono " +
                             (picked
                               ? amount > 0 && k !== "cogs"
-                                ? "text-teal-300"
-                                : "text-rose-300"
+                                ? "text-teal-bright"
+                                : "text-danger-soft"
                               : k === "cogs" && amount > 0
-                                ? "text-rose-700"
-                                : "text-teal-800")
+                                ? "text-danger"
+                                : "text-teal-deep")
                           }
                         >
                           {k === "cogs"
@@ -159,7 +159,7 @@ export function InnovationBoard({
                       );
                     })}
                     {card.lead > 0 && (
-                      <span className={"text-xs font-mono " + (picked ? "text-amber-300" : "text-amber-700")}>
+                      <span className={"text-xs font-mono " + (picked ? "text-ember-soft" : "text-ember-deep")}>
                         lands in {card.lead} quarter
                       </span>
                     )}
@@ -172,9 +172,9 @@ export function InnovationBoard({
       ))}
 
       {p && (
-        <div className="border-t border-stone-300 pt-3 mt-2 text-sm text-stone-600">
+        <div className="border-t border-line pt-3 mt-2 text-sm text-dim">
           With everything shipped, the product would carry a conversion ceiling of{" "}
-          <span className="font-mono text-stone-900">{pct(v(p, "ceiling"))}</span>.
+          <span className="font-mono text-ink">{pct(v(p, "ceiling"))}</span>.
           {p.ceilingBinding
             ? " On this plan, that is the binding constraint."
             : " On this plan, the product is not the constraint."}
@@ -207,7 +207,7 @@ export function ProductPortfolio({
         eyebrow="Product portfolio"
         title={live.length > 1 ? "Two products, one production line" : "One product on sale"}
       >
-        <p className="text-sm text-stone-600 mb-4">
+        <p className="text-sm text-dim mb-4">
           Price is yours to set. Demand moves against a market reference of {inr(PRODUCTS[0].refPrice)} for the Pulse and{" "}
           {inr(PRODUCTS[1].refPrice)} for the Pro — charge less and volume rises, charge more and it falls, roughly to
           the power of {n1(PRICE_ELASTICITY)}.
@@ -221,9 +221,9 @@ export function ProductPortfolio({
 
             if (!cur.live) {
               return (
-                <div key={prod.id} className="border border-dashed border-stone-400 p-4">
-                  <div className="font-serif text-lg text-stone-500">{prod.name}</div>
-                  <div className="text-sm text-stone-500 mt-1">
+                <div key={prod.id} className="border border-dashed border-line-2 p-4">
+                  <div className="font-serif text-lg text-dim">{prod.name}</div>
+                  <div className="text-sm text-dim mt-1">
                     Not developed yet — {n0(s.npd)} of 100. Fund New Product Development to bring it to market.
                   </div>
                 </div>
@@ -236,21 +236,21 @@ export function ProductPortfolio({
                 className={
                   "border p-4 " +
                   (cur.status === "discontinued"
-                    ? "border-rose-700 bg-rose-50"
+                    ? "border-danger bg-danger/10"
                     : cur.status === "paused"
-                      ? "border-amber-600 bg-amber-50"
-                      : "border-stone-300")
+                      ? "border-ember bg-ember/10"
+                      : "border-line")
                 }
               >
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <div>
                     <div className="font-serif text-xl">{prod.name}</div>
-                    <div className="text-xs text-stone-500">{prod.blurb}</div>
+                    <div className="text-xs text-dim">{prod.blurb}</div>
                   </div>
                   <div className="text-right">
                     <Eyebrow>Stock on hand</Eyebrow>
                     <div className="font-mono text-lg">{n0(num(cur.inv))} units</div>
-                    <div className="text-xs text-stone-500">at {inr(num(cur.invCost))} each</div>
+                    <div className="text-xs text-dim">at {inr(num(cur.invCost))} each</div>
                   </div>
                 </div>
 
@@ -258,25 +258,25 @@ export function ProductPortfolio({
                   <div>
                     <Eyebrow>Price</Eyebrow>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-stone-500 font-mono">₹</span>
+                      <span className="text-dim font-mono">₹</span>
                       <input
                         type="number"
                         min="0"
                         step="100"
                         value={cur.price}
                         onChange={(e) => update(prod.id, { price: Math.max(0, num(e.target.value)) })}
-                        className="w-32 border border-stone-400 px-2 py-1 text-right font-mono focus:outline-none focus:ring-2 focus:ring-stone-800"
+                        className="w-32 border border-line-2 px-2 py-1 text-right font-mono focus:outline-none focus:ring-2 focus:ring-ink"
                       />
                     </div>
                     {info && (
                       <div className="text-xs font-mono mt-2 space-y-0.5">
-                        <div className={Math.abs(info.premium) > 20 ? "text-amber-700" : "text-stone-600"}>
+                        <div className={Math.abs(info.premium) > 20 ? "text-ember-deep" : "text-dim"}>
                           {info.premium >= 0 ? "+" : ""}
                           {n0(info.premium)}% against a market reference of {inr(info.ref)}
                         </div>
-                        <div className={info.mult >= 1 ? "text-teal-800" : "text-rose-800"}>demand ×{n2(info.mult)}</div>
+                        <div className={info.mult >= 1 ? "text-teal-deep" : "text-danger-deep"}>demand ×{n2(info.mult)}</div>
                         {num(cur.invCost) > 0 && (
-                          <div className={cur.price > num(cur.invCost) ? "text-stone-600" : "text-rose-800 font-semibold"}>
+                          <div className={cur.price > num(cur.invCost) ? "text-dim" : "text-danger-deep font-semibold"}>
                             {inr(cur.price - num(cur.invCost))} a unit above your last known cost of{" "}
                             {inr(num(cur.invCost))}
                           </div>
@@ -300,7 +300,7 @@ export function ProductPortfolio({
                       />
                       <div className="font-mono text-xl w-14 text-right">{n0(num(cur.share))}%</div>
                     </div>
-                    <div className="text-xs font-mono text-stone-600 mt-2">
+                    <div className="text-xs font-mono text-dim mt-2">
                       {prod.capacityCost !== 1
                         ? "each unit uses " + n1(prod.capacityCost) + " units of line capacity"
                         : "one unit of line capacity each"}
@@ -319,13 +319,13 @@ export function ProductPortfolio({
                           onClick={() => update(prod.id, { status })}
                           className={
                             "text-left border p-2 " +
-                            (on ? "border-stone-900 bg-stone-900 text-white" : "border-stone-300 bg-white hover:border-stone-800")
+                            (on ? "border-line-2 bg-chrome text-white" : "border-line bg-raise hover:border-line-2")
                           }
                         >
                           <div className="font-serif capitalize">
                             {status === "active" ? "Keep building" : status === "paused" ? "Pause production" : "Discontinue"}
                           </div>
-                          <div className={"text-xs mt-1 " + (on ? "text-stone-300" : "text-stone-500")}>
+                          <div className={"text-xs mt-1 " + (on ? "text-faint" : "text-dim")}>
                             {PRODUCT_STATUS_COPY[status]}
                           </div>
                         </button>
@@ -362,7 +362,7 @@ export function PeoplePanel({
       eyebrow="Headcount by function"
       title={n0(headcount(s.staff)) + " people today, " + (p ? n0(v(p, "headcount")) : "—") + " at quarter end"}
     >
-      <p className="text-sm text-stone-600 mb-4">
+      <p className="text-sm text-dim mb-4">
         Each function does one job. Hire and the salary is yours every quarter from now on, and new joiners work at 60%
         for their first. Cut and you pay severance once, lose the work immediately, and take morale and attrition with
         it. Nobody can be cut below the founding team in that function.
@@ -381,11 +381,11 @@ export function PeoplePanel({
           const tone: Tone = ratio >= 0.999 ? "good" : ratio >= 0.85 ? "watch" : "bad";
 
           return (
-            <div key={d.id} className={"border p-3 " + (ratio >= 0.999 ? "border-stone-300 bg-white" : TONE_CARD[tone])}>
+            <div key={d.id} className={"border p-3 " + (ratio >= 0.999 ? "border-line bg-raise" : TONE_CARD[tone])}>
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <div>
                   <div className="font-serif text-lg">{d.name}</div>
-                  <div className="text-xs text-stone-500">
+                  <div className="text-xs text-dim">
                     {d.drives} · {inr(d.salary)} a quarter each
                   </div>
                 </div>
@@ -401,7 +401,7 @@ export function PeoplePanel({
 
               <div className="grid gap-3 sm:grid-cols-2 mt-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs uppercase tracking-widest text-stone-500 w-10">Hire</span>
+                  <span className="text-xs uppercase tracking-widest text-dim w-10">Hire</span>
                   <input
                     type="number"
                     min="0"
@@ -409,9 +409,9 @@ export function PeoplePanel({
                     value={alloc["hire_" + d.id]}
                     placeholder="0"
                     onChange={(e) => set("hire_" + d.id, e.target.value)}
-                    className="w-20 border border-stone-400 px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-stone-800"
+                    className="w-20 border border-line-2 px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink"
                   />
-                  <span className="text-xs font-mono text-stone-600">
+                  <span className="text-xs font-mono text-dim">
                     {hire > 0
                       ? inr(hire * d.hire) + " now, " + inr(hire * d.salary) + " every quarter"
                       : inr(d.hire) + " each to recruit"}
@@ -419,7 +419,7 @@ export function PeoplePanel({
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-xs uppercase tracking-widest text-stone-500 w-10">Cut</span>
+                  <span className="text-xs uppercase tracking-widest text-dim w-10">Cut</span>
                   <input
                     type="number"
                     min="0"
@@ -428,9 +428,9 @@ export function PeoplePanel({
                     value={alloc["fire_" + d.id]}
                     placeholder="0"
                     onChange={(e) => set("fire_" + d.id, e.target.value)}
-                    className="w-20 border border-stone-400 px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-stone-800"
+                    className="w-20 border border-line-2 px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink"
                   />
-                  <span className="text-xs font-mono text-stone-600">
+                  <span className="text-xs font-mono text-dim">
                     {cut > 0
                       ? inr(cut * d.sever) + " severance, saves " + inr(cut * d.salary) + " a quarter"
                       : n0(Math.max(0, now - d.base)) + " above the founding " + n0(d.base)}
@@ -438,7 +438,7 @@ export function PeoplePanel({
                 </div>
               </div>
 
-              <div className={"text-xs mt-2 leading-snug " + (cut > 0 ? "text-rose-800" : ratio < 0.999 ? TONE_TEXT[tone] : "text-stone-500")}>
+              <div className={"text-xs mt-2 leading-snug " + (cut > 0 ? "text-danger-deep" : ratio < 0.999 ? TONE_TEXT[tone] : "text-dim")}>
                 {cut > 0 ? "If you cut here: " + d.ifCut : ratio < 0.999 ? d.ifShort : "Fully staffed for what you have funded."}
               </div>
             </div>
@@ -473,7 +473,7 @@ export function FinancePanel({
   return (
     <div className="space-y-4">
       <Panel eyebrow="Credit facility" title={"Up to " + inr(limit) + " available"}>
-        <p className="text-sm text-stone-600 mb-3">
+        <p className="text-sm text-dim mb-3">
           Capped at 60% of net worth, less what you already owe. Interest runs at 3.5% a quarter on the average balance.
           Drawn cash raises this quarter&apos;s ceiling for every department.
         </p>
@@ -483,7 +483,7 @@ export function FinancePanel({
           <div>
             <Eyebrow>Draw down</Eyebrow>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-stone-500 font-mono text-sm">₹</span>
+              <span className="text-dim font-mono text-sm">₹</span>
               <input
                 type="number"
                 min="0"
@@ -492,17 +492,17 @@ export function FinancePanel({
                 placeholder="0"
                 onChange={(e) => setAlloc({ ...alloc, draw: e.target.value.replace(/^-/, "") })}
                 className={
-                  "w-28 border px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-stone-800 " +
-                  (overLimit ? "border-rose-700 text-rose-800" : "border-stone-400")
+                  "w-28 border px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink " +
+                  (overLimit ? "border-danger text-danger-deep" : "border-line-2")
                 }
               />
-              <span className="text-xs uppercase tracking-widest text-stone-500">lakh</span>
+              <span className="text-xs uppercase tracking-widest text-dim">lakh</span>
             </div>
-            <div className="text-xs font-mono text-stone-600 mt-2 space-y-0.5">
-              <div className="text-teal-800">{inr(drawn)} into cash today</div>
+            <div className="text-xs font-mono text-dim mt-2 space-y-0.5">
+              <div className="text-teal-deep">{inr(drawn)} into cash today</div>
               <div>{inr((s.debt + drawn) * INTEREST_RATE)} of interest this quarter</div>
               {overLimit && (
-                <div className="text-rose-800">{inr(num(alloc.draw) * 1e5 - limit)} over the limit will be refused.</div>
+                <div className="text-danger-deep">{inr(num(alloc.draw) * 1e5 - limit)} over the limit will be refused.</div>
               )}
             </div>
           </div>
@@ -510,7 +510,7 @@ export function FinancePanel({
           <div>
             <Eyebrow>Repay</Eyebrow>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-stone-500 font-mono text-sm">₹</span>
+              <span className="text-dim font-mono text-sm">₹</span>
               <input
                 type="number"
                 min="0"
@@ -518,11 +518,11 @@ export function FinancePanel({
                 value={alloc.repay}
                 placeholder="0"
                 onChange={(e) => setAlloc({ ...alloc, repay: e.target.value.replace(/^-/, "") })}
-                className="w-28 border border-stone-400 px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-stone-800"
+                className="w-28 border border-line-2 px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink"
               />
-              <span className="text-xs uppercase tracking-widest text-stone-500">lakh</span>
+              <span className="text-xs uppercase tracking-widest text-dim">lakh</span>
             </div>
-            <div className="text-xs font-mono text-stone-600 mt-2 space-y-0.5">
+            <div className="text-xs font-mono text-dim mt-2 space-y-0.5">
               <div>{inr(s.debt)} outstanding today</div>
               <div>{inr(p ? v(p, "debtClose") : s.debt)} at quarter end</div>
             </div>
@@ -531,7 +531,7 @@ export function FinancePanel({
       </Panel>
 
       <Panel eyebrow="Supplier payment terms" title="Where your working capital sits">
-        <p className="text-sm text-stone-600 mb-3">
+        <p className="text-sm text-dim mb-3">
           One choice that moves your cost per unit, your supplier reliability and how much cash the balance sheet holds.
           It reaches straight into Operations.
         </p>
@@ -546,15 +546,15 @@ export function FinancePanel({
                 onClick={() => setPayTerms(t.id)}
                 className={
                   "text-left border p-3 " +
-                  (on ? "border-stone-900 bg-stone-900 text-white" : "border-stone-300 bg-white hover:border-stone-800")
+                  (on ? "border-line-2 bg-chrome text-white" : "border-line bg-raise hover:border-line-2")
                 }
               >
                 <div className="font-serif text-base">{t.name}</div>
-                <div className={"text-xs font-mono mt-1 " + (on ? "text-teal-300" : "text-teal-800")}>
+                <div className={"text-xs font-mono mt-1 " + (on ? "text-teal-bright" : "text-teal-deep")}>
                   cost {t.cogsMult === 1 ? "unchanged" : (t.cogsMult < 1 ? "−" : "+") + pct(Math.abs(1 - t.cogsMult) * 100)} ·
                   reliability {(t.rel >= 0 ? "+" : "") + t.rel}
                 </div>
-                <div className={"text-xs mt-1 " + (on ? "text-stone-400" : "text-stone-500")}>{t.note}</div>
+                <div className={"text-xs mt-1 " + (on ? "text-faint" : "text-dim")}>{t.note}</div>
               </button>
             );
           })}
@@ -588,13 +588,13 @@ export function WarrantyPanel({
               onClick={() => setWarranty(opt.id)}
               className={
                 "text-left border p-3 " +
-                (on ? "border-stone-900 bg-stone-900 text-white" : "border-stone-300 bg-white hover:border-stone-800")
+                (on ? "border-line-2 bg-chrome text-white" : "border-line bg-raise hover:border-line-2")
               }
             >
               <div className="font-serif text-lg">{opt.name}</div>
-              <div className={"text-xs mt-1 " + (on ? "text-teal-300" : "text-teal-800")}>{opt.conv}</div>
-              <div className={"text-xs mt-1 " + (on ? "text-stone-400" : "text-stone-500")}>{opt.cost}</div>
-              <div className={"text-xs font-mono mt-2 " + (on ? "text-stone-300" : "text-stone-600")}>
+              <div className={"text-xs mt-1 " + (on ? "text-teal-bright" : "text-teal-deep")}>{opt.conv}</div>
+              <div className={"text-xs mt-1 " + (on ? "text-faint" : "text-dim")}>{opt.cost}</div>
+              <div className={"text-xs font-mono mt-2 " + (on ? "text-faint" : "text-dim")}>
                 {opt.mult ? inr(1000 * (defect / 100) * 1500 * opt.mult) + " per 1,000 units" : "₹0 per 1,000 units"}
               </div>
             </button>
@@ -687,14 +687,14 @@ export function ProductFocus({
       <Panel eyebrow="Product focus" title="Build the right product, and know what state it is in">
         <div className="grid gap-4 sm:grid-cols-4">
           {headline.map((h) => (
-            <div key={h.label} className="border-l-2 border-stone-300 pl-3">
+            <div key={h.label} className="border-l-2 border-line pl-3">
               <Eyebrow>{h.label}</Eyebrow>
               <div className="font-mono text-2xl leading-tight">{h.value}</div>
               {h.d && (
                 <div
                   className={
                     "text-xs font-mono " +
-                    ((h.lowerBetter ? !h.d.up : h.d.up) ? "text-teal-700" : "text-rose-700")
+                    ((h.lowerBetter ? !h.d.up : h.d.up) ? "text-teal-deep" : "text-danger")
                   }
                 >
                   {(h.lowerBetter ? !h.d.up : h.d.up) ? "▲" : "▼"} {h.d.txt} vs last quarter
@@ -705,13 +705,13 @@ export function ProductFocus({
         </div>
       </Panel>
 
-      <div className="bg-white border border-stone-300">
-        <header className="border-b border-stone-300 px-4 py-3">
-          <Eyebrow tone="text-rose-800">Product pipeline</Eyebrow>
+      <div className="bg-raise border border-line">
+        <header className="border-b border-line px-4 py-3">
+          <Eyebrow tone="text-danger-deep">Product pipeline</Eyebrow>
           <h3 className="font-serif text-lg">Where everything stands</h3>
         </header>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-stone-200 border-b border-stone-200">
+        <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-line border-b border-line">
           {PIPELINE_STAGES.map((stage) => (
             <div key={stage.id} className="px-4 py-3">
               <div className="flex items-center gap-2">
@@ -722,23 +722,23 @@ export function ProductFocus({
                 >
                   {stage.n}
                 </span>
-                <span className="text-sm font-semibold text-stone-900">{stage.label}</span>
+                <span className="text-sm font-semibold text-ink">{stage.label}</span>
               </div>
               <div className="font-mono text-2xl mt-1">{board.counts[stage.id as keyof typeof board.counts]}</div>
-              <div className="text-xs text-stone-500">{stage.sub}</div>
+              <div className="text-xs text-dim">{stage.sub}</div>
             </div>
           ))}
         </div>
 
         <div className="p-4">
           {board.counts.development + board.counts.ready === 0 && (
-            <div className="border-l-4 border-amber-600 bg-amber-50 px-3 py-2 mb-3 text-sm text-stone-800">
+            <div className="border-l-4 border-ember bg-ember/10 px-3 py-2 mb-3 text-sm text-ink">
               Nothing is in development. The product will only improve at the speed of continuous R&amp;D, and the
               conversion ceiling moves with it — which is what caps every rupee sales and marketing spend.
             </div>
           )}
           {board.items.length === 0 ? (
-            <p className="text-sm text-stone-500">Nothing to show yet.</p>
+            <p className="text-sm text-dim">Nothing to show yet.</p>
           ) : (
             <div className="grid gap-3 lg:grid-cols-3">
               {board.items.map((item) => (
@@ -747,10 +747,10 @@ export function ProductFocus({
                   className={
                     "border p-3 " +
                     (item.warn
-                      ? "border-amber-600 bg-amber-50"
+                      ? "border-ember bg-ember/10"
                       : item.stage === "live"
-                        ? "border-stone-300 bg-stone-50"
-                        : "border-stone-300 bg-white")
+                        ? "border-line bg-raise"
+                        : "border-line bg-raise")
                   }
                 >
                   <div className="flex items-baseline justify-between gap-2">
@@ -759,10 +759,10 @@ export function ProductFocus({
                       className={
                         "px-1.5 py-0.5 text-xs uppercase tracking-widest shrink-0 " +
                         (item.stage === "live"
-                          ? "bg-stone-900 text-white"
+                          ? "bg-chrome text-white"
                           : item.stage === "ready"
-                            ? "bg-teal-800 text-white"
-                            : "bg-amber-700 text-white")
+                            ? "bg-teal-deep text-white"
+                            : "bg-ember-deep text-white")
                       }
                     >
                       {item.tag}
@@ -770,19 +770,19 @@ export function ProductFocus({
                   </div>
                   <div className="mt-2">
                     <div className="flex justify-between text-xs font-mono mb-1">
-                      <span className="text-stone-500">{item.label}</span>
+                      <span className="text-dim">{item.label}</span>
                       <span>{n0(item.pct)}%</span>
                     </div>
                     <Bar
                       value={item.pct}
                       max={100}
-                      tone={item.stage === "live" ? "bg-stone-800" : item.stage === "ready" ? "bg-teal-700" : "bg-amber-600"}
+                      tone={item.stage === "live" ? "bg-chrome" : item.stage === "ready" ? "bg-teal-deep" : "bg-ember"}
                     />
                   </div>
-                  <div className={"text-xs font-mono mt-2 " + (item.warn ? "text-amber-800" : "text-stone-700")}>
+                  <div className={"text-xs font-mono mt-2 " + (item.warn ? "text-ember-deep" : "text-ink")}>
                     {item.eta}
                   </div>
-                  <div className="text-xs text-stone-500 mt-1 leading-snug">{item.note}</div>
+                  <div className="text-xs text-dim mt-1 leading-snug">{item.note}</div>
                 </div>
               ))}
             </div>
@@ -802,7 +802,7 @@ export function ProductFocus({
                 <span>R&amp;D committed this quarter</span>
                 <span className="font-mono">{inr(rndExpensed + rndCapitalised)}</span>
               </div>
-              <div className="text-xs text-stone-500 font-mono">
+              <div className="text-xs text-dim font-mono">
                 {inr(rndExpensed)} expensed, {inr(rndCapitalised)} capitalised to the balance sheet
               </div>
             </div>
@@ -823,7 +823,7 @@ export function ProductFocus({
                 max={100}
                 tone={TONE_BAR[engBandwidth >= 0.999 ? "good" : engBandwidth >= 0.85 ? "watch" : "bad"]}
               />
-              <div className="text-xs text-stone-500 mt-1">
+              <div className="text-xs text-dim mt-1">
                 {engBandwidth >= 0.999
                   ? "The team can deliver everything you have funded."
                   : "Every rupee of quality, innovation and new product work is delivering " +
@@ -839,7 +839,7 @@ export function ProductFocus({
                   {board.backlog.length} of {INNOVATIONS.length}
                 </span>
               </div>
-              <div className="text-xs text-stone-500">
+              <div className="text-xs text-dim">
                 Cheapest unstarted:{" "}
                 {cheapest ? cheapest.name + " at " + inr(cheapest.cost) : "everything is started or shipped"}
               </div>
@@ -852,7 +852,7 @@ export function ProductFocus({
                   {quartersLeft} quarter{quartersLeft === 1 ? "" : "s"}
                 </span>
               </div>
-              <div className="text-xs text-stone-500">
+              <div className="text-xs text-dim">
                 Anything with a lead time started after Q3 will not ship before the year closes.
               </div>
               <TeachingNote id="leadtime" />
@@ -861,17 +861,17 @@ export function ProductFocus({
         </Panel>
 
         <Panel eyebrow="Decision impact" title="What these product choices move">
-          <p className="text-xs text-stone-500 mb-3">
+          <p className="text-xs text-dim mb-3">
             Direction and magnitude of the product decisions on this screen. Not a forecast of the quarter.
           </p>
           <div className="space-y-2">
             {impacts.map((impact) => (
-              <div key={impact.label} className="flex items-center justify-between border-b border-stone-200 pb-1.5">
-                <span className="text-sm text-stone-800">{impact.label}</span>
+              <div key={impact.label} className="flex items-center justify-between border-b border-line pb-1.5">
+                <span className="text-sm text-ink">{impact.label}</span>
                 <span
                   className={
                     "text-xs uppercase tracking-widest font-semibold " +
-                    (impact.band === "None" ? "text-stone-400" : impact.good ? "text-teal-800" : "text-rose-800")
+                    (impact.band === "None" ? "text-faint" : impact.good ? "text-teal-deep" : "text-danger-deep")
                   }
                 >
                   {impact.band === "None" ? "—" : (impact.good ? "▲ " : "▼ ") + impact.band}
@@ -880,7 +880,7 @@ export function ProductFocus({
             ))}
           </div>
           {Boolean(p?.ceilingBinding) && (
-            <div className="mt-3 border-l-4 border-rose-700 bg-rose-50 px-3 py-2 text-xs text-rose-900">
+            <div className="mt-3 border-l-4 border-danger bg-danger/10 px-3 py-2 text-xs text-danger-deep">
               The product is the binding constraint right now. Selling harder cannot help until this moves.
             </div>
           )}
@@ -944,8 +944,8 @@ export function ReflectionForm({
 
         <div>
           <div className="font-serif text-base">2. What did you fund?</div>
-          <p className="text-xs text-stone-500 mt-1">Taken from your decisions, not your description of them.</p>
-          <div className="mt-2 text-sm text-stone-800 font-mono">
+          <p className="text-xs text-dim mt-1">Taken from your decisions, not your description of them.</p>
+          <div className="mt-2 text-sm text-ink font-mono">
             {funded.length
               ? funded
                   .slice(0, 4)
@@ -954,7 +954,7 @@ export function ReflectionForm({
               : "Nothing funded this quarter."}
           </div>
           {priority && (
-            <div className="text-xs text-stone-500 mt-1">
+            <div className="text-xs text-dim mt-1">
               You said you would prioritise: {PRIORITY_BY_ID[priority].name.toLowerCase()}.
             </div>
           )}
@@ -962,7 +962,7 @@ export function ReflectionForm({
 
         <div>
           <div className="font-serif text-base">3. What did you deliberately choose not to fund?</div>
-          <p className="text-xs text-stone-500 mt-1">
+          <p className="text-xs text-dim mt-1">
             Naming a sacrifice is the difference between a trade-off and an oversight.
           </p>
           <TeachingNote id="reflection" inline />
@@ -1003,14 +1003,14 @@ export function ReflectionForm({
 
         <div>
           <div className="font-serif text-base">
-            Anything else, in a sentence or two? <span className="text-stone-500 text-sm">(optional)</span>
+            Anything else, in a sentence or two? <span className="text-dim text-sm">(optional)</span>
           </div>
           <textarea
             value={reflection.note || ""}
             onChange={(e) => set("note", e.target.value)}
             rows={2}
             placeholder="Only if there is something the four answers above do not capture."
-            className="w-full border border-stone-400 p-3 text-sm bg-white mt-2 focus:outline-none focus:ring-2 focus:ring-stone-800"
+            className="w-full border border-line-2 p-3 text-sm bg-raise mt-2 focus:outline-none focus:ring-2 focus:ring-ink"
           />
         </div>
       </div>

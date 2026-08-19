@@ -130,12 +130,12 @@ export function BriefingScreen({
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <div className="bg-stone-900 text-white p-6">
-        <Eyebrow tone="text-rose-400">
+      <div className="bg-chrome text-white p-6">
+        <Eyebrow tone="text-danger-soft">
           Quarter {s.quarter} of 4 · {brief.title}
         </Eyebrow>
         <h1 className="font-serif text-4xl mt-1">Monday morning, and the company is yours</h1>
-        <p className="text-sm text-stone-300 mt-3 max-w-3xl leading-relaxed">{brief.brief}</p>
+        <p className="text-sm text-faint mt-3 max-w-3xl leading-relaxed">{brief.brief}</p>
       </div>
 
       <Panel eyebrow="Where the company stands" title="The numbers that matter this morning">
@@ -155,56 +155,56 @@ export function BriefingScreen({
       </Panel>
 
       <div>
-        <Eyebrow tone="text-rose-800">Since you last looked</Eyebrow>
+        <Eyebrow tone="text-danger-deep">Since you last looked</Eyebrow>
         <h3 className="font-serif text-xl mb-2">What changed</h3>
         <div className="space-y-1">
           {changes.map((c, i) => (
             <div
               key={i}
               className={
-                "bg-white border border-stone-300 border-l-4 px-4 py-2 flex flex-wrap items-baseline gap-x-3 " +
+                "bg-raise border border-line border-l-4 px-4 py-2 flex flex-wrap items-baseline gap-x-3 " +
                 (c.dir === "up" ? "border-l-teal-700" : c.dir === "down" ? "border-l-rose-700" : "border-l-stone-400")
               }
             >
               <span
                 className={
                   "font-mono text-xs " +
-                  (c.dir === "up" ? "text-teal-700" : c.dir === "down" ? "text-rose-700" : "text-stone-500")
+                  (c.dir === "up" ? "text-teal-deep" : c.dir === "down" ? "text-danger" : "text-dim")
                 }
               >
                 {c.dir === "up" ? "▲" : c.dir === "down" ? "▼" : "●"}
               </span>
-              <span className="text-sm font-semibold text-stone-900">{c.label}</span>
-              <span className="text-sm text-stone-600 flex-1 min-w-full sm:min-w-0">{c.detail}</span>
+              <span className="text-sm font-semibold text-ink">{c.label}</span>
+              <span className="text-sm text-dim flex-1 min-w-full sm:min-w-0">{c.detail}</span>
             </div>
           ))}
         </div>
       </div>
 
       {constraint && (
-        <div className="bg-white border-2 border-rose-800">
-          <header className="bg-rose-800 text-white px-4 py-2">
-            <Eyebrow tone="text-rose-200">Your biggest constraint</Eyebrow>
+        <div className="bg-raise border-2 border-danger-deep">
+          <header className="bg-danger-deep text-white px-4 py-2">
+            <Eyebrow tone="text-danger-soft">Your biggest constraint</Eyebrow>
             <h3 className="font-serif text-2xl">{constraint.primary.label}</h3>
           </header>
           <div className="p-4 space-y-3">
             <div>
               <Eyebrow>The evidence</Eyebrow>
-              <p className="text-sm text-stone-800 mt-0.5">{constraint.primary.why}</p>
+              <p className="text-sm text-ink mt-0.5">{constraint.primary.why}</p>
             </div>
             <div>
               <Eyebrow>What it cost you</Eyebrow>
-              <p className="text-sm text-stone-800 mt-0.5">{constraint.primary.impact}</p>
+              <p className="text-sm text-ink mt-0.5">{constraint.primary.impact}</p>
             </div>
             <TeachingNote id="constraint" />
-            <div className="border-t border-stone-200 pt-3">
-              <p className="text-sm text-stone-500 italic">
+            <div className="border-t border-line pt-3">
+              <p className="text-sm text-dim italic">
                 This is what the evidence says is binding. It is not necessarily what you should fix — that is your call,
                 and fixing it will cost you something else.
               </p>
             </div>
             {constraint.all.length > 1 && (
-              <div className="text-xs text-stone-500 font-mono">
+              <div className="text-xs text-dim font-mono">
                 Also pressing: {constraint.all.slice(1).map((c) => c.label).join(" · ")}
               </div>
             )}
@@ -223,25 +223,25 @@ export function BriefingScreen({
                 <span
                   className={
                     "text-xs uppercase tracking-widest font-semibold " +
-                    (b.met === null ? "text-stone-500" : b.met ? "text-teal-800" : "text-rose-800")
+                    (b.met === null ? "text-dim" : b.met ? "text-teal-deep" : "text-danger-deep")
                   }
                 >
                   {b.met === null ? "Watching" : b.met ? "Satisfied" : "Not satisfied"}
                 </span>
               </div>
-              <div className="text-sm text-stone-800 mt-1">“{b.ask}”</div>
-              <div className="text-xs text-stone-500 font-mono mt-1">{b.detail}</div>
+              <div className="text-sm text-ink mt-1">“{b.ask}”</div>
+              <div className="text-xs text-dim font-mono mt-1">{b.detail}</div>
             </div>
           ))}
         </div>
-        <p className="text-xs text-stone-500 mt-3 italic">
+        <p className="text-xs text-dim mt-3 italic">
           They cannot all be satisfied at once, and none of them is automatically right.
         </p>
         <TeachingNote id="board" />
       </Panel>
 
       <Panel eyebrow="Before you start" title="What are you going to prioritise this quarter?">
-        <p className="text-sm text-stone-600 mb-3">
+        <p className="text-sm text-dim mb-3">
           Say it now, out loud, before you see the levers. At the end of the quarter we will compare what you said, what
           you actually funded, and what the company turned out to need.
         </p>
@@ -255,11 +255,11 @@ export function BriefingScreen({
                 onClick={() => setPriority(p.id)}
                 className={
                   "text-left border p-3 " +
-                  (on ? "border-stone-900 bg-stone-900 text-white" : "border-stone-300 bg-white hover:border-stone-800")
+                  (on ? "border-line-2 bg-chrome text-white" : "border-line bg-raise hover:border-line-2")
                 }
               >
                 <div className="font-serif text-base leading-snug">{p.name}</div>
-                <div className={"text-xs mt-1 leading-snug " + (on ? "text-stone-300" : "text-stone-500")}>{p.desc}</div>
+                <div className={"text-xs mt-1 leading-snug " + (on ? "text-faint" : "text-dim")}>{p.desc}</div>
               </button>
             );
           })}
@@ -271,7 +271,7 @@ export function BriefingScreen({
         disabled={!priority || busy}
         className={
           "w-full py-4 font-serif text-xl " +
-          (priority && !busy ? "bg-rose-800 text-white hover:bg-rose-900" : "bg-stone-200 text-stone-400")
+          (priority && !busy ? "bg-danger-deep text-white hover:bg-danger-deep" : "bg-raise-2 text-faint")
         }
       >
         {busy ? "Opening the quarter…" : priority ? "Start the quarter" : "Choose a priority to begin"}

@@ -41,17 +41,17 @@ function DecisionCard({
   const daysOfCash = cash > 0 ? Math.round(((total * 1e5) / cash) * 90) : 0;
 
   return (
-    <div className="border border-stone-300 bg-white">
+    <div className="border border-line bg-raise">
       <div className="flex flex-wrap items-start justify-between gap-3 p-4">
         <div className="min-w-0 flex-1">
-          <div className="font-serif text-lg text-stone-900">{item.name}</div>
+          <div className="font-serif text-lg text-ink">{item.name}</div>
           <div className="grid gap-x-6 gap-y-1 sm:grid-cols-2 mt-2">
-            <div className="text-xs text-teal-800 leading-snug">
+            <div className="text-xs text-teal-deep leading-snug">
               <span className="uppercase tracking-widest font-semibold">You gain</span>
               <br />
               {item.gain}
             </div>
-            <div className="text-xs text-rose-800 leading-snug">
+            <div className="text-xs text-danger-deep leading-snug">
               <span className="uppercase tracking-widest font-semibold">You give up</span>
               <br />
               {item.cost}
@@ -61,7 +61,7 @@ function DecisionCard({
 
         <div className="text-right shrink-0">
           <div className="flex items-center gap-2">
-            <span className="text-stone-500 font-mono text-sm">₹</span>
+            <span className="text-dim font-mono text-sm">₹</span>
             <input
               type="number"
               min="0"
@@ -69,17 +69,17 @@ function DecisionCard({
               value={total === 0 ? "" : total}
               placeholder="0"
               onChange={(e) => setAlloc(spreadGroup(alloc, item, e.target.value.replace(/^-/, "")))}
-              className="w-24 border border-stone-400 px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-stone-800"
+              className="w-24 border border-line-2 px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink"
             />
-            <span className="text-xs uppercase tracking-widest text-stone-500">lakh</span>
+            <span className="text-xs uppercase tracking-widest text-dim">lakh</span>
           </div>
           {total > 0 && (
-            <div className="text-xs font-mono text-stone-500 mt-1">
+            <div className="text-xs font-mono text-dim mt-1">
               {inr(total * 1e5)}
               {cash > 0 ? " · " + daysOfCash + " days of cash" : ""}
             </div>
           )}
-          {overridden && <div className="text-xs text-amber-700 mt-1">set in detail view</div>}
+          {overridden && <div className="text-xs text-ember-deep mt-1">set in detail view</div>}
         </div>
       </div>
       {item.learn && (
@@ -110,14 +110,14 @@ function DetailLineRow({
   const overCap = cap != null && amount > cap + 0.001;
 
   return (
-    <div className="border-b border-stone-200 py-3 last:border-b-0">
+    <div className="border-b border-line py-3 last:border-b-0">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <div className="min-w-0">
-          <div className="text-sm text-stone-900">{line.name}</div>
-          <div className="text-xs font-mono text-stone-500 mt-0.5">{line.formula}</div>
+          <div className="text-sm text-ink">{line.name}</div>
+          <div className="text-xs font-mono text-dim mt-0.5">{line.formula}</div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-stone-500 font-mono text-sm">₹</span>
+          <span className="text-dim font-mono text-sm">₹</span>
           <input
             type="number"
             min="0"
@@ -126,16 +126,16 @@ function DetailLineRow({
             placeholder="0"
             onChange={(e) => onChange(e.target.value.replace(/^-/, ""))}
             className={
-              "w-24 border px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-stone-800 " +
-              (overCap ? "border-rose-700 text-rose-800" : "border-stone-400")
+              "w-24 border px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink " +
+              (overCap ? "border-danger text-danger-deep" : "border-line-2")
             }
           />
-          <span className="text-xs uppercase tracking-widest text-stone-500 w-10">lakh</span>
+          <span className="text-xs uppercase tracking-widest text-dim w-10">lakh</span>
         </div>
       </div>
       <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
         {preview.map((p, i) => (
-          <span key={i} className={"text-xs font-mono " + (i === 0 ? "text-teal-800" : "text-stone-600")}>
+          <span key={i} className={"text-xs font-mono " + (i === 0 ? "text-teal-deep" : "text-dim")}>
             {p}
           </span>
         ))}
@@ -184,8 +184,8 @@ export function DepartmentScreen({
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <Eyebrow tone="text-rose-800">{meta.label}</Eyebrow>
-          <h2 className="font-serif text-3xl text-stone-900">{meta.question}</h2>
+          <Eyebrow tone="text-danger-deep">{meta.label}</Eyebrow>
+          <h2 className="font-serif text-3xl text-ink">{meta.question}</h2>
         </div>
         <div className="text-right">
           <Eyebrow>Committed here</Eyebrow>
@@ -210,10 +210,10 @@ export function DepartmentScreen({
 
       {extra}
 
-      <div className="border border-stone-300 bg-white">
+      <div className="border border-line bg-raise">
         <button
           onClick={() => setAdvanced(!advanced)}
-          className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-stone-50"
+          className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-raise"
         >
           <div>
             <Eyebrow>Detailed planning</Eyebrow>
@@ -221,11 +221,11 @@ export function DepartmentScreen({
               {advanced ? "Hide the underlying lines" : "Open the underlying lines and formulas"}
             </div>
           </div>
-          <span className="font-mono text-sm text-stone-500">{advanced ? "−" : "+"}</span>
+          <span className="font-mono text-sm text-dim">{advanced ? "−" : "+"}</span>
         </button>
         {advanced && (
-          <div className="border-t border-stone-300 p-4">
-            <p className="text-sm text-stone-600 mb-3">
+          <div className="border-t border-line p-4">
+            <p className="text-sm text-dim mb-3">
               Every published formula, exactly as the engine runs it. Editing here overrides the grouped decision above.
             </p>
             {(DETAIL_LINES_BY_SCREEN[id] || []).map((line) => (

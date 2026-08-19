@@ -107,6 +107,9 @@ export type CrisisLogEntry = {
 export type CompanyState = {
   quarter: number;
   cash: number;
+  /** A signed Q4 "Path A" rescue cheque, raised but not yet swept into cash. Zero outside
+   * that one case. */
+  pendingInvestment: number;
   ar: number;
   ap: number;
   debt: number;
@@ -118,8 +121,9 @@ export type CompanyState = {
   products: Record<ProductId, ProductState>;
   innovations: string[];
   pipeline: Record<string, number>;
-  launchHype: number;
-  launchBoostLeft: number;
+  // Quarter number -> that quarter's Pre-Launch Buzz gain. Only the two most recent entries
+  // are ever live -- see `buzzFree`/`buzzConvBonus` on `QuarterResultShape`.
+  buzzHist: Record<number, number>;
   customers: number;
   priorUnits: number;
   brand: number;

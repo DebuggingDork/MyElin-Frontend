@@ -7,6 +7,7 @@
  */
 
 import { createContext, useContext, useState } from "react";
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import {
   BUFFER,
   LEVEL_TONE,
@@ -17,14 +18,14 @@ import {
   TONE_CARD,
   TONE_TEXT,
 } from "@/lib/simulation/constants";
-import { clamp, inr, n0, n1 } from "@/lib/simulation/format";
-import type { Budget, HealthBar, InboxMessage, Readiness, Tone } from "@/lib/simulation/types";
+import { clamp, cr, inr, n0, n1 } from "@/lib/simulation/format";
+import type { Budget, HealthBar, InboxMessage, QuarterResultShape, Readiness, Tone } from "@/lib/simulation/types";
 
 /* ── type and rules ───────────────────────────────────────────────── */
 
 export function Eyebrow({
   children,
-  tone = "text-stone-500",
+  tone = "text-dim",
 }: {
   children: React.ReactNode;
   tone?: string;
@@ -46,12 +47,12 @@ export function Panel({
   className?: string;
 }) {
   return (
-    <section className={"bg-white border border-stone-300 " + className}>
+    <section className={"bg-raise border border-line " + className}>
       {(eyebrow || title) && (
-        <header className="border-b border-stone-300 px-4 py-3 flex flex-wrap items-end justify-between gap-2">
+        <header className="border-b border-line px-4 py-3 flex flex-wrap items-end justify-between gap-2">
           <div>
             {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
-            {title && <h3 className="font-serif text-lg text-stone-900 leading-snug">{title}</h3>}
+            {title && <h3 className="font-serif text-lg text-ink leading-snug">{title}</h3>}
           </div>
           {right}
         </header>
@@ -65,7 +66,7 @@ export function Stat({
   label,
   value,
   sub,
-  tone = "text-stone-900",
+  tone = "text-ink",
 }: {
   label: React.ReactNode;
   value: React.ReactNode;
@@ -73,17 +74,17 @@ export function Stat({
   tone?: string;
 }) {
   return (
-    <div className="border-l-2 border-stone-300 pl-3">
+    <div className="border-l-2 border-line pl-3">
       <Eyebrow>{label}</Eyebrow>
       <div className={"font-mono text-xl leading-tight " + tone}>{value}</div>
-      {sub && <div className="text-xs text-stone-500 mt-0.5">{sub}</div>}
+      {sub && <div className="text-xs text-dim mt-0.5">{sub}</div>}
     </div>
   );
 }
 
-export function Bar({ value, max, tone = "bg-stone-800" }: { value: number; max: number; tone?: string }) {
+export function Bar({ value, max, tone = "bg-chrome" }: { value: number; max: number; tone?: string }) {
   return (
-    <div className="h-1.5 w-full bg-stone-200">
+    <div className="h-1.5 w-full bg-raise-2">
       <div className={"h-1.5 " + tone} style={{ width: clamp((value / (max || 1)) * 100, 0, 100) + "%" }} />
     </div>
   );
@@ -94,7 +95,7 @@ export function LedgerRow({
   label,
   working,
   value,
-  tone = "text-stone-900",
+  tone = "text-ink",
   strong,
   flag,
   indent,
@@ -110,19 +111,19 @@ export function LedgerRow({
   return (
     <div
       className={
-        "grid grid-cols-12 gap-2 items-baseline py-1.5 border-b border-stone-200 " + (flag ? "bg-rose-50" : "")
+        "grid grid-cols-12 gap-2 items-baseline py-1.5 border-b border-line " + (flag ? "bg-danger/10" : "")
       }
     >
       <div
         className={
           "col-span-6 sm:col-span-4 text-sm " +
           (indent ? "pl-4 " : "") +
-          (strong ? "font-semibold text-stone-900" : "text-stone-700")
+          (strong ? "font-semibold text-ink" : "text-ink")
         }
       >
         {label}
       </div>
-      <div className="col-span-6 sm:col-span-5 text-xs text-stone-500 font-mono break-words order-3 sm:order-none">
+      <div className="col-span-6 sm:col-span-5 text-xs text-dim font-mono break-words order-3 sm:order-none">
         {working}
       </div>
       <div className={"col-span-6 sm:col-span-3 text-right font-mono text-sm " + tone + (strong ? " font-semibold" : "")}>
@@ -147,15 +148,15 @@ export function TeachingNote({ id, inline }: { id?: string; inline?: boolean }) 
     <div className={inline ? "mt-2" : "mt-3"}>
       <button
         onClick={() => setOpen(!open)}
-        className="text-xs uppercase tracking-widest font-semibold text-stone-500 hover:text-rose-800 border-b border-dotted border-stone-400"
+        className="text-xs uppercase tracking-widest font-semibold text-dim hover:text-danger-deep border-b border-dotted border-line-2"
       >
         {open ? "Hide note" : "Why this works this way"}
       </button>
       {open && (
-        <div className="mt-2 border-l-2 border-stone-800 bg-stone-50 px-3 py-2">
-          <div className="text-xs uppercase tracking-widest text-rose-800 font-semibold">{note.cat}</div>
-          <div className="font-serif text-base text-stone-900 mt-0.5">{note.title}</div>
-          <p className="text-sm text-stone-700 mt-1 leading-snug">{note.body}</p>
+        <div className="mt-2 border-l-2 border-line-2 bg-raise px-3 py-2">
+          <div className="text-xs uppercase tracking-widest text-danger-deep font-semibold">{note.cat}</div>
+          <div className="font-serif text-base text-ink mt-0.5">{note.title}</div>
+          <p className="text-sm text-ink mt-1 leading-snug">{note.body}</p>
         </div>
       )}
     </div>
@@ -179,7 +180,7 @@ export function Inbox({
   if (!shown.length) {
     return (
       <Panel eyebrow={eyebrow} title={title}>
-        <p className="text-sm text-stone-500">Nothing from your team. Quiet quarters are rarer than they look.</p>
+        <p className="text-sm text-dim">Nothing from your team. Quiet quarters are rarer than they look.</p>
       </Panel>
     );
   }
@@ -188,19 +189,19 @@ export function Inbox({
     <div>
       <div className="flex flex-wrap items-baseline justify-between gap-2 mb-2">
         <div>
-          <Eyebrow tone="text-rose-800">{eyebrow}</Eyebrow>
+          <Eyebrow tone="text-danger-deep">{eyebrow}</Eyebrow>
           <h3 className="font-serif text-xl">{title}</h3>
         </div>
         {limit && messages.length > limit && (
-          <span className="text-xs font-mono text-stone-500">{messages.length - limit} more on the dashboard</span>
+          <span className="text-xs font-mono text-dim">{messages.length - limit} more on the dashboard</span>
         )}
       </div>
       <div className="space-y-2">
         {shown.map((m, i) => (
-          <div key={i} className={"bg-white border-l-4 border border-stone-300 px-4 py-3 " + MESSAGE_TONE[m.tone].border}>
+          <div key={i} className={"bg-raise border-l-4 border border-line px-4 py-3 " + MESSAGE_TONE[m.tone].border}>
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <span className="font-serif text-base text-stone-900">{m.name}</span>
-              <span className="text-xs uppercase tracking-widest text-stone-500">{m.role}</span>
+              <span className="font-serif text-base text-ink">{m.name}</span>
+              <span className="text-xs uppercase tracking-widest text-dim">{m.role}</span>
               <span
                 className={
                   "px-1.5 py-0.5 text-xs uppercase tracking-widest font-semibold ml-auto " + MESSAGE_TONE[m.tone].tag
@@ -209,8 +210,8 @@ export function Inbox({
                 {MESSAGE_TONE[m.tone].label}
               </span>
             </div>
-            <div className="font-semibold text-stone-900 text-sm mt-1">{m.subject}</div>
-            <p className="text-sm text-stone-700 mt-1 leading-snug">{m.body}</p>
+            <div className="font-semibold text-ink text-sm mt-1">{m.subject}</div>
+            <p className="text-sm text-ink mt-1 leading-snug">{m.body}</p>
           </div>
         ))}
       </div>
@@ -251,6 +252,57 @@ export function Sparkline({
   );
 }
 
+/**
+ * Valuation, quarter by quarter -- the number every closed-quarter report and the final
+ * report both lead with, plotted instead of just stated. Reads straight off `history`, the
+ * same engine-computed results every other figure on these screens reads from; nothing here
+ * is estimated or re-derived. Renders nothing before there are two quarters to compare.
+ */
+export function ValuationTrendChart({ history }: { history: QuarterResultShape[] }) {
+  const trend = history.map((h) => ({ q: "Q" + h.q, valuation: h.valuation as number }));
+  if (trend.length < 2) return null;
+
+  const opening = trend[0].valuation;
+  const latest = trend[trend.length - 1];
+  const tone = latest.valuation >= opening ? "#0f766e" : "#9f1239";
+
+  return (
+    <Panel
+      eyebrow="Valuation trajectory"
+      title={"Q1 " + cr(opening) + " → " + latest.q + " " + cr(latest.valuation)}
+    >
+      <div className="h-56">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={trend} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id="valuationTrend" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={tone} stopOpacity={0.28} />
+                <stop offset="100%" stopColor={tone} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid stroke="#e7e5e4" strokeDasharray="2 4" />
+            <XAxis dataKey="q" stroke="#78716c" fontSize={12} />
+            <YAxis stroke="#78716c" fontSize={11} tickFormatter={(val: number) => cr(val)} width={64} />
+            <Tooltip
+              contentStyle={{ fontFamily: "monospace", fontSize: 12, borderColor: "#d6d3d1" }}
+              formatter={(val: unknown) => [cr(Number(val)), "Valuation"]}
+            />
+            <Area
+              type="monotone"
+              dataKey="valuation"
+              stroke={tone}
+              strokeWidth={2}
+              fill="url(#valuationTrend)"
+              dot={{ r: 3, fill: tone, strokeWidth: 0 }}
+              activeDot={{ r: 5 }}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    </Panel>
+  );
+}
+
 /** A figure with its own history behind it. `invert` marks metrics where down is good. */
 export function TrendStat({
   label,
@@ -272,17 +324,17 @@ export function TrendStat({
   const better = delta === null ? null : invert ? delta < 0 : delta > 0;
 
   return (
-    <div className="border-l-2 border-stone-300 pl-3">
+    <div className="border-l-2 border-line pl-3">
       <Eyebrow>{label}</Eyebrow>
       <div className="flex items-end justify-between gap-2">
         <div>
           <div className={"font-mono text-xl leading-tight " + TONE_TEXT[tone]}>{value}</div>
-          {sub && <div className="text-xs text-stone-500 mt-0.5">{sub}</div>}
+          {sub && <div className="text-xs text-dim mt-0.5">{sub}</div>}
         </div>
         <div className="text-right shrink-0">
           <Sparkline values={pts} tone={invert ? "invert" : "normal"} />
           {delta !== null && (
-            <div className={"text-xs font-mono " + (better ? "text-teal-700" : "text-rose-700")}>
+            <div className={"text-xs font-mono " + (better ? "text-teal-deep" : "text-danger")}>
               {better ? "▲" : "▼"} {Math.abs(delta) >= 1000 ? n0(Math.abs(delta)) : n1(Math.abs(delta))}
             </div>
           )}
@@ -300,11 +352,11 @@ export function Ticker({ items }: { items: { label: string; value: string; tone:
   const run = (key: string) => (
     <div key={key} className="flex shrink-0 items-center" aria-hidden={key === "b"}>
       {items.map((item, i) => (
-        <span key={i} className="flex items-center gap-2 px-5 border-r border-stone-700">
-          <span className="text-xs uppercase tracking-widest text-stone-500">{item.label}</span>
+        <span key={i} className="flex items-center gap-2 px-5 border-r border-line-2">
+          <span className="text-xs uppercase tracking-widest text-dim">{item.label}</span>
           <span className={"font-mono text-sm " + TICKER_TONE[item.tone]}>{item.value}</span>
           {item.dir && (
-            <span className={"text-xs " + (item.dir === "up" ? "text-teal-400" : "text-rose-400")}>
+            <span className={"text-xs " + (item.dir === "up" ? "text-teal-bright" : "text-danger-soft")}>
               {item.dir === "up" ? "▲" : "▼"}
             </span>
           )}
@@ -314,7 +366,7 @@ export function Ticker({ items }: { items: { label: string; value: string; tone:
   );
 
   return (
-    <div className="bg-stone-950 border-t border-b border-stone-700 overflow-hidden">
+    <div className="bg-chrome border-t border-b border-line-2 overflow-hidden">
       <style>
         {
           "@keyframes simTick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}.simulation-tick{animation:simTick 90s linear infinite;will-change:transform}.simulation-tick:hover{animation-play-state:paused}@media (prefers-reduced-motion:reduce){.simulation-tick{animation:none}}"
@@ -342,7 +394,7 @@ export function ReadinessGrid({ dirs, only }: { dirs: Readiness[]; only?: string
           <div key={d.id} className={"border p-3 " + TONE_CARD[tone]}>
             <Eyebrow>{d.label}</Eyebrow>
             <div className={"font-mono text-base font-semibold mt-0.5 " + TONE_TEXT[tone]}>{d.level}</div>
-            <div className="text-xs text-stone-600 mt-1 leading-snug">{d.note}</div>
+            <div className="text-xs text-dim mt-1 leading-snug">{d.note}</div>
           </div>
         );
       })}
@@ -357,13 +409,13 @@ export function HealthPanel({ health, compact }: { health: HealthBar[]; compact?
         {health.map((h) => (
           <div key={h.key}>
             <div className="flex items-baseline justify-between">
-              <span className="text-sm text-stone-800">{h.label}</span>
+              <span className="text-sm text-ink">{h.label}</span>
               <span className={"text-xs font-mono " + TONE_TEXT[h.tone]}>{n0(h.value)}</span>
             </div>
             <div className="mt-1">
               <Bar value={h.value} max={100} tone={TONE_BAR[h.tone]} />
             </div>
-            <div className="text-xs text-stone-500 mt-1">{h.note}</div>
+            <div className="text-xs text-dim mt-1">{h.note}</div>
           </div>
         ))}
       </div>
@@ -378,21 +430,21 @@ export function BudgetMeter({ budget }: { budget: Budget }) {
   const over = left < 0;
 
   return (
-    <div className={"border px-4 py-3 " + (over ? "border-rose-700 bg-rose-50" : "border-stone-300 bg-white")}>
+    <div className={"border px-4 py-3 " + (over ? "border-danger bg-danger/10" : "border-line bg-raise")}>
       <div className="flex flex-wrap items-baseline justify-between gap-2 mb-2">
-        <Eyebrow tone={over ? "text-rose-800" : "text-stone-500"}>
+        <Eyebrow tone={over ? "text-danger-deep" : "text-dim"}>
           {over ? "Over the quarter's ceiling" : "Cash left to commit"}
         </Eyebrow>
-        <div className={"font-mono text-lg " + (over ? "text-rose-800" : "text-stone-900")}>
-          {inr(left)} <span className="text-stone-400 text-xs">of {inr(budget.ceiling)}</span>
+        <div className={"font-mono text-lg " + (over ? "text-danger-deep" : "text-ink")}>
+          {inr(left)} <span className="text-faint text-xs">of {inr(budget.ceiling)}</span>
         </div>
       </div>
       <Bar
         value={budget.committed}
         max={budget.ceiling}
-        tone={over ? "bg-rose-700" : budget.committed > budget.ceiling * 0.85 ? "bg-amber-600" : "bg-stone-800"}
+        tone={over ? "bg-danger" : budget.committed > budget.ceiling * 0.85 ? "bg-ember" : "bg-chrome"}
       />
-      <div className="text-xs text-stone-500 mt-2 font-mono">
+      <div className="text-xs text-dim mt-2 font-mono">
         {inr(budget.opex)} operating + {inr(budget.capex)} plant + {inr(budget.inno)} innovation + {inr(budget.people)}{" "}
         people. Ceiling = cash + credit drawn, less fixed costs and the {inr(BUFFER)} buffer.
       </div>

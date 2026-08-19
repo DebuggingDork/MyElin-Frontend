@@ -17,7 +17,10 @@ export type Accent =
   | "amber"
   | "orange"
   | "rose"
-  | "pink";
+  | "pink"
+  | "danger"
+  | "danger-soft"
+  | "danger-deep";
 
 export const accentVar: Record<Accent, string> = {
   violet: "var(--violet)",
@@ -31,6 +34,10 @@ export const accentVar: Record<Accent, string> = {
   orange: "var(--orange)",
   rose: "var(--rose)",
   pink: "var(--pink)",
+  // Real red, not remapped like --rose was -- see the token's own comment in globals.css.
+  danger: "var(--danger)",
+  "danger-soft": "var(--danger-soft)",
+  "danger-deep": "var(--danger-deep)",
 };
 
 export function Container({
