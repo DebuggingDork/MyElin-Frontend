@@ -107,6 +107,9 @@ export type CrisisLogEntry = {
 export type CompanyState = {
   quarter: number;
   cash: number;
+  /** A signed Q4 "Path A" rescue cheque, raised but not yet swept into cash. Zero outside
+   * that one case. */
+  pendingInvestment: number;
   ar: number;
   ap: number;
   debt: number;

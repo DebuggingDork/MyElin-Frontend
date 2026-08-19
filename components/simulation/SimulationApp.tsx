@@ -521,6 +521,9 @@ export function SimulationApp() {
                 <span>
                   <span className="text-stone-500 text-xs uppercase tracking-widest mr-2">Cash</span>
                   {inr(state.cash)}
+                  {state.pendingInvestment > 0 && (
+                    <span className="text-teal-300 ml-1">+{inr(state.pendingInvestment)} pending</span>
+                  )}
                 </span>
                 {priority && (
                   <span className="text-teal-300">

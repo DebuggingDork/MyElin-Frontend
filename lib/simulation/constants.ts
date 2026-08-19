@@ -434,6 +434,7 @@ const OPENING_ASSETS = OPENING_CASH + 8e5 + 600 * 3250 + 2.5e6 + 1e6;
 export const INITIAL_STATE: CompanyState = {
   quarter: 1,
   cash: OPENING_CASH,
+  pendingInvestment: 0,
   ar: 8e5,
   ap: 0,
   debt: 0,

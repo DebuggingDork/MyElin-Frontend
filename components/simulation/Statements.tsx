@@ -297,6 +297,14 @@ export function CashFlow({ r }: { r: QuarterResultShape }) {
         indent
       />
       <LedgerRow label="Borrowings repaid" working="" value={"(" + inr(v(r, "repaid")) + ")"} indent />
+      {v(r, "equityRaised") > 0 && (
+        <LedgerRow
+          label="Equity investment received"
+          working="term sheet accepted last quarter"
+          value={inr(v(r, "equityRaised"))}
+          indent
+        />
+      )}
       <LedgerRow label="Cash from financing" working="" value={inr(v(r, "financingCF"))} strong />
       <LedgerRow
         label="Net movement in cash"
