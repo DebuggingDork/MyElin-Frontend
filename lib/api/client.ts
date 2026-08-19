@@ -17,6 +17,8 @@ import type {
   MarketingAllocationSubmit,
   MessageResponse,
   OperationsAllocationSubmit,
+  ProfileResponse,
+  ProfileUpdate,
   QuarterAllocationResponse,
   QuarterDetailResponse,
   QuarterReportPdfResponse,
@@ -175,6 +177,13 @@ export const api = {
       { method: "POST", body: JSON.stringify(body) },
       false,
     ),
+
+  /* ── Profile ──────────────────────────────────────────────── */
+
+  getProfile: () => request<ProfileResponse>("/profile"),
+
+  updateProfile: (body: ProfileUpdate) =>
+    request<ProfileResponse>("/profile", { method: "PATCH", body: JSON.stringify(body) }),
 
   /* ── Company / run ─────────────────────────────────────────── */
 
