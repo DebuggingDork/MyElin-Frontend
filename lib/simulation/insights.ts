@@ -897,19 +897,6 @@ export function inbox(
     );
   }
 
-  if (!s.products.pro.live && (r.hypeNow as number) > 8 && (r.npd as number) < 60) {
-    say(
-      "market",
-      "warning",
-      "We are building anticipation for something that is not coming",
-      n1(r.hypeNow as number) +
-        " points of pre-launch interest against development at " +
-        n0(r.npd as number) +
-        " of 100. Either fund the build or stop funding the noise.",
-      true,
-    );
-  }
-
   if (!s.products.pro.live && (r.npd as number) > 55) {
     say(
       "product",
@@ -1341,10 +1328,10 @@ export function lessons(r: QuarterResultShape, prior: QuarterResultShape | undef
         ", so the company is now losing people it did not choose to lose.",
     );
   }
-  if ((r.seoFree as number) + (r.hypeFree as number) > 400) {
+  if ((r.seoFree as number) + (r.buzzFree as number) > 400) {
     add(
       "Assets bought earlier are working now for nothing",
-      n0((r.seoFree as number) + (r.hypeFree as number)) +
+      n0((r.seoFree as number) + (r.buzzFree as number)) +
         " leads arrived this quarter at no cost, from search and pre-launch work funded in previous quarters. Nothing on this quarter's plan produced them.",
     );
   }
@@ -1555,14 +1542,7 @@ export function pipelineBoard(s: CompanyState, r: QuarterResultShape | null, sta
       note:
         "To have it on sale by quarter three, it needs to clear 100 by the end of quarter two — about " +
         inr(Math.pow(Math.max(0, left) / Math.max(1, 5 - s.quarter) / 16, 2) * 1e5) +
-        " a quarter from here at full engineering staffing." +
-        (r && (r.hypeNow as number) > 4
-          ? " Anticipation is at " +
-            n1(r.hypeNow as number) +
-            ", worth a " +
-            Math.min(1.9, 1 + (r.hypeNow as number) / 60).toFixed(2) +
-            "x demand pull at launch."
-          : " No pre-launch marketing funded yet."),
+        " a quarter from here at full engineering staffing.",
       warn: gain <= 0.5 && before > 0,
     });
   }

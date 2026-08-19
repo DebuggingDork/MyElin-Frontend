@@ -357,13 +357,13 @@ export function ConstraintChain({ r }: { r: QuarterResultShape }) {
       : null,
     {
       k: "Assets built earlier",
-      v: "+ " + n0(v(r, "seoFree") + v(r, "hypeFree")),
+      v: "+ " + n0(v(r, "seoFree") + v(r, "buzzFree")),
       u: "free leads",
       // Corrected: the original concatenated this with a unary `+`, printing a literal NaN.
       w:
         "SEO " +
         n0(v(r, "seoFree")) +
-        (v(r, "hypeFree") > 0 ? ", pre-launch anticipation " + n0(v(r, "hypeFree")) : "") +
+        (v(r, "buzzFree") > 0 ? ", pre-launch buzz " + n0(v(r, "buzzFree")) : "") +
         " — paid for in prior quarters",
     },
     {
