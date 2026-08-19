@@ -189,6 +189,7 @@ export function Profile() {
                       <input
                         id="profile-first-name"
                         type="text"
+                        maxLength={120}
                         value={firstName}
                         onChange={(e) => {
                           setSaved(false);

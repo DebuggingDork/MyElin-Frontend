@@ -263,6 +263,7 @@ function AuthForm({
                 name="given-name"
                 type="text"
                 required
+                maxLength={120}
                 autoComplete="given-name"
                 value={firstName}
                 onChange={(e) => onFirstName(e.target.value)}

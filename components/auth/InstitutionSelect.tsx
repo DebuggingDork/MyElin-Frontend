@@ -131,6 +131,7 @@ export function InstitutionSelect({
           open && optionCount > 0 ? `${inputId}-option-${active}` : undefined
         }
         autoComplete="off"
+        maxLength={255}
         value={query}
         onChange={(e) => {
           setQuery(e.target.value);
