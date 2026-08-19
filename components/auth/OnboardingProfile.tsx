@@ -6,6 +6,7 @@ import { ArrowRight, ChevronDown } from "lucide-react";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { InstitutionSelect } from "@/components/auth/InstitutionSelect";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { api } from "@/lib/api/client";
 import { easeOut } from "@/lib/media";
 import type { InstitutionRef } from "@/lib/institutions";
 import {
@@ -60,6 +61,16 @@ export function OnboardingProfile({
       current_year: year || null,
       goals,
       captured_at: new Date().toISOString(),
+    });
+    // Fire-and-forget: a profile endpoint now exists, but this screen's whole design point is
+    // that nothing here blocks getting in. `onFinish` runs immediately either way; the account
+    // already has the localStorage copy saved above as a fallback if this request fails.
+    void api.updateProfile({
+      first_name: firstName || null,
+      institution,
+      degree: degree || null,
+      current_year: year || null,
+      goals,
     });
     onFinish();
   }
@@ -174,7 +185,7 @@ export function OnboardingProfile({
  * sheet, and `appearance-none` means the chevron has to be drawn here, the same way the other
  * fields on this screen carry their own leading icon.
  */
-function SelectField({
+export function SelectField({
   id,
   label,
   placeholder,

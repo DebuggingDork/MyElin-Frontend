@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronDown, LogOut } from "lucide-react";
+import { ChevronDown, LogOut, User as UserIcon } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { api } from "@/lib/api/client";
 import type { CompanyListItem, RunStatus } from "@/lib/api/types";
@@ -190,6 +190,14 @@ export function ProfileMenu() {
           </div>
 
           <div className="border-t border-line p-2">
+            <Link
+              href="/profile"
+              onClick={() => setOpen(false)}
+              className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[13px] text-dim transition-colors hover:bg-[var(--panel-2)] hover:text-ink"
+            >
+              <UserIcon className="h-3.5 w-3.5" />
+              Profile
+            </Link>
             <button
               type="button"
               onClick={() => {
