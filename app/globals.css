@@ -70,6 +70,12 @@
   --danger-soft: #fda4af;
   --danger-deep: #881337;
 
+  /* A dark chrome surface that does NOT flip with the theme -- for the simulation module's
+     header banners, primary CTAs and "selected" states, which pair it with fixed `text-white`
+     (the reference's own `bg-stone-900 text-white` idiom). `--void` flips per theme by design,
+     so reusing it here would turn these into unreadable white-on-near-white in light mode. */
+  --chrome: #0a221c;
+
   --grad-primary: linear-gradient(135deg, #0f766e 0%, #14b8a6 48%, #2dd4bf 100%);
   --grad-cool: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
   --grad-warm: linear-gradient(135deg, #71847d 0%, #9fb3ac 55%, #e8eef0 100%);
@@ -159,6 +165,9 @@
   --danger-soft: #fda4af;
   --danger-deep: #881337;
 
+  /* Same fixed dark chrome as the dark block -- see the comment there. */
+  --chrome: #0a221c;
+
   --grad-primary: linear-gradient(135deg, #075e54 0%, #0b7d70 48%, #0d9488 100%);
   --grad-cool: linear-gradient(135deg, #075e54 0%, #0b7d70 100%);
   --grad-warm: linear-gradient(135deg, #6c7d76 0%, #4d6059 55%, #0a1f1a 100%);
@@ -213,6 +222,10 @@
   --color-orange: var(--orange);
   --color-rose: var(--rose);
   --color-pink: var(--pink);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-deep: var(--danger-deep);
+  --color-chrome: var(--chrome);
 
   /* Brand aliases → teal */
   --color-bg: var(--base);
