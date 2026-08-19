@@ -63,6 +63,13 @@
   --rose: #e8eef0;
   --pink: #5eead4;
 
+  /* Real red — deliberately not folded into ember. Reserved for states ember/--rose can't
+     say: simulation crisis severity, hard failure. Same hex the Nadi Wear reference itself
+     uses (Tailwind rose-700/300/900), kept as-is rather than retuned for either theme. */
+  --danger: #be123c;
+  --danger-soft: #fda4af;
+  --danger-deep: #881337;
+
   --grad-primary: linear-gradient(135deg, #0f766e 0%, #14b8a6 48%, #2dd4bf 100%);
   --grad-cool: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
   --grad-warm: linear-gradient(135deg, #71847d 0%, #9fb3ac 55%, #e8eef0 100%);
@@ -145,6 +152,12 @@
   --orange: var(--ember-soft);
   --rose: #0a1f1a;
   --pink: #12a695;
+
+  /* Same real-red trio as the dark block — red doesn't need retuning for contrast the way
+     teal/ember did, so both themes carry identical hex values here. */
+  --danger: #be123c;
+  --danger-soft: #fda4af;
+  --danger-deep: #881337;
 
   --grad-primary: linear-gradient(135deg, #075e54 0%, #0b7d70 48%, #0d9488 100%);
   --grad-cool: linear-gradient(135deg, #075e54 0%, #0b7d70 100%);
