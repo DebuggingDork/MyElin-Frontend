@@ -1,10 +1,11 @@
 /**
  * The signup onboarding answers (screen 2 of `/signup`).
  *
- * The backend's `/auth/register` takes email + password only, so there is nowhere to send
- * these yet — they're persisted locally against the user id, ready to POST unchanged once a
- * profile endpoint exists. Shapes match what the directory/analytics questions
- * ("2,840 students from 47 institutions") need: ids, not prose.
+ * `OnboardingProfile` now POSTs these to `PATCH /profile` on submit (fire-and-forget, matching
+ * this screen's own "nothing here blocks getting in" design) -- the local copy below is a
+ * best-effort fallback for whenever that request fails, never the primary record. Shapes match
+ * what the directory/analytics questions ("2,840 students from 47 institutions") need: ids, not
+ * prose.
  */
 
 import type { InstitutionRef } from "@/lib/institutions";
