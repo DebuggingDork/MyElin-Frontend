@@ -449,8 +449,7 @@ export const INITIAL_STATE: CompanyState = {
   },
   innovations: [],
   pipeline: {},
-  launchHype: 0,
-  launchBoostLeft: 0,
+  buzzHist: {},
   customers: 4000,
   priorUnits: 0,
   brand: 0,
@@ -1278,14 +1277,14 @@ export const DETAIL_SCREENS: DetailScreen[] = [
       },
       {
         key: "prelaunch",
-        name: "Pre-launch marketing",
-        formula: "Anticipation +5√x · no leads until the new product is on sale",
+        name: "Pre-Launch Buzz",
+        formula: "Buzz +4√x · no leads this quarter",
         preview: (v, c) => {
-          const hype = c.s.launchHype + 5 * pw(v, 0.5);
+          const b = 4 * pw(v, 0.5);
           return [
-            "anticipation " + n1(hype),
-            c.s.products.pro.live ? "the Pro is already on sale" : "lands with the Pro when it launches",
-            "launch demand ×" + n2(Math.min(1.9, 1 + hype / 60)) + " for two quarters",
+            "+" + n1(b) + " buzz",
+            n0(b * 15) + " free leads in Q" + (c.s.quarter + 1),
+            n0(b * 25) + " leads and +" + n1(b * 0.3) + "pts conversion in Q" + (c.s.quarter + 2),
           ];
         },
       },

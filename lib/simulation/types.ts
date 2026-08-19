@@ -121,8 +121,9 @@ export type CompanyState = {
   products: Record<ProductId, ProductState>;
   innovations: string[];
   pipeline: Record<string, number>;
-  launchHype: number;
-  launchBoostLeft: number;
+  // Quarter number -> that quarter's Pre-Launch Buzz gain. Only the two most recent entries
+  // are ever live -- see `buzzFree`/`buzzConvBonus` on `QuarterResultShape`.
+  buzzHist: Record<number, number>;
   customers: number;
   priorUnits: number;
   brand: number;
