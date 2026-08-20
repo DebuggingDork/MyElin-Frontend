@@ -229,6 +229,15 @@
   --color-danger-deep: var(--danger-deep);
   --color-chrome: var(--chrome);
 
+  /* Simulation-only sidebar/toolbar surfaces — see the `.simulation` block below.
+     Fixed cream/peach tones, independent of the app's dark/light toggle. */
+  --color-sim-surface: var(--sim-surface);
+  --color-sim-surface-raised: var(--sim-surface-raised);
+  --color-sim-surface-hover: var(--sim-surface-hover);
+  --color-sim-line: var(--sim-line);
+  --color-sim-faint: var(--sim-faint);
+  --color-sim-ink: var(--sim-ink);
+
   /* Brand aliases → teal */
   --color-bg: var(--base);
   --color-bg-soft: var(--raise);
@@ -1069,11 +1078,14 @@ body {
 }
 
 /* ─────────────────── Nadi Wear simulation surface ───────────────────
-   The four-quarter simulation ships as a light, ruled document: white
-   panels, stone rules, a serif for headings and monospace for every
-   number. It renders inside the run shell, so these rules stop the app's
+   The four-quarter simulation ships as a light, ruled document: cream
+   panels, warm-teal rules, a serif for headings and monospace for every
+   number — the Color Hunt "00797924b1b1fff0e4ffe0c5" palette's cream/peach
+   half. It renders inside the run shell, so these rules stop the app's
    dark tokens leaking into it. Scoped to `.simulation` only — nothing here
-   reaches the rest of the run screens.
+   reaches the rest of the run screens, and it stays this light "document"
+   surface regardless of the app's own dark/light toggle (the toggle only
+   affects the sidebar/toolbar above it, via --sim-* below).
 
    The border rule matters most: the global `* { border-color: var(--line) }`
    near the top paints every otherwise-unspecified border teal, which would
@@ -1083,15 +1095,26 @@ body {
 
 .simulation {
   color-scheme: light;
-  background: #f5f5f4;
+  background: #fff0e4;
   color: #1c1917;
+
+  /* Sidebar + toolbar tokens. The simulation is a fixed light "document"
+     regardless of the app's dark/light toggle (see note above), so its own
+     chrome stays on the cream/peach half of the palette rather than
+     following --void/--raise, which would go dark in dark mode. */
+  --sim-surface: #fff0e4;
+  --sim-surface-raised: #ffe0c5;
+  --sim-surface-hover: #ffd6ae;
+  --sim-line: #f0c9a8;
+  --sim-faint: #8a7361;
+  --sim-ink: #1c1917;
 }
 
 :where(.simulation) * {
-  border-color: #d6d3d1;
+  border-color: #f0c9a8;
 }
 
 .simulation :focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(28, 25, 23, 0.85);
+  box-shadow: 0 0 0 2px rgba(0, 121, 121, 0.85);
 }
