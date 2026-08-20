@@ -29,7 +29,7 @@ export function IntroScreen({ onStart, busy }: { onStart: () => void; busy?: boo
         <div className="bg-raise border border-line">
           <header className="border-b border-line px-4 py-3">
             <Eyebrow>Company snapshot</Eyebrow>
-            <h3 className="font-serif text-lg leading-snug">Where you start, quarter one</h3>
+            <h3 className="font-serif text-lg leading-snug text-ink">Where you start, quarter one</h3>
           </header>
           <div className="grid grid-cols-2 gap-4 p-4">
             <Stat label="Cash in the bank" value={inr(OPENING_CASH)} />

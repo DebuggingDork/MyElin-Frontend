@@ -123,7 +123,7 @@ export function DashboardScreen({
 
       <div>
         <Eyebrow tone="text-danger-deep">Where the plan puts pressure</Eyebrow>
-        <h3 className="font-serif text-xl mb-2">Operating readiness</h3>
+        <h3 className="font-serif text-xl mb-2 text-ink">Operating readiness</h3>
         <ReadinessGrid dirs={dirs} />
         <p className="text-xs text-dim mt-2 italic">
           Direction only. You will not know the exact revenue, profit or cash until the quarter closes — which is the

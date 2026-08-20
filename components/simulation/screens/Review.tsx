@@ -59,7 +59,7 @@ export function ReviewScreen({
     <div className="space-y-5">
       <div>
         <Eyebrow tone="text-danger-deep">Before you commit</Eyebrow>
-        <h2 className="font-serif text-3xl">Close quarter {quarter}</h2>
+        <h2 className="font-serif text-3xl text-ink">Close quarter {quarter}</h2>
       </div>
 
       <ReadinessGrid dirs={dirs} />

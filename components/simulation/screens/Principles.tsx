@@ -15,7 +15,7 @@ export function PrinciplesScreen() {
     <div className="space-y-5">
       <div>
         <Eyebrow tone="text-danger-deep">Reference</Eyebrow>
-        <h2 className="font-serif text-3xl">Every principle the model is built on</h2>
+        <h2 className="font-serif text-3xl text-ink">Every principle the model is built on</h2>
         <p className="text-sm text-dim mt-1 max-w-2xl">
           These explain how the business behaves, not what you should do about it. Each one also appears in context on
           the screen it applies to.

@@ -11,7 +11,7 @@
 import { useState } from "react";
 import { ARCHETYPES, CRISIS_STEPS, DIAGNOSIS_LABELS, STRATEGY_BY_ID } from "@/lib/simulation/constants";
 import { inr, lakh, num } from "@/lib/simulation/format";
-import { Eyebrow, LedgerRow, Panel, TeachingNote } from "@/components/simulation/Kit";
+import { Eyebrow, LedgerRow, Panel, TeachingNote, optionCard } from "@/components/simulation/Kit";
 import type { CrisisBriefing } from "@/lib/simulation/remote";
 import type {
   ArchetypeId,
@@ -59,9 +59,7 @@ export function CrisisScreen({
 
   const set = (key: keyof CrisisInput, value: unknown) => setCrisis({ ...crisis, [key]: value });
 
-  const choiceClass = (on: boolean) =>
-    "text-left border px-3 py-2 text-sm " +
-    (on ? "border-line-2 bg-chrome text-white" : "border-line bg-raise hover:border-line-2");
+  const choiceClass = (on: boolean) => optionCard(on, "px-3 py-2") + " text-sm";
 
   const canAdvance = [true, true, locked || Boolean(crisis.diagnosis), locked || Boolean(crisis.strategy), true][step];
 
@@ -118,7 +116,7 @@ export function CrisisScreen({
         <div className="space-y-3">
           <div>
             <Eyebrow tone="text-danger-deep">Step two</Eyebrow>
-            <h3 className="font-serif text-xl">What each function is seeing</h3>
+            <h3 className="font-serif text-xl text-ink">What each function is seeing</h3>
             <p className="text-sm text-dim mt-1">Some of this is relevant. Some of it is not.</p>
           </div>
           {evidence.map((line, i) => (
@@ -169,7 +167,7 @@ export function CrisisScreen({
         <div className="space-y-3">
           <div>
             <Eyebrow tone="text-danger-deep">Step four</Eyebrow>
-            <h3 className="font-serif text-xl">How will you respond?</h3>
+            <h3 className="font-serif text-xl text-ink">How will you respond?</h3>
             <p className="text-sm text-dim mt-1">
               These are directions, not budgets. You decide how much to put behind it next.
             </p>
@@ -183,12 +181,12 @@ export function CrisisScreen({
                   disabled={locked}
                   onClick={() => set("strategy", c.id as StrategyId)}
                   className={
-                    "text-left border p-4 " +
-                    (on ? "border-line-2 border-2 bg-raise" : "border-line bg-raise hover:border-line-2") +
+                    "text-left border p-4 text-ink transition-colors duration-150 ease-out " +
+                    (on ? "border-2 border-teal-deep bg-raise-2" : "border-line bg-raise hover:border-teal/50") +
                     (locked && !on ? " opacity-40" : "")
                   }
                 >
-                  <div className="font-serif text-xl">{c.name}</div>
+                  <div className="font-serif text-xl text-ink">{c.name}</div>
                   <p className="text-sm text-ink mt-1">{c.thesis}</p>
                   <div className="grid gap-x-4 gap-y-1 sm:grid-cols-2 mt-3">
                     <div className="text-xs text-teal-deep">

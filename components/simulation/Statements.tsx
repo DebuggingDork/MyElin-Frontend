@@ -483,7 +483,7 @@ export function ConstraintChain({ r }: { r: QuarterResultShape }) {
       <header className="border-b border-line px-4 py-3 flex flex-wrap items-baseline justify-between gap-2">
         <div>
           <Eyebrow tone="text-danger-deep">Where the quarter narrowed</Eyebrow>
-          <h3 className="font-serif text-lg">The constraint chain</h3>
+          <h3 className="font-serif text-lg text-ink">The constraint chain</h3>
         </div>
         <div className="text-xs text-dim uppercase tracking-widest">Ledger red marks the binding gate</div>
       </header>

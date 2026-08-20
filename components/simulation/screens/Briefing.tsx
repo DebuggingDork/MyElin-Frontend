@@ -7,7 +7,16 @@
 
 import { BUFFER, PRIORITIES, QUARTER_BRIEFS, TONE_CARD, headcount } from "@/lib/simulation/constants";
 import { cr, inr, n0, n1, pct } from "@/lib/simulation/format";
-import { Eyebrow, HealthPanel, Panel, TeachingNote, TrendStat } from "@/components/simulation/Kit";
+import {
+  Eyebrow,
+  HealthPanel,
+  Panel,
+  TeachingNote,
+  TrendStat,
+  optionCard,
+  optionNote,
+  optionTitle,
+} from "@/components/simulation/Kit";
 import type { ChangeLine } from "@/lib/simulation/insights";
 import type {
   CompanyState,
@@ -156,7 +165,7 @@ export function BriefingScreen({
 
       <div>
         <Eyebrow tone="text-danger-deep">Since you last looked</Eyebrow>
-        <h3 className="font-serif text-xl mb-2">What changed</h3>
+        <h3 className="font-serif text-xl mb-2 text-ink">What changed</h3>
         <div className="space-y-1">
           {changes.map((c, i) => (
             <div
@@ -253,13 +262,10 @@ export function BriefingScreen({
               <button
                 key={p.id}
                 onClick={() => setPriority(p.id)}
-                className={
-                  "text-left border p-3 " +
-                  (on ? "border-line-2 bg-chrome text-white" : "border-line bg-raise hover:border-line-2")
-                }
+                className={optionCard(on)}
               >
-                <div className="font-serif text-base leading-snug">{p.name}</div>
-                <div className={"text-xs mt-1 leading-snug " + (on ? "text-faint" : "text-dim")}>{p.desc}</div>
+                <div className={"font-serif text-base leading-snug " + optionTitle(on)}>{p.name}</div>
+                <div className={"text-xs mt-1 leading-snug " + optionNote(on)}>{p.desc}</div>
               </button>
             );
           })}

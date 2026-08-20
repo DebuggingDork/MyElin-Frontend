@@ -306,7 +306,7 @@ export function ClosedScreen({
 
       <div>
         <Eyebrow tone="text-danger-deep">How the quarter narrowed</Eyebrow>
-        <h3 className="font-serif text-xl mb-2">The constraint chain</h3>
+        <h3 className="font-serif text-xl mb-2 text-ink">The constraint chain</h3>
         <ConstraintChain r={r} />
         <TeachingNote id="constraint" />
       </div>

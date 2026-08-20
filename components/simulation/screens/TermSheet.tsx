@@ -66,15 +66,17 @@ export function TermSheetScreen({
               key={offer.id}
               onClick={() => setPicked(offer.id)}
               className={
-                "text-left border flex flex-col " +
-                (on ? "border-line-2 border-2 bg-raise" : "border-line bg-raise hover:border-line-2")
+                "text-left border flex flex-col text-ink transition-colors duration-150 ease-out " +
+                (on ? "border-2 border-teal-deep bg-raise" : "border-line bg-raise hover:border-teal/50")
               }
             >
-              <div className={"px-4 py-3 border-b " + (on ? "bg-chrome text-white border-line-2" : "border-line")}>
+              <div className={"px-4 py-3 border-b " + (on ? "bg-chrome text-white border-teal-deep" : "border-line")}>
                 <Eyebrow tone={on ? "text-faint" : "text-dim"}>
                   Path {offer.id} · {offer.who}
                 </Eyebrow>
-                <div className="font-serif text-xl leading-snug">{offer.title}</div>
+                <div className={"font-serif text-xl leading-snug " + (on ? "text-white" : "text-ink")}>
+                  {offer.title}
+                </div>
               </div>
               <div className="p-4 flex-1">
                 <p className="text-sm text-dim leading-relaxed">{offer.pitch}</p>

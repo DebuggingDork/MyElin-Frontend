@@ -217,7 +217,7 @@ export function Inbox({
       <div className="flex flex-wrap items-baseline justify-between gap-2 mb-2">
         <div>
           <Eyebrow tone="text-danger-deep">{eyebrow}</Eyebrow>
-          <h3 className="font-serif text-xl">{title}</h3>
+          <h3 className="font-serif text-xl text-ink">{title}</h3>
         </div>
         {limit && messages.length > limit && (
           <span className="text-xs font-mono text-dim">{messages.length - limit} more on the dashboard</span>
