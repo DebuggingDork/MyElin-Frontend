@@ -10,16 +10,40 @@ import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/types";
 
 /** Supabase's recovery-link redirect carries the token in the URL *fragment*
- *  (`#access_token=...&type=recovery`), never the query string -- fragments never reach a
- *  server, so this must be read client-side. An expired/invalid link redirects here with
- *  `#error=...&error_description=...` instead of a token. */
-function readRecoveryHash(): { accessToken: string | null; hashError: string | null } {
-  if (typeof window === "undefined") return { accessToken: null, hashError: null };
-  const params = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-  return {
-    accessToken: params.get("access_token"),
-    hashError: params.get("error_description") || params.get("error"),
-  };
+ *  (`#access_token=...&type=recovery`) -- fragments never reach a server, so this must be read
+ *  client-side. An expired/invalid link arrives with `error`/`error_description` instead of a
+ *  token, and GoTrue puts those in the query string on some paths and the fragment on others,
+ *  so both are read here: reporting "invalid or expired" when Supabase actually said why is
+ *  the difference between a user who can act on it and one who just tries again. */
+function readRecoveryLink(): {
+  accessToken: string | null;
+  linkError: string | null;
+} {
+  if (typeof window === "undefined") return { accessToken: null, linkError: null };
+
+  const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const query = new URLSearchParams(window.location.search);
+  const read = (key: string) => hash.get(key) || query.get(key);
+
+  const accessToken = read("access_token");
+  if (accessToken) return { accessToken, linkError: null };
+
+  const described = read("error_description") || read("error");
+  if (described) return { accessToken: null, linkError: described.replace(/\+/g, " ") };
+
+  // A `code` means the Supabase project is on the PKCE flow, whose one-time verifier is held
+  // by a Supabase client this app does not run -- so the token cannot be recovered from here.
+  // Say that plainly rather than blaming the link, which is not what is wrong.
+  if (read("code")) {
+    return {
+      accessToken: null,
+      linkError:
+        "This reset link is in a format this page cannot complete. Ask an administrator to " +
+        "set the Supabase project's auth flow to implicit, then request a new link.",
+    };
+  }
+
+  return { accessToken: null, linkError: null };
 }
 
 export function ResetPassword() {
@@ -36,11 +60,14 @@ export function ResetPassword() {
     // Deferred a tick, same as AuthSlide's mode-sync effect -- lands via a callback rather
     // than synchronously in the effect body (react-hooks/set-state-in-effect).
     queueMicrotask(() => {
-      const { accessToken: token, hashError } = readRecoveryHash();
+      const { accessToken: token, linkError: described } = readRecoveryLink();
       if (token) {
         setAccessToken(token);
+        // Keep the recovery token out of the address bar, browser history and any outbound
+        // Referer once it has been read -- it is a live credential until it is spent.
+        window.history.replaceState(null, "", window.location.pathname);
       } else {
-        setLinkError(hashError || "This reset link is invalid or has expired.");
+        setLinkError(described || "This reset link is invalid or has expired.");
       }
     });
   }, []);
