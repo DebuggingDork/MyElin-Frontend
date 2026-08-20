@@ -21,6 +21,18 @@ import {
 import { clamp, cr, inr, n0, n1 } from "@/lib/simulation/format";
 import type { Budget, HealthBar, InboxMessage, QuarterResultShape, Readiness, Tone } from "@/lib/simulation/types";
 
+/* ── chart colours ────────────────────────────────────────────────────
+   SVG and recharts take paint values, not Tailwind classes, so these few
+   have to be literal. They are the same palette the `.simulation` block in
+   globals.css pins -- that surface is a fixed light document and does not
+   follow the app's dark/light toggle, so a literal here cannot go stale
+   against the theme the way it would anywhere else. */
+
+const CHART_RISE = "#004f4f"; // --teal-deep
+const CHART_FALL = "#9f1239"; // between --danger and --danger-deep
+const CHART_GRID = "#f0c9a8"; // --sim-line
+const CHART_AXIS = "#7a6552"; // --faint
+
 /* ── type and rules ───────────────────────────────────────────────── */
 
 export function Eyebrow({
@@ -268,7 +280,8 @@ export function Sparkline({
   const coords = pts.map((v, i) => [(i / (pts.length - 1)) * (w - 2) + 1, h - 1 - ((v - lo) / span) * (h - 2)]);
   const points = coords.map((c) => c[0].toFixed(1) + "," + c[1].toFixed(1)).join(" ");
   const rising = pts[pts.length - 1] >= pts[0];
-  const colour = tone === "invert" ? (rising ? "#9f1239" : "#0f766e") : rising ? "#0f766e" : "#9f1239";
+  const colour =
+    tone === "invert" ? (rising ? CHART_FALL : CHART_RISE) : rising ? CHART_RISE : CHART_FALL;
   const last = coords[coords.length - 1];
 
   return (
@@ -291,7 +304,7 @@ export function ValuationTrendChart({ history }: { history: QuarterResultShape[]
 
   const opening = trend[0].valuation;
   const latest = trend[trend.length - 1];
-  const tone = latest.valuation >= opening ? "#0f766e" : "#9f1239";
+  const tone = latest.valuation >= opening ? CHART_RISE : CHART_FALL;
 
   return (
     <Panel
@@ -307,11 +320,11 @@ export function ValuationTrendChart({ history }: { history: QuarterResultShape[]
                 <stop offset="100%" stopColor={tone} stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid stroke="#e7e5e4" strokeDasharray="2 4" />
-            <XAxis dataKey="q" stroke="#78716c" fontSize={12} />
-            <YAxis stroke="#78716c" fontSize={11} tickFormatter={(val: number) => cr(val)} width={64} />
+            <CartesianGrid stroke={CHART_GRID} strokeDasharray="2 4" />
+            <XAxis dataKey="q" stroke={CHART_AXIS} fontSize={12} />
+            <YAxis stroke={CHART_AXIS} fontSize={11} tickFormatter={(val: number) => cr(val)} width={64} />
             <Tooltip
-              contentStyle={{ fontFamily: "monospace", fontSize: 12, borderColor: "#d6d3d1" }}
+              contentStyle={{ fontFamily: "monospace", fontSize: 12, borderColor: CHART_GRID }}
               formatter={(val: unknown) => [cr(Number(val)), "Valuation"]}
             />
             <Area
