@@ -280,7 +280,7 @@ body {
 }
 
 ::selection {
-  background: rgba(20, 184, 166, 0.35);
+  background: color-mix(in srgb, var(--teal) 35%, transparent);
   color: var(--text);
 }
 

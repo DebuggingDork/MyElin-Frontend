@@ -66,7 +66,7 @@ export function Nav() {
                     className="absolute inset-0 rounded-full border border-line"
                     style={{
                       background:
-                        "linear-gradient(135deg, rgba(20,184,166,0.28), rgba(255,255,255,0.08))",
+                        "linear-gradient(135deg, color-mix(in srgb, var(--teal) 28%, transparent), rgba(255,255,255,0.08))",
                     }}
                   />
                 )}

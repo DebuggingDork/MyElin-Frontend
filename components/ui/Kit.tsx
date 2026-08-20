@@ -208,7 +208,7 @@ export function Action({
     "active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-45 disabled:active:scale-100",
     size === "lg" ? "px-7 py-4 text-[15px]" : "px-5 py-3 text-[13.5px]",
     variant === "primary" &&
-      "text-white shadow-[0_10px_40px_-12px_rgba(20,184,166,0.55)] hover:shadow-[0_14px_50px_-10px_rgba(20,184,166,0.7)]",
+      "text-white shadow-[0_10px_40px_-12px_color-mix(in_srgb,var(--teal)_55%,transparent)] hover:shadow-[0_14px_50px_-10px_color-mix(in_srgb,var(--teal)_70%,transparent)]",
     // Base sits on the quieter rule and brightens on hover -- both were line-2 after the token
     // sweep, which left the outline variant with no visible hover change at all.
     variant === "outline" &&
