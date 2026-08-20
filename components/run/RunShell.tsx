@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useRun } from "@/components/run/RunProvider";
@@ -22,6 +22,19 @@ export function RunShell({ children }: { children: React.ReactNode }) {
       router.replace(`/login?next=${encodeURIComponent(pathname)}`);
     }
   }, [ready, user, router, pathname]);
+
+  /**
+   * Every run screen opens at the top.
+   *
+   * `<main>` below is the scroll container, not the window, so the router's own scroll
+   * restoration never reached it: moving on to the next department kept the scroll offset of
+   * the one just finished. Keyed on `pathname` alone, so it only fires on an actual move
+   * between screens and never while one is being filled in.
+   */
+  const mainRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    mainRef.current?.scrollTo({ top: 0, behavior: "auto" });
+  }, [pathname]);
 
   if (!ready || loading) {
     return (
@@ -47,7 +60,9 @@ export function RunShell({ children }: { children: React.ReactNode }) {
           {error}
         </p>
       )}
-      <main className="flex-1 overflow-y-auto">{children}</main>
+      <main ref={mainRef} className="flex-1 overflow-y-auto">
+        {children}
+      </main>
     </div>
   );
 }

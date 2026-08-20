@@ -17,7 +17,7 @@
  * engine that grades them afterwards, so the two can never disagree.
  */
 
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Loader2, LogOut, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
@@ -250,6 +250,19 @@ export function SimulationApp() {
 
   const toggleNav = useCallback(() => writeNavOpen(!readNavOpen()), []);
 
+  /**
+   * Every section opens at the top.
+   *
+   * The document column is its own scroll container (`overflow-y-auto` below), not the window,
+   * so neither the browser nor Next's router ever touched it -- switching department left the
+   * new section scrolled to wherever the CEO had been reading in the old one, which on the
+   * longer screens meant landing halfway down a form they had not seen the start of.
+   *
+   * Keyed on the section and the lifecycle phase and nothing else: it must not fire while a
+   * section is being filled in, or every keystroke that re-renders would yank the page up.
+   */
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
+
   // Escape closes the mobile drawer, the same as tapping the backdrop.
   useEffect(() => {
     if (!mobileNavOpen) return;
@@ -267,10 +280,19 @@ export function SimulationApp() {
     (id: string) => {
       const params = new URLSearchParams(searchParams.toString());
       params.set("tab", id);
+      // `scroll: false` because the router's own scroll handling targets the *window*, which
+      // is not what scrolls here. The column below is reset directly instead.
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     },
     [pathname, router, searchParams],
   );
+
+  // See `scrollerRef` above. Runs on every way into a new section -- the rail, the mobile
+  // drawer, "Close the quarter", the deep-linked `?tab=`, and each lifecycle phase -- because
+  // it keys off where the CEO has ended up, not off the control that took them there.
+  useEffect(() => {
+    scrollerRef.current?.scrollTo({ top: 0, behavior: "auto" });
+  }, [tab, phase]);
 
   /**
    * Set the plan up for `next`, restoring any draft already saved for that quarter.
@@ -714,7 +736,7 @@ export function SimulationApp() {
             </>
           )}
 
-          <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">
+          <div ref={scrollerRef} className="flex min-w-0 flex-1 flex-col overflow-y-auto">
           {/* Sticky: quarter, cash and what is left to commit are the figures you are deciding
               against, so they stay on screen while the document scrolls under them. */}
           <header className="sticky top-0 z-20 shrink-0 bg-chrome text-white">
