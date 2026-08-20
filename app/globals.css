@@ -1098,16 +1098,66 @@ body {
   background: #fff0e4;
   color: #1c1917;
 
-  /* Sidebar + toolbar tokens. The simulation is a fixed light "document"
-     regardless of the app's dark/light toggle (see note above), so its own
-     chrome stays on the cream/peach half of the palette rather than
-     following --void/--raise, which would go dark in dark mode. */
+  /* Pin every shared design token the simulation's own screens read through
+     ordinary Tailwind utilities (text-ink, text-dim, bg-raise, border-line,
+     ...) to fixed light/cream values. `color`/`border-color` above only
+     override the property on elements that don't set it explicitly -- any
+     descendant using `text-ink` etc. still resolves `var(--text)` against
+     whatever the app's dark/light toggle currently has, which is how white
+     text ended up on this cream surface in dark mode. Redefining the
+     variables themselves closes that gap for every screen at once instead
+     of patching each file's className. */
+  --void: #fff0e4;
+  --base: #fff0e4;
+  --raise: #ffe0c5;
+  --raise-2: #ffd6ae;
+  --panel: rgba(0, 121, 121, 0.05);
+  --panel-2: rgba(0, 121, 121, 0.09);
+  --line: rgba(0, 121, 121, 0.18);
+  --line-2: rgba(0, 121, 121, 0.28);
+  --field: #ffe6d2;
+  --field-hover: #ffdcc0;
+
+  --text: #1c1917;
+  --dim: #5c4d40;
+  --faint: #7a6552;
+
+  --teal: #007979;
+  --teal-bright: #0f9d9d;
+  --teal-deep: #004f4f;
+  --teal-soft: #24b1b1;
+
+  --ember: #a8481c;
+  --ember-soft: #c0552a;
+  --ember-deep: #7d3311;
+
+  --violet: #007979;
+  --violet-2: #24b1b1;
+  --indigo: #004f4f;
+  --cyan: #0f9d9d;
+  --emerald: #0f9d9d;
+  --rose: #1c1917;
+  --pink: #24b1b1;
+
+  /* Sidebar + toolbar tokens (see chrome() in SimulationApp.tsx). Same
+     cream/peach family as above, kept as their own names since the sidebar
+     wants a slightly different step (raised card vs. page background). */
   --sim-surface: #fff0e4;
   --sim-surface-raised: #ffe0c5;
   --sim-surface-hover: #ffd6ae;
   --sim-line: #f0c9a8;
   --sim-faint: #8a7361;
   --sim-ink: #1c1917;
+}
+
+/* The header/ticker banner sits on the fixed-dark --chrome surface (see the
+   comment on --chrome above), not the cream document -- it needs light text
+   on dark, the opposite of the override just above. Scoped narrowly so it
+   doesn't fight the cream tokens the rest of the simulation relies on. */
+.simulation-chrome {
+  --text: #ffffff;
+  --dim: #9fb3ac;
+  --faint: #71847d;
 }
 
 :where(.simulation) * {
