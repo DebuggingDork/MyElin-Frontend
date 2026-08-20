@@ -1,23 +1,29 @@
 import type { Scenario } from "@/lib/play/types";
 
-/** Startup Survival — seed-stage SaaS, Quarter 1. Mock data until the API lands. */
+/** Startup Survival — the entry ceremony for the Nadi Wear run. `id` stays "startup-survival"
+ *  since it's the slug hardcoded across the marketing site's "Play now" links; only the
+ *  identity fields below (company/metrics/copy) need to actually describe Nadi Wear -- the
+ *  newspaper screens (NewspaperStory/NewspaperKpi) generate all their copy from these fields,
+ *  so nothing else needs to change to fix a mismatched story. Numbers match the real opening
+ *  state in `lib/simulation/constants.ts` (OPENING_CASH, INITIAL_STATE). */
 export const startupSurvival: Scenario = {
   id: "startup-survival",
-  name: "Startup Survival",
+  name: "Nadi Wear",
   quarterLabel: "Quarter 1",
   quarterTheme: "Planning",
   company: {
-    name: "Nimbus Labs",
+    name: "Nadi Wear",
     stage: "Seed",
-    sector: "Workflow automation SaaS",
+    sector: "D2C wearables",
   },
   minutes: 30,
   metrics: [
-    { key: "cash", label: "Cash in bank", value: "₹5 Cr", accent: "emerald" },
-    { key: "employees", label: "Employees", value: "12", accent: "cyan" },
-    { key: "customers", label: "Customers", value: "4,200", accent: "violet" },
-    { key: "revenue", label: "Monthly revenue", value: "₹18 L", accent: "indigo" },
-    { key: "burn", label: "Burn rate", value: "₹26 L", accent: "rose" },
+    { key: "cash", label: "Cash in bank", value: "₹1.5 Cr", accent: "emerald" },
+    { key: "price", label: "Nadi Pulse price", value: "₹9,999", accent: "cyan" },
+    { key: "customers", label: "Customers", value: "4,000", accent: "violet" },
+    { key: "team", label: "Team", value: "14", accent: "indigo" },
+    { key: "stock", label: "Stock on hand", value: "600 units", accent: "amber" },
+    { key: "rivals", label: "Funded rivals", value: "3", accent: "rose" },
   ],
   panels: [
     {
