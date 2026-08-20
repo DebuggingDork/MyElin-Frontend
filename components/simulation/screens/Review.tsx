@@ -58,7 +58,7 @@ export function ReviewScreen({
   return (
     <div className="space-y-5">
       <div>
-        <Eyebrow tone="text-danger-deep">Before you commit</Eyebrow>
+        <Eyebrow tone="text-tone-bad">Before you commit</Eyebrow>
         <h2 className="font-serif text-3xl text-ink">Close quarter {quarter}</h2>
       </div>
 
@@ -85,7 +85,7 @@ export function ReviewScreen({
       <BudgetMeter budget={budget} />
 
       {budget.committed > budget.ceiling && (
-        <div className="border-l-4 border-danger bg-danger/10 px-4 py-3 text-sm text-danger-deep">
+        <div className="border-l-4 border-danger bg-danger/10 px-4 py-3 text-sm text-tone-bad">
           You are {inr(budget.committed - budget.ceiling)} beyond what the balance sheet supports. You can still commit —
           the buffer takes it, and the record will show it.
         </div>
@@ -97,7 +97,7 @@ export function ReviewScreen({
         </div>
       )}
 
-      {error && <div className="border-l-4 border-danger bg-danger/10 px-4 py-3 text-sm text-danger-deep">{error}</div>}
+      {error && <div className="border-l-4 border-danger bg-danger/10 px-4 py-3 text-sm text-tone-bad">{error}</div>}
 
       <button
         onClick={onClose}

@@ -116,7 +116,7 @@ export function TermSheetScreen({
           />
         </div>
 
-        {error && <div className="border-l-4 border-danger bg-danger/10 px-4 py-3 text-sm text-danger-deep">{error}</div>}
+        {error && <div className="border-l-4 border-danger bg-danger/10 px-4 py-3 text-sm text-tone-bad">{error}</div>}
 
         <div className="flex justify-end">
           <button

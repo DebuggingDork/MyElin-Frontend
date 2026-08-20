@@ -116,7 +116,7 @@ export function InnovationBoard({
 
       {INNOVATION_CATEGORIES.map((cat) => (
         <div key={cat} className="mb-5 last:mb-0">
-          <Eyebrow tone="text-danger-deep">{cat}</Eyebrow>
+          <Eyebrow tone="text-tone-bad">{cat}</Eyebrow>
           <div className="grid gap-3 sm:grid-cols-2 mt-2">
             {INNOVATIONS.filter((c) => c.cat === cat).map((card) => {
               const shipped = s.innovations.indexOf(card.id) >= 0;
@@ -159,8 +159,8 @@ export function InnovationBoard({
                                 ? "text-teal-bright"
                                 : "text-danger-soft"
                               : k === "cogs" && amount > 0
-                                ? "text-danger"
-                                : "text-teal-deep")
+                                ? "text-tone-bad"
+                                : "text-tone-good")
                           }
                         >
                           {k === "cogs"
@@ -170,7 +170,7 @@ export function InnovationBoard({
                       );
                     })}
                     {card.lead > 0 && (
-                      <span className={"text-xs font-mono " + (picked ? "text-ember-soft" : "text-ember-deep")}>
+                      <span className={"text-xs font-mono " + (picked ? "text-ember-soft" : "text-tone-watch")}>
                         lands in {card.lead} quarter
                       </span>
                     )}
@@ -281,13 +281,13 @@ export function ProductPortfolio({
                     </div>
                     {info && (
                       <div className="text-xs font-mono mt-2 space-y-0.5">
-                        <div className={Math.abs(info.premium) > 20 ? "text-ember-deep" : "text-dim"}>
+                        <div className={Math.abs(info.premium) > 20 ? "text-tone-watch" : "text-dim"}>
                           {info.premium >= 0 ? "+" : ""}
                           {n0(info.premium)}% against a market reference of {inr(info.ref)}
                         </div>
-                        <div className={info.mult >= 1 ? "text-teal-deep" : "text-danger-deep"}>demand ×{n2(info.mult)}</div>
+                        <div className={info.mult >= 1 ? "text-tone-good" : "text-tone-bad"}>demand ×{n2(info.mult)}</div>
                         {num(cur.invCost) > 0 && (
-                          <div className={cur.price > num(cur.invCost) ? "text-dim" : "text-danger-deep font-semibold"}>
+                          <div className={cur.price > num(cur.invCost) ? "text-dim" : "text-tone-bad font-semibold"}>
                             {inr(cur.price - num(cur.invCost))} a unit above your last known cost of{" "}
                             {inr(num(cur.invCost))}
                           </div>
@@ -446,7 +446,7 @@ export function PeoplePanel({
                 </div>
               </div>
 
-              <div className={"text-xs mt-2 leading-snug " + (cut > 0 ? "text-danger-deep" : ratio < 0.999 ? TONE_TEXT[tone] : "text-dim")}>
+              <div className={"text-xs mt-2 leading-snug " + (cut > 0 ? "text-tone-bad" : ratio < 0.999 ? TONE_TEXT[tone] : "text-dim")}>
                 {cut > 0 ? "If you cut here: " + d.ifCut : ratio < 0.999 ? d.ifShort : "Fully staffed for what you have funded."}
               </div>
             </div>
@@ -501,16 +501,16 @@ export function FinancePanel({
                 onChange={(e) => setAlloc({ ...alloc, draw: e.target.value.replace(/^-/, "") })}
                 className={
                   "w-28 border px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink " +
-                  (overLimit ? "border-danger text-danger-deep" : "border-line-2")
+                  (overLimit ? "border-danger text-tone-bad" : "border-line-2")
                 }
               />
               <span className="text-xs uppercase tracking-widest text-dim">lakh</span>
             </div>
             <div className="text-xs font-mono text-dim mt-2 space-y-0.5">
-              <div className="text-teal-deep">{inr(drawn)} into cash today</div>
+              <div className="text-tone-good">{inr(drawn)} into cash today</div>
               <div>{inr((s.debt + drawn) * INTEREST_RATE)} of interest this quarter</div>
               {overLimit && (
-                <div className="text-danger-deep">{inr(num(alloc.draw) * 1e5 - limit)} over the limit will be refused.</div>
+                <div className="text-tone-bad">{inr(num(alloc.draw) * 1e5 - limit)} over the limit will be refused.</div>
               )}
             </div>
           </div>
@@ -555,7 +555,7 @@ export function FinancePanel({
                 className={optionCard(on)}
               >
                 <div className={"font-serif text-base " + optionTitle(on)}>{t.name}</div>
-                <div className={"text-xs font-mono mt-1 " + optionMeta(on)}>
+                <div className={"text-xs font-mono mt-1 " + optionMeta}>
                   cost {t.cogsMult === 1 ? "unchanged" : (t.cogsMult < 1 ? "−" : "+") + pct(Math.abs(1 - t.cogsMult) * 100)} ·
                   reliability {(t.rel >= 0 ? "+" : "") + t.rel}
                 </div>
@@ -594,7 +594,7 @@ export function WarrantyPanel({
               className={optionCard(on)}
             >
               <div className={"font-serif text-lg " + optionTitle(on)}>{opt.name}</div>
-              <div className={"text-xs mt-1 " + optionMeta(on)}>{opt.conv}</div>
+              <div className={"text-xs mt-1 " + optionMeta}>{opt.conv}</div>
               <div className={"text-xs mt-1 " + optionNote(on)}>{opt.cost}</div>
               <div className={"text-xs font-mono mt-2 " + optionNote(on)}>
                 {opt.mult ? inr(1000 * (defect / 100) * 1500 * opt.mult) + " per 1,000 units" : "₹0 per 1,000 units"}
@@ -696,7 +696,7 @@ export function ProductFocus({
                 <div
                   className={
                     "text-xs font-mono " +
-                    ((h.lowerBetter ? !h.d.up : h.d.up) ? "text-teal-deep" : "text-danger")
+                    ((h.lowerBetter ? !h.d.up : h.d.up) ? "text-tone-good" : "text-tone-bad")
                   }
                 >
                   {(h.lowerBetter ? !h.d.up : h.d.up) ? "▲" : "▼"} {h.d.txt} vs last quarter
@@ -709,7 +709,7 @@ export function ProductFocus({
 
       <div className="bg-raise border border-line">
         <header className="border-b border-line px-4 py-3">
-          <Eyebrow tone="text-danger-deep">Product pipeline</Eyebrow>
+          <Eyebrow tone="text-tone-bad">Product pipeline</Eyebrow>
           <h3 className="font-serif text-lg text-ink">Where everything stands</h3>
         </header>
 
@@ -781,7 +781,7 @@ export function ProductFocus({
                       tone={item.stage === "live" ? "bg-chrome" : item.stage === "ready" ? "bg-teal-deep" : "bg-ember"}
                     />
                   </div>
-                  <div className={"text-xs font-mono mt-2 " + (item.warn ? "text-ember-deep" : "text-ink")}>
+                  <div className={"text-xs font-mono mt-2 " + (item.warn ? "text-tone-watch" : "text-ink")}>
                     {item.eta}
                   </div>
                   <div className="text-xs text-dim mt-1 leading-snug">{item.note}</div>
@@ -873,7 +873,7 @@ export function ProductFocus({
                 <span
                   className={
                     "text-xs uppercase tracking-widest font-semibold " +
-                    (impact.band === "None" ? "text-faint" : impact.good ? "text-teal-deep" : "text-danger-deep")
+                    (impact.band === "None" ? "text-faint" : impact.good ? "text-tone-good" : "text-tone-bad")
                   }
                 >
                   {impact.band === "None" ? "—" : (impact.good ? "▲ " : "▼ ") + impact.band}
@@ -882,7 +882,7 @@ export function ProductFocus({
             ))}
           </div>
           {Boolean(p?.ceilingBinding) && (
-            <div className="mt-3 border-l-4 border-danger bg-danger/10 px-3 py-2 text-xs text-danger-deep">
+            <div className="mt-3 border-l-4 border-danger bg-danger/10 px-3 py-2 text-xs text-tone-bad">
               The product is the binding constraint right now. Selling harder cannot help until this moves.
             </div>
           )}

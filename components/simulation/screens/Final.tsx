@@ -151,7 +151,7 @@ export function FinalScreen({
             label={"Quarter " + h.q}
             working={n0(v(h, "unitsSold")) + " units of a " + n0(v(h, "mktDemand")) + "-unit category"}
             value={pct(v(h, "marketShare") * 100)}
-            tone={v(h, "shareDelta") >= 0 ? "text-teal-deep" : "text-danger-deep"}
+            tone={v(h, "shareDelta") >= 0 ? "text-tone-good" : "text-tone-bad"}
           />
         ))}
       </Panel>
@@ -256,14 +256,14 @@ export function FinalScreen({
             working={"Q3 valuation × (1 + momentum of " + n1(ts.M) + ")"}
             value={inr(ts.trueContinuation)}
             strong
-            tone={(eg.gap as number) > 0 ? "text-danger-deep" : "text-teal-deep"}
+            tone={(eg.gap as number) > 0 ? "text-tone-bad" : "text-tone-good"}
           />
           <LedgerRow
             label={(eg.gap as number) > 0 ? "Value left on the table" : "Value captured above continuation"}
             working="difference"
             value={inr(Math.abs(eg.gap as number))}
             strong
-            tone={(eg.gap as number) > 0 ? "text-danger-deep" : "text-teal-deep"}
+            tone={(eg.gap as number) > 0 ? "text-tone-bad" : "text-tone-good"}
           />
         </Panel>
       )}
@@ -280,7 +280,7 @@ export function FinalScreen({
             working="quarter four"
             value={n0(v(last, "unitsSold")) + " units"}
             strong
-            tone={eg.covenantHit ? "text-teal-deep" : "text-danger-deep"}
+            tone={eg.covenantHit ? "text-tone-good" : "text-tone-bad"}
           />
           <LedgerRow
             label="Equity given up"
@@ -337,7 +337,7 @@ export function FinalScreen({
                     {fired.map((m, j) => (
                       <li
                         key={j}
-                        className={"text-xs font-mono " + (Number(m.points) > 0 ? "text-teal-deep" : "text-danger-deep")}
+                        className={"text-xs font-mono " + (Number(m.points) > 0 ? "text-tone-good" : "text-tone-bad")}
                       >
                         {formatSigned(m.points)} {formatDisplayText(m.why)}
                       </li>

@@ -109,7 +109,7 @@ export function DashboardScreen({
         <div className="bg-raise border-2 border-danger-deep">
           <div className="px-4 py-3 flex flex-wrap items-baseline justify-between gap-2">
             <div>
-              <Eyebrow tone="text-danger-deep">Your biggest constraint right now</Eyebrow>
+              <Eyebrow tone="text-tone-bad">Your biggest constraint right now</Eyebrow>
               <h3 className="font-serif text-2xl">{constraint.primary.label}</h3>
               <p className="text-sm text-ink mt-1 max-w-2xl">{constraint.primary.why}</p>
             </div>
@@ -122,7 +122,7 @@ export function DashboardScreen({
       )}
 
       <div>
-        <Eyebrow tone="text-danger-deep">Where the plan puts pressure</Eyebrow>
+        <Eyebrow tone="text-tone-bad">Where the plan puts pressure</Eyebrow>
         <h3 className="font-serif text-xl mb-2 text-ink">Operating readiness</h3>
         <ReadinessGrid dirs={dirs} />
         <p className="text-xs text-dim mt-2 italic">

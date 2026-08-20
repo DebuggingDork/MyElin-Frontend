@@ -62,12 +62,12 @@ function Assessment({ score }: { score: QuarterScore }) {
 
       {score.modifiers.length > 0 && (
         <div className="mt-4">
-          <Eyebrow tone="text-danger-deep">Adjustments that fired</Eyebrow>
+          <Eyebrow tone="text-tone-bad">Adjustments that fired</Eyebrow>
           <ul className="mt-1 space-y-0.5">
             {score.modifiers.map((m, i) => (
               <li
                 key={i}
-                className={"text-xs font-mono " + (Number(m.points) >= 0 ? "text-teal-deep" : "text-danger-deep")}
+                className={"text-xs font-mono " + (Number(m.points) >= 0 ? "text-tone-good" : "text-tone-bad")}
               >
                 {formatSigned(m.points)} {formatDisplayText(m.why)}
               </li>
@@ -79,7 +79,7 @@ function Assessment({ score }: { score: QuarterScore }) {
       <div className="mt-4 border-t border-line pt-3">
         <button
           onClick={() => setOpen(!open)}
-          className="text-xs uppercase tracking-widest font-semibold text-dim hover:text-danger-deep border-b border-dotted border-line-2"
+          className="text-xs uppercase tracking-widest font-semibold text-dim hover:text-tone-bad border-b border-dotted border-line-2"
         >
           {open ? "Hide" : "Show"} how every mark was earned
         </button>
@@ -107,10 +107,10 @@ function Assessment({ score }: { score: QuarterScore }) {
                         className={
                           "font-mono mr-1 " +
                           (s.level === "full"
-                            ? "text-teal-deep"
+                            ? "text-tone-good"
                             : s.level === "part"
-                              ? "text-ember-deep"
-                              : "text-danger-deep")
+                              ? "text-tone-watch"
+                              : "text-tone-bad")
                         }
                       >
                         {s.level === "full" ? "met" : s.level === "part" ? "part" : "not met"}
@@ -170,7 +170,7 @@ export function ClosedScreen({
       </div>
 
       <div>
-        <Eyebrow tone="text-danger-deep">What happened</Eyebrow>
+        <Eyebrow tone="text-tone-bad">What happened</Eyebrow>
         <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-4 mt-2">
           <Stat label="Revenue" value={cr(v(r, "revenueT"))} sub={n0(v(r, "unitsSold")) + " units"} />
           <Stat
@@ -232,12 +232,12 @@ export function ClosedScreen({
       <div className="grid gap-5 lg:grid-cols-2">
         <div className="bg-raise border border-line">
           <header className="border-b border-line px-4 py-3">
-            <Eyebrow tone="text-danger-deep">What went wrong</Eyebrow>
+            <Eyebrow tone="text-tone-bad">What went wrong</Eyebrow>
           </header>
           <ul className="p-4 space-y-2">
             {read.wrong.map((line, i) => (
               <li key={i} className="text-sm text-ink flex gap-2">
-                <span className="text-danger">—</span>
+                <span className="text-tone-bad">—</span>
                 <span>{line}</span>
               </li>
             ))}
@@ -246,12 +246,12 @@ export function ClosedScreen({
 
         <div className="bg-raise border border-line">
           <header className="border-b border-line px-4 py-3">
-            <Eyebrow tone="text-teal-deep">What went right</Eyebrow>
+            <Eyebrow tone="text-tone-good">What went right</Eyebrow>
           </header>
           <ul className="p-4 space-y-2">
             {read.right.map((line, i) => (
               <li key={i} className="text-sm text-ink flex gap-2">
-                <span className="text-teal-deep">—</span>
+                <span className="text-tone-good">—</span>
                 <span>{line}</span>
               </li>
             ))}
@@ -305,7 +305,7 @@ export function ClosedScreen({
       )}
 
       <div>
-        <Eyebrow tone="text-danger-deep">How the quarter narrowed</Eyebrow>
+        <Eyebrow tone="text-tone-bad">How the quarter narrowed</Eyebrow>
         <h3 className="font-serif text-xl mb-2 text-ink">The constraint chain</h3>
         <ConstraintChain r={r} />
         <TeachingNote id="constraint" />

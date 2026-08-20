@@ -46,12 +46,12 @@ function DecisionCard({
         <div className="min-w-0 flex-1">
           <div className="font-serif text-lg text-ink">{item.name}</div>
           <div className="grid gap-x-6 gap-y-1 sm:grid-cols-2 mt-2">
-            <div className="text-xs text-teal-deep leading-snug">
+            <div className="text-xs text-tone-good leading-snug">
               <span className="uppercase tracking-widest font-semibold">You gain</span>
               <br />
               {item.gain}
             </div>
-            <div className="text-xs text-danger-deep leading-snug">
+            <div className="text-xs text-tone-bad leading-snug">
               <span className="uppercase tracking-widest font-semibold">You give up</span>
               <br />
               {item.cost}
@@ -79,7 +79,7 @@ function DecisionCard({
               {cash > 0 ? " · " + daysOfCash + " days of cash" : ""}
             </div>
           )}
-          {overridden && <div className="text-xs text-ember-deep mt-1">set in detail view</div>}
+          {overridden && <div className="text-xs text-tone-watch mt-1">set in detail view</div>}
         </div>
       </div>
       {item.learn && (
@@ -127,7 +127,7 @@ function DetailLineRow({
             onChange={(e) => onChange(e.target.value.replace(/^-/, ""))}
             className={
               "w-24 border px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink " +
-              (overCap ? "border-danger text-danger-deep" : "border-line-2")
+              (overCap ? "border-danger text-tone-bad" : "border-line-2")
             }
           />
           <span className="text-xs uppercase tracking-widest text-dim w-10">lakh</span>
@@ -135,7 +135,7 @@ function DetailLineRow({
       </div>
       <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
         {preview.map((p, i) => (
-          <span key={i} className={"text-xs font-mono " + (i === 0 ? "text-teal-deep" : "text-dim")}>
+          <span key={i} className={"text-xs font-mono " + (i === 0 ? "text-tone-good" : "text-dim")}>
             {p}
           </span>
         ))}
@@ -184,7 +184,7 @@ export function DepartmentScreen({
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <Eyebrow tone="text-danger-deep">{meta.label}</Eyebrow>
+          <Eyebrow tone="text-tone-bad">{meta.label}</Eyebrow>
           <h2 className="font-serif text-3xl text-ink">{meta.question}</h2>
         </div>
         <div className="text-right">

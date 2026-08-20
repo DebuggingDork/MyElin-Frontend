@@ -22,16 +22,16 @@ import { clamp, cr, inr, n0, n1 } from "@/lib/simulation/format";
 import type { Budget, HealthBar, InboxMessage, QuarterResultShape, Readiness, Tone } from "@/lib/simulation/types";
 
 /* ── chart colours ────────────────────────────────────────────────────
-   SVG and recharts take paint values, not Tailwind classes, so these few
-   have to be literal. They are the same palette the `.simulation` block in
-   globals.css pins -- that surface is a fixed light document and does not
-   follow the app's dark/light toggle, so a literal here cannot go stale
-   against the theme the way it would anywhere else. */
+   SVG and recharts take paint values rather than Tailwind classes, so these
+   are written as `var()` references instead of class names. CSS variables
+   resolve in SVG presentation attributes, which means the charts follow the
+   theme the same way everything else in `.simulation` does -- a literal hex
+   here would go stale against the dark theme. */
 
-const CHART_RISE = "#004f4f"; // --teal-deep
-const CHART_FALL = "#9f1239"; // between --danger and --danger-deep
-const CHART_GRID = "#f0c9a8"; // --sim-line
-const CHART_AXIS = "#7a6552"; // --faint
+const CHART_RISE = "var(--tone-good)";
+const CHART_FALL = "var(--tone-bad)";
+const CHART_GRID = "var(--sim-line)";
+const CHART_AXIS = "var(--faint)";
 
 /* ── type and rules ───────────────────────────────────────────────── */
 
@@ -52,7 +52,7 @@ export function Eyebrow({
    retyped at each call site.
 
    Each part names its own colour instead of inheriting one. Selected cards
-   sit on the fixed-dark `bg-chrome`, unselected on the cream `bg-raise`, so
+   sit on the always-dark `bg-chrome`, unselected on the themed `bg-raise`, so
    a child that leaves `color` unset inherits whichever surface it happens to
    land on -- which is what left unselected card titles rendering near-white
    on cream. Stating the colour per state removes that coupling. */
@@ -66,8 +66,9 @@ export const optionCard = (on: boolean, pad = "p-3") =>
 /** The card's name. Carries the weight, so it takes the strongest ink either way. */
 export const optionTitle = (on: boolean) => (on ? "text-white" : "text-ink");
 
-/** The teal consequence line ("cost -3.0% · reliability +3"). */
-export const optionMeta = (on: boolean) => (on ? "text-teal-bright" : "text-teal-deep");
+/** The teal consequence line ("cost -3.0% · reliability +3"). Not state-dependent:
+ *  `tone-good` already resolves light on the selected card's dark surface. */
+export const optionMeta = "text-tone-good";
 
 /** Supporting prose under the title. One step quieter than the name, never faint enough to lose. */
 export const optionNote = (on: boolean) => (on ? "text-faint" : "text-dim");
@@ -187,13 +188,13 @@ export function TeachingNote({ id, inline }: { id?: string; inline?: boolean }) 
     <div className={inline ? "mt-2" : "mt-3"}>
       <button
         onClick={() => setOpen(!open)}
-        className="text-xs uppercase tracking-widest font-semibold text-dim hover:text-danger-deep border-b border-dotted border-line-2"
+        className="text-xs uppercase tracking-widest font-semibold text-dim hover:text-tone-bad border-b border-dotted border-line-2"
       >
         {open ? "Hide note" : "Why this works this way"}
       </button>
       {open && (
         <div className="mt-2 border-l-2 border-line-2 bg-raise px-3 py-2">
-          <div className="text-xs uppercase tracking-widest text-danger-deep font-semibold">{note.cat}</div>
+          <div className="text-xs uppercase tracking-widest text-tone-bad font-semibold">{note.cat}</div>
           <div className="font-serif text-base text-ink mt-0.5">{note.title}</div>
           <p className="text-sm text-ink mt-1 leading-snug">{note.body}</p>
         </div>
@@ -228,7 +229,7 @@ export function Inbox({
     <div>
       <div className="flex flex-wrap items-baseline justify-between gap-2 mb-2">
         <div>
-          <Eyebrow tone="text-danger-deep">{eyebrow}</Eyebrow>
+          <Eyebrow tone="text-tone-bad">{eyebrow}</Eyebrow>
           <h3 className="font-serif text-xl text-ink">{title}</h3>
         </div>
         {limit && messages.length > limit && (
@@ -374,7 +375,7 @@ export function TrendStat({
         <div className="text-right shrink-0">
           <Sparkline values={pts} tone={invert ? "invert" : "normal"} />
           {delta !== null && (
-            <div className={"text-xs font-mono " + (better ? "text-teal-deep" : "text-danger")}>
+            <div className={"text-xs font-mono " + (better ? "text-tone-good" : "text-tone-bad")}>
               {better ? "▲" : "▼"} {Math.abs(delta) >= 1000 ? n0(Math.abs(delta)) : n1(Math.abs(delta))}
             </div>
           )}
@@ -472,10 +473,10 @@ export function BudgetMeter({ budget }: { budget: Budget }) {
   return (
     <div className={"border px-4 py-3 " + (over ? "border-danger bg-danger/10" : "border-line bg-raise")}>
       <div className="flex flex-wrap items-baseline justify-between gap-2 mb-2">
-        <Eyebrow tone={over ? "text-danger-deep" : "text-dim"}>
+        <Eyebrow tone={over ? "text-tone-bad" : "text-dim"}>
           {over ? "Over the quarter's ceiling" : "Cash left to commit"}
         </Eyebrow>
-        <div className={"font-mono text-lg " + (over ? "text-danger-deep" : "text-ink")}>
+        <div className={"font-mono text-lg " + (over ? "text-tone-bad" : "text-ink")}>
           {inr(left)} <span className="text-faint text-xs">of {inr(budget.ceiling)}</span>
         </div>
       </div>

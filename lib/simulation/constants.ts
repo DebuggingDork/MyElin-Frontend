@@ -1640,10 +1640,10 @@ export const PIPELINE_STAGE_BG: Record<string, string> = {
    is what had white and blue-tinted cards landing on a warm background. */
 
 export const TONE_TEXT: Record<Tone, string> = {
-  good: "text-teal-deep",
-  watch: "text-ember-deep",
-  bad: "text-danger-deep",
-  flat: "text-ink",
+  good: "text-tone-good",
+  watch: "text-tone-watch",
+  bad: "text-tone-bad",
+  flat: "text-tone-flat",
 };
 
 export const TONE_BAR: Record<Tone, string> = {
@@ -1660,12 +1660,12 @@ export const TONE_CARD: Record<Tone, string> = {
   flat: "bg-raise border-line",
 };
 
-/** The ticker runs on the fixed-dark chrome, so its tones are the light end of each family. */
+/** The ticker runs on the fixed-dark chrome, where the tone tokens are already light. */
 export const TICKER_TONE: Record<Tone, string> = {
-  good: "text-teal-bright",
-  watch: "text-ember-soft",
-  bad: "text-danger-soft",
-  flat: "text-white",
+  good: "text-tone-good",
+  watch: "text-tone-watch",
+  bad: "text-tone-bad",
+  flat: "text-tone-flat",
 };
 
 export const MESSAGE_TONE: Record<string, { border: string; tag: string; label: string }> = {

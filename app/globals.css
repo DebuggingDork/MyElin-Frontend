@@ -71,6 +71,13 @@
   --danger-soft: #fda4af;
   --danger-deep: #881337;
 
+  /* Status text tones, light for the dark app surface. `.simulation` restates both
+     of these for its own subtree; these are the app-wide fallback. */
+  --tone-good: var(--teal-bright);
+  --tone-watch: var(--ember-soft);
+  --tone-bad: var(--danger-soft);
+  --tone-flat: var(--text);
+
   /* A dark chrome surface that does NOT flip with the theme -- for the simulation module's
      header banners, primary CTAs and "selected" states, which pair it with fixed `text-white`
      (the reference's own `bg-stone-900 text-white` idiom). `--void` flips per theme by design,
@@ -167,6 +174,12 @@
   --danger-soft: #fda4af;
   --danger-deep: #881337;
 
+  /* Deepened for a pale ground, the same way teal and ember are. */
+  --tone-good: var(--teal-deep);
+  --tone-watch: var(--ember-deep);
+  --tone-bad: var(--danger-deep);
+  --tone-flat: var(--text);
+
   /* Same fixed dark chrome as the dark block -- see the comment there. */
   --chrome: #0a221c;
 
@@ -237,6 +250,13 @@
   --color-sim-line: var(--sim-line);
   --color-sim-faint: var(--sim-faint);
   --color-sim-ink: var(--sim-ink);
+
+  /* Status text tones. Text-only, so unlike --teal-deep/--danger-deep they are
+     free to flip with the theme -- see the `.simulation` block below. */
+  --color-tone-good: var(--tone-good);
+  --color-tone-watch: var(--tone-watch);
+  --color-tone-bad: var(--tone-bad);
+  --color-tone-flat: var(--tone-flat);
 
   /* Brand aliases → teal */
   --color-bg: var(--base);
@@ -1093,20 +1113,79 @@ body {
    specificity, so Tailwind's own `border-stone-300` utilities still win and
    only the unspecified case changes. */
 
-.simulation {
-  color-scheme: light;
-  background: #fff0e4;
-  color: #1c1917;
+/* The simulation redefines the shared tokens for its own subtree rather than
+   inheriting the app's. Its screens are written in ordinary utilities
+   (text-ink, bg-raise, border-line), so restating the variables retunes every
+   screen at once instead of patching each file.
 
-  /* Pin every shared design token the simulation's own screens read through
-     ordinary Tailwind utilities (text-ink, text-dim, bg-raise, border-line,
-     ...) to fixed light/cream values. `color`/`border-color` above only
-     override the property on elements that don't set it explicitly -- any
-     descendant using `text-ink` etc. still resolves `var(--text)` against
-     whatever the app's dark/light toggle currently has, which is how white
-     text ended up on this cream surface in dark mode. Redefining the
-     variables themselves closes that gap for every screen at once instead
-     of patching each file's className. */
+   Both themes are defined. The dark block is the base and the light block
+   overrides it, matching how :root and :root[data-theme="light"] are ordered
+   at the top of this file -- the simulation follows the app's toggle like
+   everything else. */
+
+.simulation {
+  color-scheme: dark;
+  background: var(--base);
+  color: var(--text);
+
+  --void: #0b201c;
+  --base: #0b201c;
+  --raise: #12302a;
+  --raise-2: #1a4038;
+  --panel: rgba(36, 177, 177, 0.06);
+  --panel-2: rgba(36, 177, 177, 0.1);
+  --line: rgba(36, 177, 177, 0.2);
+  --line-2: rgba(36, 177, 177, 0.32);
+  --field: #12302a;
+  --field-hover: #1a4038;
+
+  /* Warm off-white rather than pure white: the simulation's identity is the
+     cream document, and this keeps that warmth when the lights go out. */
+  --text: #f5ece3;
+  --dim: #b0c2ba;
+  --faint: #869890;
+
+  --teal: #2fbdbd;
+  --teal-bright: #5fd6d6;
+  /* Stays dark in both themes: it is a *background* (the active rail item,
+     `bg-teal-deep text-white`), not a text colour. Text uses --tone-good. */
+  --teal-deep: #0f6b6b;
+  --teal-soft: #8fdada;
+
+  --ember: #e8845f;
+  --ember-soft: #f2a488;
+  --ember-deep: #b8542f;
+
+  --violet: #2fbdbd;
+  --violet-2: #8fdada;
+  --indigo: #0f6b6b;
+  --cyan: #5fd6d6;
+  --emerald: #5fd6d6;
+  --rose: #f5ece3;
+  --pink: #8fdada;
+
+  /* Status text. Separate from the surface tokens above because those double
+     as backgrounds and cannot flip: --teal-deep and --danger-deep both need
+     to stay dark enough to carry white text. These are text-only, so they
+     are free to go light on a dark surface and dark on a light one. */
+  --tone-good: #5fd6d6;
+  --tone-watch: #f2a488;
+  --tone-bad: #fda4af;
+  --tone-flat: var(--text);
+
+  /* The rail and its toolbar. Their own names because the rail sits one step
+     off the document surface rather than on it. */
+  --sim-surface: #0d2621;
+  --sim-surface-raised: #12302a;
+  --sim-surface-hover: #1a4038;
+  --sim-line: #1d3f38;
+  --sim-faint: #869890;
+  --sim-ink: #f5ece3;
+}
+
+:root[data-theme="light"] .simulation {
+  color-scheme: light;
+
   --void: #fff0e4;
   --base: #fff0e4;
   --raise: #ffe0c5;
@@ -1120,7 +1199,9 @@ body {
 
   --text: #1c1917;
   --dim: #5c4d40;
-  --faint: #7a6552;
+  /* Measured against --raise (#ffe0c5), not the page: the lighter #7a6552 came
+     out at 4.39:1 on a card, just under AA for body text. */
+  --faint: #6b5745;
 
   --teal: #007979;
   --teal-bright: #0f9d9d;
@@ -1139,9 +1220,11 @@ body {
   --rose: #1c1917;
   --pink: #24b1b1;
 
-  /* Sidebar + toolbar tokens (see chrome() in SimulationApp.tsx). Same
-     cream/peach family as above, kept as their own names since the sidebar
-     wants a slightly different step (raised card vs. page background). */
+  --tone-good: #004f4f;
+  --tone-watch: #7d3311;
+  --tone-bad: #881337;
+  --tone-flat: var(--text);
+
   --sim-surface: #fff0e4;
   --sim-surface-raised: #ffe0c5;
   --sim-surface-hover: #ffd6ae;
@@ -1150,23 +1233,26 @@ body {
   --sim-ink: #1c1917;
 }
 
-/* Dark inversions inside the simulation -- the header/ticker banner, the
-   "biggest constraint" card, the selected-priority button, and more --
-   pair a `bg-chrome`/`bg-danger-deep` patch with `text-white` and rely on
-   text-dim/text-faint for secondary copy inside it. Those patches sit on
-   the fixed-dark --chrome/--danger-deep surfaces, not the cream document,
-   so they need light text on dark: the opposite of the override just
-   above. An attribute selector catches every such patch across the
-   simulation's ~dozen screen files without a className on each one. */
+/* Dark patches inside the simulation -- the header/ticker banner, the
+   "biggest constraint" card, the selected option card -- pair a
+   `bg-chrome`/`bg-danger-deep` background with `text-white` and lean on
+   text-dim/text-faint for secondary copy. Those two surfaces stay dark in
+   both themes, so the tokens inside them are light in both themes. An
+   attribute selector catches every such patch across the simulation's dozen
+   screen files without a className on each one. */
 :where(.simulation) [class*="bg-chrome"],
 :where(.simulation) [class*="bg-danger-deep"] {
   --text: #ffffff;
   --dim: #9fb3ac;
   --faint: #71847d;
+  --tone-good: #5fd6d6;
+  --tone-watch: #f2a488;
+  --tone-bad: #fda4af;
+  --tone-flat: #ffffff;
 }
 
 :where(.simulation) * {
-  border-color: #f0c9a8;
+  border-color: var(--sim-line);
 }
 
 .simulation :focus-visible {

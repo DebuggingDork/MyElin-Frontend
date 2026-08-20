@@ -164,7 +164,7 @@ export function BriefingScreen({
       </Panel>
 
       <div>
-        <Eyebrow tone="text-danger-deep">Since you last looked</Eyebrow>
+        <Eyebrow tone="text-tone-bad">Since you last looked</Eyebrow>
         <h3 className="font-serif text-xl mb-2 text-ink">What changed</h3>
         <div className="space-y-1">
           {changes.map((c, i) => (
@@ -178,7 +178,7 @@ export function BriefingScreen({
               <span
                 className={
                   "font-mono text-xs " +
-                  (c.dir === "up" ? "text-teal-deep" : c.dir === "down" ? "text-danger" : "text-dim")
+                  (c.dir === "up" ? "text-tone-good" : c.dir === "down" ? "text-tone-bad" : "text-dim")
                 }
               >
                 {c.dir === "up" ? "▲" : c.dir === "down" ? "▼" : "●"}
@@ -232,7 +232,7 @@ export function BriefingScreen({
                 <span
                   className={
                     "text-xs uppercase tracking-widest font-semibold " +
-                    (b.met === null ? "text-dim" : b.met ? "text-teal-deep" : "text-danger-deep")
+                    (b.met === null ? "text-dim" : b.met ? "text-tone-good" : "text-tone-bad")
                   }
                 >
                   {b.met === null ? "Watching" : b.met ? "Satisfied" : "Not satisfied"}

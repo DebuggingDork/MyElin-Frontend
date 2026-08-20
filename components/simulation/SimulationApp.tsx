@@ -562,9 +562,29 @@ export function SimulationApp() {
    *  the two can never drift apart. */
   const navBody = (
     <>
-      <p className="px-2 pb-2 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-sim-faint">
-        Nadi Wear · 4 quarters
-      </p>
+      {/* The collapse control lives on the rail it collapses, not out beside the brand
+          mark, so it reads as part of the panel rather than a stray toolbar icon. */}
+      <div className="flex items-center justify-between gap-2 pb-2 pl-2">
+        <p className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-sim-faint">
+          Nadi Wear · 4 quarters
+        </p>
+        <button
+          type="button"
+          onClick={toggleNav}
+          aria-label="Collapse navigation"
+          className="hidden h-7 w-7 shrink-0 items-center justify-center rounded-md text-sim-faint transition-colors hover:bg-sim-surface-hover hover:text-sim-ink lg:flex"
+        >
+          <PanelLeftClose className="h-4 w-4" />
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobileNavOpen(false)}
+          aria-label="Close navigation"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-sim-faint transition-colors hover:bg-sim-surface-hover hover:text-sim-ink lg:hidden"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
       <nav className="flex-1 space-y-1 overflow-y-auto">
         {tabs.map((t) => (
           <button
@@ -579,7 +599,7 @@ export function SimulationApp() {
               tab === t.id
                 ? "border-teal-deep bg-teal-deep text-white font-medium"
                 : t.hot
-                  ? "border-sim-line bg-sim-surface-raised text-danger-deep hover:border-danger/40"
+                  ? "border-sim-line bg-sim-surface-raised text-tone-bad hover:border-danger/40"
                   : "border-sim-line bg-sim-surface-raised text-sim-ink hover:border-teal/40 hover:bg-sim-surface-hover",
             )}
           >
@@ -611,31 +631,37 @@ export function SimulationApp() {
             reading the app's own light/dark tokens (text-ink etc.) instead of clashing with
             the simulation's fixed cream surface below. */}
         <div className="flex shrink-0 items-center justify-between gap-3 border-b border-line bg-base px-4 py-2 sm:px-6 lg:px-8">
-          <div className="flex min-w-0 items-center gap-2">
+          <div className="flex min-w-0 items-center gap-3">
+            <Link href="/" aria-label="Myelin home" className="flex shrink-0 items-center">
+              <Logo variant="glyph" />
+            </Link>
+            {/* Only shown when there is no rail to collapse from: the drawer trigger below
+                lg, and the re-open control once the desktop rail is closed. */}
             {showNav && (
               <>
                 <button
                   type="button"
                   onClick={() => setMobileNavOpen(true)}
                   aria-label="Open navigation"
-                  className="flex h-8 w-8 items-center justify-center rounded-md text-dim transition-colors hover:bg-[var(--panel-2)] hover:text-ink lg:hidden"
+                  className="flex h-8 items-center gap-1.5 rounded-md px-2 text-[13px] text-dim transition-colors hover:bg-[var(--panel-2)] hover:text-ink lg:hidden"
                 >
                   <PanelLeftOpen className="h-4 w-4" />
+                  Menu
                 </button>
-                <button
-                  type="button"
-                  onClick={toggleNav}
-                  aria-label={navOpen ? "Collapse navigation" : "Expand navigation"}
-                  aria-expanded={navOpen}
-                  className="hidden h-8 w-8 items-center justify-center rounded-md text-dim transition-colors hover:bg-[var(--panel-2)] hover:text-ink lg:flex"
-                >
-                  {navOpen ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
-                </button>
+                {!navOpen && (
+                  <button
+                    type="button"
+                    onClick={toggleNav}
+                    aria-label="Expand navigation"
+                    aria-expanded={false}
+                    className="hidden h-8 items-center gap-1.5 rounded-md px-2 text-[13px] text-dim transition-colors hover:bg-[var(--panel-2)] hover:text-ink lg:flex"
+                  >
+                    <PanelLeftOpen className="h-4 w-4" />
+                    Departments
+                  </button>
+                )}
               </>
             )}
-            <Link href="/" aria-label="Myelin home" className="flex shrink-0 items-center">
-              <Logo variant="glyph" />
-            </Link>
           </div>
           <div className="flex shrink-0 items-center gap-3">
             <ThemeToggle />
@@ -660,16 +686,6 @@ export function SimulationApp() {
                 className="fixed inset-0 z-40 bg-black/50 lg:hidden"
               />
               <aside className="fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col border-r border-sim-line bg-sim-surface px-3 py-4 shadow-xl lg:hidden">
-                <div className="mb-1 flex justify-end">
-                  <button
-                    type="button"
-                    onClick={() => setMobileNavOpen(false)}
-                    aria-label="Close navigation"
-                    className="flex h-8 w-8 items-center justify-center rounded-md text-sim-faint transition-colors hover:bg-sim-surface-hover hover:text-sim-ink"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
                 {navBody}
               </aside>
             </>
@@ -736,7 +752,7 @@ export function SimulationApp() {
   );
 
   const errorBanner = error && (
-    <div className="border-l-4 border-danger bg-danger/10 px-4 py-3 text-sm text-danger-deep">{error}</div>
+    <div className="border-l-4 border-danger bg-danger/10 px-4 py-3 text-sm text-tone-bad">{error}</div>
   );
 
   /* ── render ───────────────────────────────────────────────────── */

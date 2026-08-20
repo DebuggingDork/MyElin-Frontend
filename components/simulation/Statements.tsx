@@ -50,7 +50,7 @@ export function BalanceSheet({
             <div
               className={
                 "hidden sm:block sm:col-span-1 text-right font-mono text-xs " +
-                (move >= 0 ? "text-teal-deep" : "text-danger")
+                (move >= 0 ? "text-tone-good" : "text-tone-bad")
               }
             >
               {(move >= 0 ? "+" : "") + n0(move / 1000)}k
@@ -81,7 +81,7 @@ export function BalanceSheet({
         )}
       </div>
 
-      <div className="mt-2 text-xs uppercase tracking-widest text-danger-deep font-semibold py-1">Assets</div>
+      <div className="mt-2 text-xs uppercase tracking-widest text-tone-bad font-semibold py-1">Assets</div>
       {row("Cash and equivalents", "cash", "", true)}
       {row("Accounts receivable", "ar", "uncollected sales", true)}
       {row("Inventory", "inventory", n0((close || open).invUnits) + " units at cost", true)}
@@ -89,13 +89,13 @@ export function BalanceSheet({
       {row("Intellectual property", "ip", "innovation board, amortised", true)}
       {row("Total assets", "assets", "")}
 
-      <div className="mt-3 text-xs uppercase tracking-widest text-danger-deep font-semibold py-1">Liabilities</div>
+      <div className="mt-3 text-xs uppercase tracking-widest text-tone-bad font-semibold py-1">Liabilities</div>
       {row("Accounts payable", "ap", "owed to suppliers", true)}
       {row("Borrowings", "debt", "credit facility drawn", true)}
       {row("Other liabilities", "other", "fixed", true)}
       {row("Total liabilities", "liabilities", "")}
 
-      <div className="mt-3 text-xs uppercase tracking-widest text-danger-deep font-semibold py-1">Equity</div>
+      <div className="mt-3 text-xs uppercase tracking-widest text-tone-bad font-semibold py-1">Equity</div>
       {row("Share capital", "share", "seed round", true)}
       {row("Retained earnings", "re", "accumulated profit and loss", true)}
       {row("Total equity", "equity", "")}
@@ -209,7 +209,7 @@ export function ProfitAndLoss({ r }: { r: QuarterResultShape }) {
         working="carried to retained earnings"
         value={inr(v(r, "netProfit"))}
         strong
-        tone={v(r, "netProfit") >= 0 ? "text-teal-deep" : "text-danger-deep"}
+        tone={v(r, "netProfit") >= 0 ? "text-tone-good" : "text-tone-bad"}
         flag={v(r, "netProfit") < 0}
       />
     </Panel>
@@ -226,7 +226,7 @@ export function CashFlow({ r }: { r: QuarterResultShape }) {
       eyebrow="Cash flow statement"
       title={"Opening " + inr(v(r, "openingCash")) + " → closing " + inr(v(r, "cash"))}
     >
-      <div className="text-xs uppercase tracking-widest text-danger-deep font-semibold py-1">Operating</div>
+      <div className="text-xs uppercase tracking-widest text-tone-bad font-semibold py-1">Operating</div>
       <LedgerRow
         label="Collections from customers"
         working={"revenue less the " + n0(v(r, "arDays")) + "-day receivable"}
@@ -267,10 +267,10 @@ export function CashFlow({ r }: { r: QuarterResultShape }) {
         working=""
         value={inr(v(r, "operatingCF"))}
         strong
-        tone={v(r, "operatingCF") >= 0 ? "text-teal-deep" : "text-danger-deep"}
+        tone={v(r, "operatingCF") >= 0 ? "text-tone-good" : "text-tone-bad"}
       />
 
-      <div className="text-xs uppercase tracking-widest text-danger-deep font-semibold py-1 mt-2">Investing</div>
+      <div className="text-xs uppercase tracking-widest text-tone-bad font-semibold py-1 mt-2">Investing</div>
       <LedgerRow
         label="Plant and capacity"
         working={v(r, "capacityAdded") > 0 ? "+" + n0(v(r, "capacityAdded")) + " units a quarter" : "no capex"}
@@ -289,7 +289,7 @@ export function CashFlow({ r }: { r: QuarterResultShape }) {
       />
       <LedgerRow label="Cash used in investing" working="" value={inr(v(r, "investingCF"))} strong />
 
-      <div className="text-xs uppercase tracking-widest text-danger-deep font-semibold py-1 mt-2">Financing</div>
+      <div className="text-xs uppercase tracking-widest text-tone-bad font-semibold py-1 mt-2">Financing</div>
       <LedgerRow
         label="Credit drawn"
         working={v(r, "drawRejected") > 1 ? inr(v(r, "drawRejected")) + " refused" : "within the limit"}
@@ -311,7 +311,7 @@ export function CashFlow({ r }: { r: QuarterResultShape }) {
         working={r.wcBreached ? "closes below the buffer" : "buffer intact"}
         value={inr(v(r, "netCF"))}
         strong
-        tone={v(r, "netCF") >= 0 ? "text-teal-deep" : "text-danger-deep"}
+        tone={v(r, "netCF") >= 0 ? "text-tone-good" : "text-tone-bad"}
         flag={Boolean(r.wcBreached)}
       />
     </Panel>
@@ -482,7 +482,7 @@ export function ConstraintChain({ r }: { r: QuarterResultShape }) {
     <div className="bg-raise border border-line">
       <header className="border-b border-line px-4 py-3 flex flex-wrap items-baseline justify-between gap-2">
         <div>
-          <Eyebrow tone="text-danger-deep">Where the quarter narrowed</Eyebrow>
+          <Eyebrow tone="text-tone-bad">Where the quarter narrowed</Eyebrow>
           <h3 className="font-serif text-lg text-ink">The constraint chain</h3>
         </div>
         <div className="text-xs text-dim uppercase tracking-widest">Ledger red marks the binding gate</div>
@@ -508,7 +508,7 @@ export function ConstraintChain({ r }: { r: QuarterResultShape }) {
                 (row.final
                   ? "text-white font-semibold"
                   : row.bind
-                    ? "text-danger-deep font-semibold"
+                    ? "text-tone-bad font-semibold"
                     : row.strong
                       ? "font-semibold text-ink"
                       : "text-ink")
@@ -518,7 +518,7 @@ export function ConstraintChain({ r }: { r: QuarterResultShape }) {
             </div>
             <div
               className={
-                "font-mono text-lg " + (row.final ? "text-white" : row.bind ? "text-danger-deep" : "text-ink")
+                "font-mono text-lg " + (row.final ? "text-white" : row.bind ? "text-tone-bad" : "text-ink")
               }
             >
               {row.v} <span className={"text-xs " + (row.final ? "text-faint" : "text-dim")}>{row.u}</span>
@@ -526,7 +526,7 @@ export function ConstraintChain({ r }: { r: QuarterResultShape }) {
             <div
               className={
                 "text-xs font-mono flex-1 min-w-full sm:min-w-0 " +
-                (row.final ? "text-faint" : row.bind ? "text-danger-deep" : "text-dim")
+                (row.final ? "text-faint" : row.bind ? "text-tone-bad" : "text-dim")
               }
             >
               {row.w}

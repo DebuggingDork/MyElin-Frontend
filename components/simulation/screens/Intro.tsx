@@ -14,7 +14,7 @@ export function IntroScreen({ onStart, busy }: { onStart: () => void; busy?: boo
     <div className="max-w-5xl mx-auto space-y-6">
       <div className="grid gap-8 lg:grid-cols-[1.3fr_1fr] lg:items-start">
         <div>
-          <Eyebrow tone="text-danger-deep">Four quarters. One company. You.</Eyebrow>
+          <Eyebrow tone="text-tone-bad">Four quarters. One company. You.</Eyebrow>
           <h1 className="font-serif text-6xl text-ink leading-[0.95] mt-3 text-balance">Nadi Wear</h1>
           <p className="font-mono text-sm text-dim mt-2">Pvt. Ltd. · Bengaluru, Karnataka</p>
 

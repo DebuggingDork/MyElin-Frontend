@@ -115,7 +115,7 @@ export function CrisisScreen({
       {step === 1 && (
         <div className="space-y-3">
           <div>
-            <Eyebrow tone="text-danger-deep">Step two</Eyebrow>
+            <Eyebrow tone="text-tone-bad">Step two</Eyebrow>
             <h3 className="font-serif text-xl text-ink">What each function is seeing</h3>
             <p className="text-sm text-dim mt-1">Some of this is relevant. Some of it is not.</p>
           </div>
@@ -166,7 +166,7 @@ export function CrisisScreen({
       {step === 3 && (
         <div className="space-y-3">
           <div>
-            <Eyebrow tone="text-danger-deep">Step four</Eyebrow>
+            <Eyebrow tone="text-tone-bad">Step four</Eyebrow>
             <h3 className="font-serif text-xl text-ink">How will you respond?</h3>
             <p className="text-sm text-dim mt-1">
               These are directions, not budgets. You decide how much to put behind it next.
@@ -189,12 +189,12 @@ export function CrisisScreen({
                   <div className="font-serif text-xl text-ink">{c.name}</div>
                   <p className="text-sm text-ink mt-1">{c.thesis}</p>
                   <div className="grid gap-x-4 gap-y-1 sm:grid-cols-2 mt-3">
-                    <div className="text-xs text-teal-deep">
+                    <div className="text-xs text-tone-good">
                       <span className="uppercase tracking-widest font-semibold">Upside</span>
                       <br />
                       {c.gain}
                     </div>
-                    <div className="text-xs text-danger-deep">
+                    <div className="text-xs text-tone-bad">
                       <span className="uppercase tracking-widest font-semibold">Exposure</span>
                       <br />
                       {c.risk}
