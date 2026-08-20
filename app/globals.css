@@ -19,10 +19,10 @@
   --raise: #12362c;
   --raise-2: #1a4738;
 
-  --panel: rgba(45, 212, 191, 0.05);
-  --panel-2: rgba(45, 212, 191, 0.09);
-  --line: rgba(94, 234, 212, 0.14);
-  --line-2: rgba(94, 234, 212, 0.22);
+  --panel: rgba(36, 177, 177, 0.05);
+  --panel-2: rgba(36, 177, 177, 0.09);
+  --line: rgba(36, 177, 177, 0.18);
+  --line-2: rgba(36, 177, 177, 0.28);
 
   /* The opaque twin of --panel-2, pre-composited over --void. Form controls the browser
      paints itself (`<select>` and its option popup) cannot use a translucent wash: see
@@ -36,11 +36,12 @@
   --dim: #9fb3ac;
   --faint: #71847d;
 
-  /* Teal brand */
-  --teal: #14b8a6;
-  --teal-bright: #2dd4bf;
-  --teal-deep: #0f766e;
-  --teal-soft: #5eead4;
+  /* Teal brand — Color Hunt "00797924b1b1fff0e4ffe0c5" palette: #007979 / #24b1b1
+     carry the accent, tinted lighter/darker for the bright/deep/soft steps. */
+  --teal: #24b1b1;
+  --teal-bright: #4dcccc;
+  --teal-deep: #146363;
+  --teal-soft: #8fdada;
 
   /* Ember — the one warm voice, teal's complement. It is never decoration: it marks
      cost, pressure and consequence (burn, morale, crisis, at-cap, distressed), which is
@@ -50,18 +51,18 @@
   --ember-deep: #b8542f;
 
   /* Legacy accent names → teal / ember / grey scale */
-  --violet: #14b8a6;
-  --violet-2: #5eead4;
-  --indigo: #0f766e;
-  --cyan: #2dd4bf;
-  --emerald: #2dd4bf;
+  --violet: #24b1b1;
+  --violet-2: #8fdada;
+  --indigo: #146363;
+  --cyan: #4dcccc;
+  --emerald: #4dcccc;
   /* amber/orange were grey (#a8b2ba/#8b969e) app-wide, which meant every warning,
      "at cap", "distressed" and crisis state was rendered in the same neutral as body
      chrome. Both now resolve to ember so a warning actually looks like one. */
   --amber: var(--ember);
   --orange: var(--ember-soft);
   --rose: #e8eef0;
-  --pink: #5eead4;
+  --pink: #8fdada;
 
   /* Real red — deliberately not folded into ember. Reserved for states ember/--rose can't
      say: simulation crisis severity, hard failure. Same hex the Nadi Wear reference itself
@@ -76,10 +77,10 @@
      so reusing it here would turn these into unreadable white-on-near-white in light mode. */
   --chrome: #0a221c;
 
-  --grad-primary: linear-gradient(135deg, #0f766e 0%, #14b8a6 48%, #2dd4bf 100%);
-  --grad-cool: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+  --grad-primary: linear-gradient(135deg, #146363 0%, #24b1b1 48%, #4dcccc 100%);
+  --grad-cool: linear-gradient(135deg, #146363 0%, #24b1b1 100%);
   --grad-warm: linear-gradient(135deg, #71847d 0%, #9fb3ac 55%, #e8eef0 100%);
-  --grad-iris: linear-gradient(135deg, #0f766e 0%, #14b8a6 50%, #5eead4 100%);
+  --grad-iris: linear-gradient(135deg, #146363 0%, #24b1b1 50%, #8fdada 100%);
 
   /* One curve for anything entering, leaving or responding to a pointer; one for things
      that move on screen without appearing. The built-in CSS keywords are too weak to
@@ -95,17 +96,17 @@
   --motion-out: cubic-bezier(0.23, 1, 0.32, 1);
   --motion-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 
-  --focus-ring: 0 0 0 3px rgba(20, 184, 166, 0.4);
+  --focus-ring: 0 0 0 3px rgba(36, 177, 177, 0.4);
   --shadow-lift: 0 1px 0 rgba(255, 255, 255, 0.04) inset,
     0 24px 60px -30px rgba(7, 26, 22, 0.9);
 
   --glass-highlight: rgba(255, 255, 255, 0.07);
   --glass-shadow: 0 24px 48px -28px rgba(2, 10, 8, 0.65);
-  --glass-tint: linear-gradient(165deg, rgba(45, 212, 191, 0.1), rgba(45, 212, 191, 0.02) 60%);
+  --glass-tint: linear-gradient(165deg, rgba(36, 177, 177, 0.1), rgba(36, 177, 177, 0.02) 60%);
 
   /* Backdrop layers (.aurora / .grid-lines / .dot-grid) read from these rather than
      hardcoding dark-theme values, so one set of rules serves both themes. */
-  --wash-1: rgba(20, 184, 166, 0.38);
+  --wash-1: rgba(36, 177, 177, 0.38);
   --wash-2: rgba(255, 255, 255, 0.06);
   --wash-opacity: 0.22;
   --rule-line: rgba(255, 255, 255, 0.04);
@@ -126,10 +127,10 @@
   --raise: #e2f1ec;
   --raise-2: #d3e9e1;
 
-  --panel: rgba(11, 125, 112, 0.05);
-  --panel-2: rgba(11, 125, 112, 0.09);
-  --line: rgba(11, 125, 112, 0.16);
-  --line-2: rgba(11, 125, 112, 0.26);
+  --panel: rgba(0, 121, 121, 0.05);
+  --panel-2: rgba(0, 121, 121, 0.09);
+  --line: rgba(0, 121, 121, 0.18);
+  --line-2: rgba(0, 121, 121, 0.28);
 
   --field: #dfefec;
   --field-hover: #d6e9e5;
@@ -138,10 +139,11 @@
   --dim: #435850;
   --faint: #62766e;
 
-  --teal: #0b7d70;
-  --teal-bright: #0d9488;
-  --teal-deep: #075e54;
-  --teal-soft: #12a695;
+  /* Same Color Hunt palette, deepened for AA contrast as body/label text on a pale ground. */
+  --teal: #007979;
+  --teal-bright: #0f9d9d;
+  --teal-deep: #004f4f;
+  --teal-soft: #24b1b1;
 
   /* Ember, deepened for a light surface the same way teal is — the dark-theme clay
      (#e8845f) sits at 1.7:1 on near-white and would read as a smudge. */
@@ -149,15 +151,15 @@
   --ember-soft: #c0552a;
   --ember-deep: #7d3311;
 
-  --violet: #0b7d70;
-  --violet-2: #12a695;
-  --indigo: #075e54;
-  --cyan: #0d9488;
-  --emerald: #0d9488;
+  --violet: #007979;
+  --violet-2: #24b1b1;
+  --indigo: #004f4f;
+  --cyan: #0f9d9d;
+  --emerald: #0f9d9d;
   --amber: var(--ember);
   --orange: var(--ember-soft);
   --rose: #0a1f1a;
-  --pink: #12a695;
+  --pink: #24b1b1;
 
   /* Same real-red trio as the dark block — red doesn't need retuning for contrast the way
      teal/ember did, so both themes carry identical hex values here. */
@@ -168,24 +170,24 @@
   /* Same fixed dark chrome as the dark block -- see the comment there. */
   --chrome: #0a221c;
 
-  --grad-primary: linear-gradient(135deg, #075e54 0%, #0b7d70 48%, #0d9488 100%);
-  --grad-cool: linear-gradient(135deg, #075e54 0%, #0b7d70 100%);
+  --grad-primary: linear-gradient(135deg, #004f4f 0%, #007979 48%, #0f9d9d 100%);
+  --grad-cool: linear-gradient(135deg, #004f4f 0%, #007979 100%);
   --grad-warm: linear-gradient(135deg, #6c7d76 0%, #4d6059 55%, #0a1f1a 100%);
-  --grad-iris: linear-gradient(135deg, #075e54 0%, #0b7d70 50%, #12a695 100%);
+  --grad-iris: linear-gradient(135deg, #004f4f 0%, #007979 50%, #24b1b1 100%);
 
-  --focus-ring: 0 0 0 3px rgba(11, 125, 112, 0.35);
+  --focus-ring: 0 0 0 3px rgba(0, 121, 121, 0.35);
   --shadow-lift: 0 1px 0 rgba(255, 255, 255, 0.7) inset,
     0 24px 60px -30px rgba(10, 31, 26, 0.16);
 
   --glass-highlight: rgba(255, 255, 255, 0.85);
   --glass-shadow: 0 24px 48px -28px rgba(10, 31, 26, 0.16);
-  --glass-tint: linear-gradient(165deg, rgba(11, 125, 112, 0.06), rgba(11, 125, 112, 0.01) 60%);
+  --glass-tint: linear-gradient(165deg, rgba(0, 121, 121, 0.06), rgba(0, 121, 121, 0.01) 60%);
 
   /* Inverted: the wash tints toward the brand instead of glowing, and the rules are
      drawn in ink rather than white — white-on-near-white is what made the light theme
      look like an unstyled page. */
-  --wash-1: rgba(11, 125, 112, 0.3);
-  --wash-2: rgba(11, 125, 112, 0.12);
+  --wash-1: rgba(0, 121, 121, 0.3);
+  --wash-2: rgba(0, 121, 121, 0.12);
   --wash-opacity: 0.5;
   --rule-line: rgba(7, 64, 57, 0.055);
   --rule-dot: rgba(7, 64, 57, 0.11);
@@ -226,6 +228,15 @@
   --color-danger-soft: var(--danger-soft);
   --color-danger-deep: var(--danger-deep);
   --color-chrome: var(--chrome);
+
+  /* Simulation-only sidebar/toolbar surfaces — see the `.simulation` block below.
+     Fixed cream/peach tones, independent of the app's dark/light toggle. */
+  --color-sim-surface: var(--sim-surface);
+  --color-sim-surface-raised: var(--sim-surface-raised);
+  --color-sim-surface-hover: var(--sim-surface-hover);
+  --color-sim-line: var(--sim-line);
+  --color-sim-faint: var(--sim-faint);
+  --color-sim-ink: var(--sim-ink);
 
   /* Brand aliases → teal */
   --color-bg: var(--base);
@@ -1067,11 +1078,14 @@ body {
 }
 
 /* ─────────────────── Nadi Wear simulation surface ───────────────────
-   The four-quarter simulation ships as a light, ruled document: white
-   panels, stone rules, a serif for headings and monospace for every
-   number. It renders inside the run shell, so these rules stop the app's
+   The four-quarter simulation ships as a light, ruled document: cream
+   panels, warm-teal rules, a serif for headings and monospace for every
+   number — the Color Hunt "00797924b1b1fff0e4ffe0c5" palette's cream/peach
+   half. It renders inside the run shell, so these rules stop the app's
    dark tokens leaking into it. Scoped to `.simulation` only — nothing here
-   reaches the rest of the run screens.
+   reaches the rest of the run screens, and it stays this light "document"
+   surface regardless of the app's own dark/light toggle (the toggle only
+   affects the sidebar/toolbar above it, via --sim-* below).
 
    The border rule matters most: the global `* { border-color: var(--line) }`
    near the top paints every otherwise-unspecified border teal, which would
@@ -1081,15 +1095,26 @@ body {
 
 .simulation {
   color-scheme: light;
-  background: #f5f5f4;
+  background: #fff0e4;
   color: #1c1917;
+
+  /* Sidebar + toolbar tokens. The simulation is a fixed light "document"
+     regardless of the app's dark/light toggle (see note above), so its own
+     chrome stays on the cream/peach half of the palette rather than
+     following --void/--raise, which would go dark in dark mode. */
+  --sim-surface: #fff0e4;
+  --sim-surface-raised: #ffe0c5;
+  --sim-surface-hover: #ffd6ae;
+  --sim-line: #f0c9a8;
+  --sim-faint: #8a7361;
+  --sim-ink: #1c1917;
 }
 
 :where(.simulation) * {
-  border-color: #d6d3d1;
+  border-color: #f0c9a8;
 }
 
 .simulation :focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(28, 25, 23, 0.85);
+  box-shadow: 0 0 0 2px rgba(0, 121, 121, 0.85);
 }

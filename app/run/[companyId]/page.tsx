@@ -1,5 +1,10 @@
-import { HubScreen } from "@/components/run/screens/HubScreen";
+import { redirect } from "next/navigation";
 
-export default function RunHubPage() {
-  return <HubScreen />;
+export default async function RunHubPage({
+  params,
+}: {
+  params: Promise<{ companyId: string }>;
+}) {
+  const { companyId } = await params;
+  redirect(`/run/${companyId}/simulation`);
 }

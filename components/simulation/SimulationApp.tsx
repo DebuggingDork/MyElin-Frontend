@@ -19,7 +19,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import Link from "next/link";
+import { Loader2, LogOut } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/types";
 import { useRun } from "@/components/run/RunProvider";
@@ -50,6 +51,9 @@ import type {
   QuarterScore,
 } from "@/lib/simulation/remote";
 import { Ticker, TeachingContext } from "@/components/simulation/Kit";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { ProfileMenu } from "@/components/layout/ProfileMenu";
+import { cn } from "@/lib/utils";
 import { DepartmentScreen } from "@/components/simulation/Decisions";
 import {
   FinancePanel,
@@ -504,82 +508,107 @@ export function SimulationApp() {
 
   const chrome = (body: React.ReactNode, showNav: boolean) => (
     <TeachingContext.Provider value={notesOn}>
-      <div className="simulation min-h-full bg-base text-ink">
-        <header className="bg-chrome text-white">
-          <div className={COLUMN + " py-3 flex flex-wrap items-center justify-between gap-3"}>
-            <div className="flex items-baseline gap-3">
-              <span className="font-serif text-xl">Nadi Wear</span>
-              <span className="text-xs uppercase tracking-widest text-dim">Chief Executive</span>
-            </div>
+      {/* App-themed toolbar -- sits outside `.simulation` so ThemeToggle/ProfileMenu keep
+          reading the app's own light/dark tokens (text-ink etc.) instead of clashing with
+          the simulation's fixed cream surface below. */}
+      <div className="flex shrink-0 items-center justify-end gap-3 border-b border-line bg-base px-4 py-2 sm:px-6 lg:px-8">
+        <ThemeToggle />
+        <div className="h-5 w-px bg-line" aria-hidden />
+        <ProfileMenu />
+      </div>
 
-            {showNav && (
-              <div className="flex flex-wrap items-center gap-x-5 gap-y-1 font-mono text-sm">
-                <span>
-                  <span className="text-dim text-xs uppercase tracking-widest mr-2">Quarter</span>
-                  {state.quarter}/4
-                </span>
-                <span>
-                  <span className="text-dim text-xs uppercase tracking-widest mr-2">Cash</span>
-                  {inr(state.cash)}
-                  {state.pendingInvestment > 0 && (
-                    <span className="text-teal-bright ml-1">+{inr(state.pendingInvestment)} pending</span>
-                  )}
-                </span>
-                {priority && (
-                  <span className="text-teal-bright">
-                    <span className="text-dim text-xs uppercase tracking-widest mr-2">Priority</span>
-                    {PRIORITY_BY_ID[priority].name}
-                  </span>
-                )}
-                <span className={budget.committed > budget.ceiling ? "text-danger-soft" : "text-faint"}>
-                  <span className="text-dim text-xs uppercase tracking-widest mr-2">Left</span>
-                  {inr(budget.ceiling - budget.committed)}
-                </span>
+      <div className="simulation flex min-h-full bg-base text-ink">
+        {showNav && (
+          <aside className="hidden w-[220px] shrink-0 flex-col border-r border-sim-line bg-sim-surface px-3 py-4 lg:flex">
+            <p className="px-2 pb-2 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-sim-faint">
+              Nadi Wear · 4 quarters
+            </p>
+            <nav className="flex-1 space-y-1">
+              {tabs.map((t) => (
                 <button
-                  onClick={() => setNotesOn(!notesOn)}
-                  className={
-                    "px-2 py-0.5 text-xs uppercase tracking-widest border " +
-                    (notesOn ? "border-teal text-teal-bright" : "border-line-2 text-dim")
-                  }
+                  key={t.id}
+                  onClick={() => setTab(t.id)}
+                  className={cn(
+                    "flex w-full items-center justify-between gap-1.5 rounded-xl border px-3 py-2.5 text-left text-[13.5px] transition-colors duration-150 ease-out",
+                    tab === t.id
+                      ? "border-teal-deep bg-teal-deep text-white font-medium"
+                      : t.hot
+                        ? "border-sim-line bg-sim-surface-raised text-danger-deep hover:border-danger/40"
+                        : "border-sim-line bg-sim-surface-raised text-sim-ink hover:border-teal/40 hover:bg-sim-surface-hover",
+                  )}
                 >
-                  Notes {notesOn ? "on" : "off"}
+                  {t.label}
+                  {t.badge > 0 && (
+                    <span className="rounded-full bg-danger px-1.5 text-xs font-mono text-white">{t.badge}</span>
+                  )}
                 </button>
-              </div>
-            )}
-          </div>
+              ))}
+            </nav>
+            <div className="mt-3 border-t border-sim-line pt-3">
+              <Link
+                href="/simulations"
+                className="flex items-center gap-2 rounded-lg px-2 py-2 text-[13px] text-sim-faint transition-colors hover:bg-sim-surface-hover hover:text-sim-ink"
+              >
+                <LogOut className="h-3.5 w-3.5 shrink-0" />
+                Exit run
+              </Link>
+            </div>
+          </aside>
+        )}
 
-          {showNav && (
-            <nav className="border-t border-line-2">
-              <div className="mx-auto w-full max-w-[1440px] px-1 sm:px-3 lg:px-5 flex overflow-x-auto">
-                {tabs.map((t) => (
+        <div className="flex min-w-0 flex-1 flex-col">
+          <header className="bg-chrome text-white">
+            <div className={COLUMN + " py-3 flex flex-wrap items-center justify-between gap-3"}>
+              <div className="flex items-baseline gap-3">
+                <span className="font-serif text-xl">Nadi Wear</span>
+                <span className="text-xs uppercase tracking-widest text-dim">Chief Executive</span>
+              </div>
+
+              {showNav && (
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-1 font-mono text-sm">
+                  <span>
+                    <span className="text-dim text-xs uppercase tracking-widest mr-2">Quarter</span>
+                    {state.quarter}/4
+                  </span>
+                  <span>
+                    <span className="text-dim text-xs uppercase tracking-widest mr-2">Cash</span>
+                    {inr(state.cash)}
+                    {state.pendingInvestment > 0 && (
+                      <span className="text-teal-bright ml-1">+{inr(state.pendingInvestment)} pending</span>
+                    )}
+                  </span>
+                  {priority && (
+                    <span className="text-teal-bright">
+                      <span className="text-dim text-xs uppercase tracking-widest mr-2">Priority</span>
+                      {PRIORITY_BY_ID[priority].name}
+                    </span>
+                  )}
+                  <span className={budget.committed > budget.ceiling ? "text-danger-soft" : "text-faint"}>
+                    <span className="text-dim text-xs uppercase tracking-widest mr-2">Left</span>
+                    {inr(budget.ceiling - budget.committed)}
+                  </span>
                   <button
-                    key={t.id}
-                    onClick={() => setTab(t.id)}
+                    onClick={() => setNotesOn(!notesOn)}
                     className={
-                      "px-3 py-2 text-sm whitespace-nowrap border-b-2 flex items-center gap-1.5 " +
-                      (tab === t.id
-                        ? "border-danger text-white"
-                        : t.hot
-                          ? "border-transparent text-danger-soft hover:text-danger-soft"
-                          : "border-transparent text-faint hover:text-white")
+                      "px-2 py-0.5 text-xs uppercase tracking-widest border " +
+                      (notesOn ? "border-teal text-teal-bright" : "border-line-2 text-dim")
                     }
                   >
-                    {t.label}
-                    {t.badge > 0 && <span className="px-1.5 bg-danger text-white text-xs font-mono">{t.badge}</span>}
+                    Notes {notesOn ? "on" : "off"}
                   </button>
-                ))}
-              </div>
-            </nav>
-          )}
+                </div>
+              )}
+            </div>
 
-          {showNav && <Ticker items={ticker} />}
-        </header>
+            {showNav && <Ticker items={ticker} />}
+          </header>
 
-        <main className={COLUMN + " py-6"}>{body}</main>
+          <main className={COLUMN + " py-6"}>{body}</main>
 
-        <footer className={COLUMN + " pb-10 pt-2 text-xs text-faint font-mono"}>
-          Teaching simulation. All figures fictional. Every number is computed by the MyElin engine.
-        </footer>
+          <footer className={COLUMN + " pb-10 pt-2 text-xs text-faint font-mono"}>
+            Teaching simulation. All figures fictional. Every number is computed by the MyElin engine.
+          </footer>
+        </div>
       </div>
     </TeachingContext.Provider>
   );
