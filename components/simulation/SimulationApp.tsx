@@ -17,10 +17,10 @@
  * engine that grades them afterwards, so the two can never disagree.
  */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Loader2, LogOut } from "lucide-react";
+import { Loader2, LogOut, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/types";
 import { useRun } from "@/components/run/RunProvider";
@@ -145,6 +145,39 @@ function readDraft(companyId: string, quarter: number): Draft | null {
  */
 const COLUMN = "mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-8";
 
+/* Whether the department rail is open, kept in localStorage so it survives a reload.
+   Read through `useSyncExternalStore` rather than an effect: the server has no storage to
+   read, and this is exactly the "external value that must not desync from hydration" case
+   the hook exists for. */
+const NAV_STORAGE_KEY = "myelin_sim_nav_open";
+
+const navListeners = new Set<() => void>();
+
+const subscribeNav = (fn: () => void) => {
+  navListeners.add(fn);
+  return () => {
+    navListeners.delete(fn);
+  };
+};
+
+function readNavOpen() {
+  try {
+    return window.localStorage.getItem(NAV_STORAGE_KEY) !== "0";
+  } catch {
+    /* private browsing -- the toggle still works, it just won't be remembered. */
+    return true;
+  }
+}
+
+function writeNavOpen(next: boolean) {
+  try {
+    window.localStorage.setItem(NAV_STORAGE_KEY, next ? "1" : "0");
+  } catch {
+    /* see above */
+  }
+  navListeners.forEach((fn) => fn());
+}
+
 const EMPTY_BUDGET: RemoteBudget = {
   opex: 0, capex: 0, inno: 0, people: 0, repay: 0, drawn: 0, committed: 0, ceiling: 0,
 };
@@ -193,6 +226,24 @@ export function SimulationApp() {
   const [booting, setBooting] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  /* Nav visibility. Desktop and mobile are tracked separately on purpose: the rail is
+     open by default on a wide screen and its state is worth remembering, while the
+     mobile drawer must start closed or it would cover the screen on every load. */
+  const navOpen = useSyncExternalStore(subscribeNav, readNavOpen, () => true);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  const toggleNav = useCallback(() => writeNavOpen(!readNavOpen()), []);
+
+  // Escape closes the mobile drawer, the same as tapping the backdrop.
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileNavOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [mobileNavOpen]);
 
   const urlTab = searchParams.get("tab");
   const tab = urlTab && SIMULATION_TABS.some((t) => t.id === urlTab) ? urlTab : "dashboard";
@@ -507,62 +558,124 @@ export function SimulationApp() {
     { id: "review", label: "Close the quarter", badge: 0, hot: false },
   ];
 
+  /** The department list. Rendered twice -- as the desktop rail and as the mobile drawer -- so
+   *  the two can never drift apart. */
+  const navBody = (
+    <>
+      <p className="px-2 pb-2 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-sim-faint">
+        Nadi Wear · 4 quarters
+      </p>
+      <nav className="flex-1 space-y-1 overflow-y-auto">
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => {
+              setTab(t.id);
+              setMobileNavOpen(false);
+            }}
+            aria-current={tab === t.id ? "page" : undefined}
+            className={cn(
+              "flex w-full items-center justify-between gap-1.5 rounded-xl border px-3 py-2.5 text-left text-[13.5px] transition-colors duration-150 ease-out",
+              tab === t.id
+                ? "border-teal-deep bg-teal-deep text-white font-medium"
+                : t.hot
+                  ? "border-sim-line bg-sim-surface-raised text-danger-deep hover:border-danger/40"
+                  : "border-sim-line bg-sim-surface-raised text-sim-ink hover:border-teal/40 hover:bg-sim-surface-hover",
+            )}
+          >
+            {t.label}
+            {t.badge > 0 && (
+              <span className="rounded-full bg-danger px-1.5 text-xs font-mono text-white">{t.badge}</span>
+            )}
+          </button>
+        ))}
+      </nav>
+      <div className="mt-3 shrink-0 border-t border-sim-line pt-3">
+        <Link
+          href="/simulations"
+          className="flex items-center gap-2 rounded-lg px-2 py-2 text-[13px] text-sim-faint transition-colors hover:bg-sim-surface-hover hover:text-sim-ink"
+        >
+          <LogOut className="h-3.5 w-3.5 shrink-0" />
+          Exit run
+        </Link>
+      </div>
+    </>
+  );
+
   const chrome = (body: React.ReactNode, showNav: boolean) => (
     <TeachingContext.Provider value={notesOn}>
-      {/* App-themed toolbar -- sits outside `.simulation` so ThemeToggle/ProfileMenu keep
-          reading the app's own light/dark tokens (text-ink etc.) instead of clashing with
-          the simulation's fixed cream surface below. */}
-      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-line bg-base px-4 py-2 sm:px-6 lg:px-8">
-        <Link href="/" aria-label="Myelin home" className="flex shrink-0 items-center">
-          <Logo variant="glyph" />
-        </Link>
-        <div className="flex shrink-0 items-center gap-3">
-          <ThemeToggle />
-          <div className="h-5 w-px bg-line" aria-hidden />
-          <ProfileMenu />
-        </div>
-      </div>
-
-      <div className="simulation flex min-h-full bg-base text-ink">
-        {showNav && (
-          <aside className="hidden w-[220px] shrink-0 flex-col border-r border-sim-line bg-sim-surface px-3 py-4 lg:flex">
-            <p className="px-2 pb-2 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-sim-faint">
-              Nadi Wear · 4 quarters
-            </p>
-            <nav className="flex-1 space-y-1">
-              {tabs.map((t) => (
+      {/* One viewport-height frame: the toolbar and the rail stay put and only the document
+          column scrolls, so switching department never means scrolling back up to the nav. */}
+      <div className="flex h-full flex-col overflow-hidden">
+        {/* App-themed toolbar -- sits outside `.simulation` so ThemeToggle/ProfileMenu keep
+            reading the app's own light/dark tokens (text-ink etc.) instead of clashing with
+            the simulation's fixed cream surface below. */}
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-line bg-base px-4 py-2 sm:px-6 lg:px-8">
+          <div className="flex min-w-0 items-center gap-2">
+            {showNav && (
+              <>
                 <button
-                  key={t.id}
-                  onClick={() => setTab(t.id)}
-                  className={cn(
-                    "flex w-full items-center justify-between gap-1.5 rounded-xl border px-3 py-2.5 text-left text-[13.5px] transition-colors duration-150 ease-out",
-                    tab === t.id
-                      ? "border-teal-deep bg-teal-deep text-white font-medium"
-                      : t.hot
-                        ? "border-sim-line bg-sim-surface-raised text-danger-deep hover:border-danger/40"
-                        : "border-sim-line bg-sim-surface-raised text-sim-ink hover:border-teal/40 hover:bg-sim-surface-hover",
-                  )}
+                  type="button"
+                  onClick={() => setMobileNavOpen(true)}
+                  aria-label="Open navigation"
+                  className="flex h-8 w-8 items-center justify-center rounded-md text-dim transition-colors hover:bg-[var(--panel-2)] hover:text-ink lg:hidden"
                 >
-                  {t.label}
-                  {t.badge > 0 && (
-                    <span className="rounded-full bg-danger px-1.5 text-xs font-mono text-white">{t.badge}</span>
-                  )}
+                  <PanelLeftOpen className="h-4 w-4" />
                 </button>
-              ))}
-            </nav>
-            <div className="mt-3 border-t border-sim-line pt-3">
-              <Link
-                href="/simulations"
-                className="flex items-center gap-2 rounded-lg px-2 py-2 text-[13px] text-sim-faint transition-colors hover:bg-sim-surface-hover hover:text-sim-ink"
-              >
-                <LogOut className="h-3.5 w-3.5 shrink-0" />
-                Exit run
-              </Link>
-            </div>
-          </aside>
-        )}
+                <button
+                  type="button"
+                  onClick={toggleNav}
+                  aria-label={navOpen ? "Collapse navigation" : "Expand navigation"}
+                  aria-expanded={navOpen}
+                  className="hidden h-8 w-8 items-center justify-center rounded-md text-dim transition-colors hover:bg-[var(--panel-2)] hover:text-ink lg:flex"
+                >
+                  {navOpen ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
+                </button>
+              </>
+            )}
+            <Link href="/" aria-label="Myelin home" className="flex shrink-0 items-center">
+              <Logo variant="glyph" />
+            </Link>
+          </div>
+          <div className="flex shrink-0 items-center gap-3">
+            <ThemeToggle />
+            <div className="h-5 w-px bg-line" aria-hidden />
+            <ProfileMenu />
+          </div>
+        </div>
 
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="simulation flex min-h-0 flex-1 bg-base text-ink">
+          {showNav && navOpen && (
+            <aside className="hidden w-[220px] shrink-0 flex-col border-r border-sim-line bg-sim-surface px-3 py-4 lg:flex">
+              {navBody}
+            </aside>
+          )}
+
+          {showNav && mobileNavOpen && (
+            <>
+              <button
+                type="button"
+                onClick={() => setMobileNavOpen(false)}
+                aria-label="Close navigation"
+                className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+              />
+              <aside className="fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col border-r border-sim-line bg-sim-surface px-3 py-4 shadow-xl lg:hidden">
+                <div className="mb-1 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setMobileNavOpen(false)}
+                    aria-label="Close navigation"
+                    className="flex h-8 w-8 items-center justify-center rounded-md text-sim-faint transition-colors hover:bg-sim-surface-hover hover:text-sim-ink"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                {navBody}
+              </aside>
+            </>
+          )}
+
+          <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">
           <header className="bg-chrome text-white">
             <div className={COLUMN + " py-3 flex flex-wrap items-center justify-between gap-3"}>
               <div className="flex items-baseline gap-3">
@@ -614,6 +727,7 @@ export function SimulationApp() {
           <footer className={COLUMN + " pb-10 pt-2 text-xs text-faint font-mono"}>
             Teaching simulation. All figures fictional. Every number is computed by the MyElin engine.
           </footer>
+          </div>
         </div>
       </div>
     </TeachingContext.Provider>
