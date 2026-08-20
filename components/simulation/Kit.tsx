@@ -413,7 +413,7 @@ export function Ticker({ items }: { items: { label: string; value: string; tone:
           "@keyframes simTick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}.simulation-tick{animation:simTick 90s linear infinite;will-change:transform}.simulation-tick:hover{animation-play-state:paused}@media (prefers-reduced-motion:reduce){.simulation-tick{animation:none}}"
         }
       </style>
-      <div className="flex w-max sim-tick py-1.5">
+      <div className="flex w-max simulation-tick py-1.5">
         {run("a")}
         {run("b")}
       </div>
