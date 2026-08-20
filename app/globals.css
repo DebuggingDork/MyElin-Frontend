@@ -1150,11 +1150,16 @@ body {
   --sim-ink: #1c1917;
 }
 
-/* The header/ticker banner sits on the fixed-dark --chrome surface (see the
-   comment on --chrome above), not the cream document -- it needs light text
-   on dark, the opposite of the override just above. Scoped narrowly so it
-   doesn't fight the cream tokens the rest of the simulation relies on. */
-.simulation-chrome {
+/* Dark inversions inside the simulation -- the header/ticker banner, the
+   "biggest constraint" card, the selected-priority button, and more --
+   pair a `bg-chrome`/`bg-danger-deep` patch with `text-white` and rely on
+   text-dim/text-faint for secondary copy inside it. Those patches sit on
+   the fixed-dark --chrome/--danger-deep surfaces, not the cream document,
+   so they need light text on dark: the opposite of the override just
+   above. An attribute selector catches every such patch across the
+   simulation's ~dozen screen files without a className on each one. */
+:where(.simulation) [class*="bg-chrome"],
+:where(.simulation) [class*="bg-danger-deep"] {
   --text: #ffffff;
   --dim: #9fb3ac;
   --faint: #71847d;

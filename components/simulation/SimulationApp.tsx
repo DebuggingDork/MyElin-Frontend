@@ -557,7 +557,7 @@ export function SimulationApp() {
         )}
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="simulation-chrome bg-chrome text-white">
+          <header className="bg-chrome text-white">
             <div className={COLUMN + " py-3 flex flex-wrap items-center justify-between gap-3"}>
               <div className="flex items-baseline gap-3">
                 <span className="font-serif text-xl">Nadi Wear</span>
