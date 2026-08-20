@@ -1626,46 +1626,52 @@ export const PIPELINE_STAGES = [
 ];
 
 export const PIPELINE_STAGE_BG: Record<string, string> = {
-  idea: "bg-stone-700",
-  development: "bg-amber-700",
-  ready: "bg-teal-800",
-  live: "bg-stone-900",
+  idea: "bg-faint",
+  development: "bg-ember-deep",
+  ready: "bg-teal-deep",
+  live: "bg-chrome",
 };
 
-/* ── shared tone palettes ─────────────────────────────────────────── */
+/* ── shared tone palettes ─────────────────────────────────────────────
+   Three voices, one per meaning: teal reads "holding", ember "under
+   pressure", danger "breaking", and flat is the plain surface. Written as
+   design tokens rather than Tailwind's own palette -- stone/white/teal-50
+   are a different, cooler family than the cream surface these sit on, which
+   is what had white and blue-tinted cards landing on a warm background. */
 
 export const TONE_TEXT: Record<Tone, string> = {
-  good: "text-teal-800",
-  watch: "text-amber-700",
-  bad: "text-rose-800",
-  flat: "text-stone-900",
+  good: "text-teal-deep",
+  watch: "text-ember-deep",
+  bad: "text-danger-deep",
+  flat: "text-ink",
 };
 
 export const TONE_BAR: Record<Tone, string> = {
-  good: "bg-teal-700",
-  watch: "bg-amber-600",
-  bad: "bg-rose-700",
-  flat: "bg-stone-400",
+  good: "bg-teal",
+  watch: "bg-ember",
+  bad: "bg-danger",
+  flat: "bg-line-2",
 };
 
 export const TONE_CARD: Record<Tone, string> = {
-  good: "bg-teal-50 border-teal-700",
-  watch: "bg-amber-50 border-amber-600",
-  bad: "bg-rose-50 border-rose-700",
-  flat: "bg-white border-stone-300",
+  good: "bg-teal/10 border-teal-deep",
+  watch: "bg-ember/10 border-ember",
+  bad: "bg-danger/10 border-danger",
+  flat: "bg-raise border-line",
 };
 
+/** The ticker runs on the fixed-dark chrome, so its tones are the light end of each family. */
 export const TICKER_TONE: Record<Tone, string> = {
-  good: "text-teal-300",
-  watch: "text-amber-300",
-  bad: "text-rose-300",
-  flat: "text-stone-200",
+  good: "text-teal-bright",
+  watch: "text-ember-soft",
+  bad: "text-danger-soft",
+  flat: "text-white",
 };
 
 export const MESSAGE_TONE: Record<string, { border: string; tag: string; label: string }> = {
-  critical: { border: "border-rose-700", tag: "bg-rose-800 text-white", label: "Urgent" },
-  warning: { border: "border-amber-600", tag: "bg-amber-600 text-white", label: "Needs a view" },
-  info: { border: "border-stone-400", tag: "bg-stone-700 text-white", label: "For information" },
+  critical: { border: "border-danger", tag: "bg-danger text-white", label: "Urgent" },
+  warning: { border: "border-ember", tag: "bg-ember-deep text-white", label: "Needs a view" },
+  info: { border: "border-line-2", tag: "bg-chrome text-white", label: "For information" },
 };
 
 /** Readiness level -> tone. Levels are the strings `readiness()` emits. */

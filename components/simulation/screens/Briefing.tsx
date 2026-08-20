@@ -172,7 +172,7 @@ export function BriefingScreen({
               key={i}
               className={
                 "bg-raise border border-line border-l-4 px-4 py-2 flex flex-wrap items-baseline gap-x-3 " +
-                (c.dir === "up" ? "border-l-teal-700" : c.dir === "down" ? "border-l-rose-700" : "border-l-stone-400")
+                (c.dir === "up" ? "border-l-teal" : c.dir === "down" ? "border-l-danger" : "border-l-line-2")
               }
             >
               <span
