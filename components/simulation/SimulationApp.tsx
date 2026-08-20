@@ -143,7 +143,22 @@ function readDraft(companyId: string, quarter: number): Draft | null {
  * screens -- otherwise the review and year-end screens sit in a narrower column than the report
  * they are read next to, with the header's rules running past them on both sides.
  */
-const COLUMN = "mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-8";
+/* The shell's one horizontal grid.
+
+   SHELL caps the rail and the document together rather than capping the
+   document alone. Capping the document meant its width was measured against a
+   container that changes size with the rail, so on a wide screen collapsing the
+   rail pushed the column back into `mx-auto` centring and pulled its right edge
+   *inward* -- the opposite of what collapsing is for. Capping the pair pins the
+   right edge, so toggling only ever moves the left one, by exactly the rail's
+   width.
+
+   COLUMN is therefore gutter only: no max-width and no centring of its own, or
+   it would reintroduce the same drift one level down. Every band inside the
+   document (header, main, footer) uses it, so they share one left rule. */
+const RAIL_W = 220;
+const SHELL = "mx-auto w-full max-w-[1660px]"; // 1440 document + 220 rail
+const COLUMN = "w-full px-4 sm:px-6 lg:px-8";
 
 /* Whether the department rail is open, kept in localStorage so it survives a reload.
    Read through `useSyncExternalStore` rather than an effect: the server has no storage to
@@ -564,7 +579,9 @@ export function SimulationApp() {
     <>
       {/* The collapse control lives on the rail it collapses, not out beside the brand
           mark, so it reads as part of the panel rather than a stray toolbar icon. */}
-      <div className="flex items-center justify-between gap-2 pb-2 pl-2">
+      {/* pl-3 against the rail's px-5 puts this label on the same 32px left rule as the
+          toolbar's logo above it and the nav labels below it. */}
+      <div className="flex items-center justify-between gap-2 pb-2 pl-3">
         <p className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-sim-faint">
           Nadi Wear · 4 quarters
         </p>
@@ -613,7 +630,7 @@ export function SimulationApp() {
       <div className="mt-3 shrink-0 border-t border-sim-line pt-3">
         <Link
           href="/simulations"
-          className="flex items-center gap-2 rounded-lg px-2 py-2 text-[13px] text-sim-faint transition-colors hover:bg-sim-surface-hover hover:text-sim-ink"
+          className="flex items-center gap-2 rounded-lg px-3 py-2 text-[13px] text-sim-faint transition-colors hover:bg-sim-surface-hover hover:text-sim-ink"
         >
           <LogOut className="h-3.5 w-3.5 shrink-0" />
           Exit run
@@ -630,7 +647,8 @@ export function SimulationApp() {
         {/* App-themed toolbar -- sits outside `.simulation` so ThemeToggle/ProfileMenu keep
             reading the app's own light/dark tokens (text-ink etc.) instead of clashing with
             the simulation's fixed cream surface below. */}
-        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-line bg-base px-4 py-2 sm:px-6 lg:px-8">
+        <div className="shrink-0 border-b border-line bg-base">
+          <div className={SHELL + " flex items-center justify-between gap-3 px-4 py-2 sm:px-6 lg:px-8"}>
           <div className="flex min-w-0 items-center gap-3">
             <Link href="/" aria-label="Myelin home" className="flex shrink-0 items-center">
               <Logo variant="glyph" />
@@ -668,11 +686,16 @@ export function SimulationApp() {
             <div className="h-5 w-px bg-line" aria-hidden />
             <ProfileMenu />
           </div>
+          </div>
         </div>
 
-        <div className="simulation flex min-h-0 flex-1 bg-base text-ink">
+        <div className="simulation min-h-0 flex-1 overflow-hidden bg-base text-ink">
+          <div className={SHELL + " flex h-full"}>
           {showNav && navOpen && (
-            <aside className="hidden w-[220px] shrink-0 flex-col border-r border-sim-line bg-sim-surface px-3 py-4 lg:flex">
+            <aside
+              className="hidden shrink-0 flex-col border-r border-sim-line bg-sim-surface px-5 py-4 lg:flex"
+              style={{ width: RAIL_W }}
+            >
               {navBody}
             </aside>
           )}
@@ -745,6 +768,7 @@ export function SimulationApp() {
           <footer className={COLUMN + " pb-10 pt-2 text-xs text-faint font-mono"}>
             Teaching simulation. All figures fictional. Every number is computed by the MyElin engine.
           </footer>
+          </div>
           </div>
         </div>
       </div>
