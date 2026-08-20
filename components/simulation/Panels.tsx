@@ -549,7 +549,7 @@ export function FinancePanel({
                   (on ? "border-line-2 bg-chrome text-white" : "border-line bg-raise hover:border-line-2")
                 }
               >
-                <div className="font-serif text-base">{t.name}</div>
+                <div className={"font-serif text-base " + (on ? "text-white" : "text-ink")}>{t.name}</div>
                 <div className={"text-xs font-mono mt-1 " + (on ? "text-teal-bright" : "text-teal-deep")}>
                   cost {t.cogsMult === 1 ? "unchanged" : (t.cogsMult < 1 ? "−" : "+") + pct(Math.abs(1 - t.cogsMult) * 100)} ·
                   reliability {(t.rel >= 0 ? "+" : "") + t.rel}
@@ -929,7 +929,7 @@ export function ReflectionForm({
     <Panel eyebrow="Before you close" title="Why did you make these decisions?">
       <div className="space-y-5">
         <div>
-          <div className="font-serif text-base">1. What was the biggest constraint you were solving?</div>
+          <div className="font-serif text-base text-ink">1. What was the biggest constraint you were solving?</div>
           <div className="grid gap-2 sm:grid-cols-2 mt-2">
             {(constraint ? constraint.all : []).map((c) => (
               <button key={c.id} onClick={() => set("constraint", c.id)} className={choiceClass(reflection.constraint === c.id)}>
@@ -943,7 +943,7 @@ export function ReflectionForm({
         </div>
 
         <div>
-          <div className="font-serif text-base">2. What did you fund?</div>
+          <div className="font-serif text-base text-ink">2. What did you fund?</div>
           <p className="text-xs text-dim mt-1">Taken from your decisions, not your description of them.</p>
           <div className="mt-2 text-sm text-ink font-mono">
             {funded.length
@@ -961,7 +961,7 @@ export function ReflectionForm({
         </div>
 
         <div>
-          <div className="font-serif text-base">3. What did you deliberately choose not to fund?</div>
+          <div className="font-serif text-base text-ink">3. What did you deliberately choose not to fund?</div>
           <p className="text-xs text-dim mt-1">
             Naming a sacrifice is the difference between a trade-off and an oversight.
           </p>
@@ -980,7 +980,7 @@ export function ReflectionForm({
         </div>
 
         <div>
-          <div className="font-serif text-base">4. What risk are you accepting?</div>
+          <div className="font-serif text-base text-ink">4. What risk are you accepting?</div>
           <div className="grid gap-2 sm:grid-cols-2 mt-2">
             {RISK_OPTIONS.map((o) => (
               <button key={o.id} onClick={() => set("risk", o.id)} className={choiceClass(reflection.risk === o.id)}>
@@ -991,7 +991,7 @@ export function ReflectionForm({
         </div>
 
         <div>
-          <div className="font-serif text-base">5. What do you expect to happen?</div>
+          <div className="font-serif text-base text-ink">5. What do you expect to happen?</div>
           <div className="grid gap-2 sm:grid-cols-4 mt-2">
             {EXPECT_OPTIONS.map((o) => (
               <button key={o.id} onClick={() => set("expect", o.id)} className={choiceClass(reflection.expect === o.id)}>
@@ -1002,7 +1002,7 @@ export function ReflectionForm({
         </div>
 
         <div>
-          <div className="font-serif text-base">
+          <div className="font-serif text-base text-ink">
             Anything else, in a sentence or two? <span className="text-dim text-sm">(optional)</span>
           </div>
           <textarea

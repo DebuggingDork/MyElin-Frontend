@@ -53,6 +53,7 @@ import type {
 import { Ticker, TeachingContext } from "@/components/simulation/Kit";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { ProfileMenu } from "@/components/layout/ProfileMenu";
+import { Logo } from "@/components/brand/Logo";
 import { cn } from "@/lib/utils";
 import { DepartmentScreen } from "@/components/simulation/Decisions";
 import {
@@ -511,10 +512,15 @@ export function SimulationApp() {
       {/* App-themed toolbar -- sits outside `.simulation` so ThemeToggle/ProfileMenu keep
           reading the app's own light/dark tokens (text-ink etc.) instead of clashing with
           the simulation's fixed cream surface below. */}
-      <div className="flex shrink-0 items-center justify-end gap-3 border-b border-line bg-base px-4 py-2 sm:px-6 lg:px-8">
-        <ThemeToggle />
-        <div className="h-5 w-px bg-line" aria-hidden />
-        <ProfileMenu />
+      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-line bg-base px-4 py-2 sm:px-6 lg:px-8">
+        <Link href="/" aria-label="Myelin home" className="flex shrink-0 items-center">
+          <Logo variant="glyph" />
+        </Link>
+        <div className="flex shrink-0 items-center gap-3">
+          <ThemeToggle />
+          <div className="h-5 w-px bg-line" aria-hidden />
+          <ProfileMenu />
+        </div>
       </div>
 
       <div className="simulation flex min-h-full bg-base text-ink">

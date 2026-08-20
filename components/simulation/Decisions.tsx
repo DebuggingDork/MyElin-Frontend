@@ -217,7 +217,7 @@ export function DepartmentScreen({
         >
           <div>
             <Eyebrow>Detailed planning</Eyebrow>
-            <div className="font-serif text-base">
+            <div className="font-serif text-base text-ink">
               {advanced ? "Hide the underlying lines" : "Open the underlying lines and formulas"}
             </div>
           </div>

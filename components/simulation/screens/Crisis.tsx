@@ -152,7 +152,7 @@ export function CrisisScreen({
             ))}
           </div>
           <div className="mt-4">
-            <div className="font-serif text-base">Why do you think so?</div>
+            <div className="font-serif text-base text-ink">Why do you think so?</div>
             <textarea
               value={crisis.reasoning || ""}
               onChange={(e) => set("reasoning", e.target.value)}

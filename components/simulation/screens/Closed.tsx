@@ -40,7 +40,7 @@ function Assessment({ score }: { score: QuarterScore }) {
       right={
         <div className="text-right">
           <Eyebrow>CEO score</Eyebrow>
-          <div className="font-mono text-2xl">
+          <div className="font-mono text-2xl text-ink">
             {n1(Number(score.final))} <span className="text-faint text-sm">{score.band}</span>
           </div>
         </div>
@@ -50,7 +50,7 @@ function Assessment({ score }: { score: QuarterScore }) {
         {verdicts.map((t) => (
           <div key={t.name} className={"border p-3 " + TONE_CARD[t.tone as Tone]}>
             <div className="flex items-baseline justify-between">
-              <span className="font-serif text-base">{humanizeId(t.name)}</span>
+              <span className="font-serif text-base text-ink">{humanizeId(t.name)}</span>
               <span className={"text-xs uppercase tracking-widest font-semibold " + TONE_TEXT[t.tone as Tone]}>
                 {t.verdict}
               </span>
@@ -338,7 +338,7 @@ export function ClosedScreen({
               onClick={() => setStatement(statement === key ? null : key)}
               className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-raise"
             >
-              <span className="font-serif text-base">{label}</span>
+              <span className="font-serif text-base text-ink">{label}</span>
               <span className="font-mono text-sm text-dim">{statement === key ? "−" : "+"}</span>
             </button>
             {statement === key && (

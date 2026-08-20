@@ -219,7 +219,7 @@ export function BriefingScreen({
           {board.map((b, i) => (
             <div key={i} className={"border p-3 " + (b.met === null ? TONE_CARD.flat : b.met ? TONE_CARD.good : TONE_CARD.bad)}>
               <div className="flex items-baseline justify-between gap-2">
-                <span className="font-serif text-base">{b.who}</span>
+                <span className="font-serif text-base text-ink">{b.who}</span>
                 <span
                   className={
                     "text-xs uppercase tracking-widest font-semibold " +

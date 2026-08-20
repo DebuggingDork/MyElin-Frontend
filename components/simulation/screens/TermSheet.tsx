@@ -102,7 +102,7 @@ export function TermSheetScreen({
         </div>
 
         <div>
-          <div className="font-serif text-base">
+          <div className="font-serif text-base text-ink">
             Why this path? <span className="text-dim text-sm">(recorded with the decision)</span>
           </div>
           <textarea

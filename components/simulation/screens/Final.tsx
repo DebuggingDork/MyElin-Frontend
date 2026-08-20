@@ -303,7 +303,7 @@ export function FinalScreen({
         >
           <div>
             <Eyebrow>Facilitator record</Eyebrow>
-            <div className="font-serif text-base">Full scoring detail, quarter by quarter</div>
+            <div className="font-serif text-base text-ink">Full scoring detail, quarter by quarter</div>
           </div>
           <span className="font-mono text-sm text-dim">{openRecord ? "−" : "+"}</span>
         </button>
