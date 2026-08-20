@@ -16,7 +16,7 @@
  * never disagree -- which was the one real risk in computing projections locally.
  */
 
-import { getApiBase, getToken } from "@/lib/api/client";
+import { authorizedFetch } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/types";
 import type { ApiErrorBody } from "@/lib/api/types";
 import { DEPARTMENTS } from "@/lib/simulation/constants";
@@ -38,10 +38,12 @@ import type {
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
   if (init.body) headers.set("Content-Type", "application/json");
-  const token = getToken();
-  if (token) headers.set("Authorization", `Bearer ${token}`);
 
-  const res = await fetch(`${getApiBase()}${path}`, { ...init, headers });
+  // `authorizedFetch`, not a bare `fetch`: these are the calls a CEO makes for an hour at a
+  // stretch, so they are exactly the ones that outlive a Supabase access token. Going through
+  // the shared client means a token nearing expiry is renewed before the call and a 401 is
+  // retried once, instead of surfacing as "could not run the plan" halfway through the run.
+  const res = await authorizedFetch(path, { ...init, headers });
   const text = await res.text();
   let body: unknown = null;
   if (text) {

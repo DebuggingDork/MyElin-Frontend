@@ -23,6 +23,7 @@ import type {
   QuarterDetailResponse,
   QuarterReportPdfResponse,
   QuarterReportResponse,
+  RefreshRequest,
   RegisterRequest,
   ResetPasswordRequest,
   RndAllocationSubmit,
@@ -48,6 +49,11 @@ export type StoredUser = { user_id: string; email: string };
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
   return window.localStorage.getItem(TOKEN_KEY);
+}
+
+export function getRefreshToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(REFRESH_KEY);
 }
 
 export function getStoredUser(): StoredUser | null {
@@ -81,6 +87,23 @@ export function persistSession(auth: AuthResponse) {
     USER_KEY,
     JSON.stringify({ user_id: auth.user_id, email: auth.email }),
   );
+  notifySession();
+}
+
+/** Subscribers to "the stored session changed underneath you" -- i.e. a silent refresh. Login
+ *  and logout already flow through `AuthProvider`'s own callbacks; a refresh does not, because
+ *  it happens inside whichever request happened to hit an expiring token. */
+const sessionListeners = new Set<() => void>();
+
+export function onSessionChange(listener: () => void): () => void {
+  sessionListeners.add(listener);
+  return () => {
+    sessionListeners.delete(listener);
+  };
+}
+
+function notifySession() {
+  sessionListeners.forEach((l) => l());
 }
 
 export function clearSession() {
@@ -88,6 +111,7 @@ export function clearSession() {
   window.localStorage.removeItem(REFRESH_KEY);
   window.localStorage.removeItem(USER_KEY);
   window.localStorage.removeItem(COMPANY_KEY);
+  notifySession();
 }
 
 let unauthorizedHandler: (() => void) | null = null;
@@ -102,6 +126,104 @@ export function onUnauthorized(handler: () => void): void {
   unauthorizedHandler = handler;
 }
 
+/* ── keeping the session alive ────────────────────────────────────
+ *
+ * Supabase issues an access token that expires in about an hour and a refresh token to trade
+ * for the next one. The refresh token was being stored and never used, so a run that took
+ * longer than an hour -- which a four-quarter simulation reliably does, usually somewhere
+ * around Q3 -- simply ran out of session: every call started coming back 401, the 401 handler
+ * cleared the session, and `RunShell` bounced the CEO to the login page mid-quarter.
+ *
+ * `authorizedFetch` closes that hole from both ends: it renews a token that is *about* to
+ * expire before spending it, and treats a 401 that slips through anyway (clock skew, a token
+ * revoked server-side) as one retryable event rather than the end of the session.
+ */
+
+/** Renew this far ahead of expiry, so a request never races the clock it just checked. */
+const REFRESH_SKEW_MS = 60_000;
+
+/** Seconds-since-epoch `exp` out of a JWT payload, or null if it isn't readable as one. */
+function tokenExpiry(token: string): number | null {
+  const payload = token.split(".")[1];
+  if (!payload) return null;
+  try {
+    const json = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
+    const exp = (JSON.parse(json) as { exp?: number }).exp;
+    return typeof exp === "number" ? exp : null;
+  } catch {
+    return null;
+  }
+}
+
+function isExpiringSoon(token: string): boolean {
+  const exp = tokenExpiry(token);
+  // An unreadable token is left alone: a 401 will still trigger the reactive path below, and
+  // guessing "expired" here would refresh on every single request.
+  if (exp === null) return false;
+  return exp * 1000 - Date.now() < REFRESH_SKEW_MS;
+}
+
+/** In-flight refresh, shared. The simulation fires several calls at once (run + endgame, a
+ *  debounced preview alongside them); without this they would each spend the refresh token,
+ *  and Supabase only honours the first -- the rest would come back 401 and sign the user out
+ *  for the exact reason this is meant to prevent. */
+let refreshInFlight: Promise<string | null> | null = null;
+
+async function refreshSession(): Promise<string | null> {
+  if (refreshInFlight) return refreshInFlight;
+
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) return null;
+
+  refreshInFlight = (async () => {
+    try {
+      // `api.refresh` sends this unauthenticated -- it authenticates with the refresh token in
+      // its body, and must never recurse back into the refresh path it is implementing.
+      const auth = await api.refresh({ refresh_token: refreshToken });
+      persistSession(auth);
+      return auth.access_token;
+    } catch {
+      // Refused (spent, revoked, expired) or unreachable. Either way there is no new token;
+      // the caller decides what a failed renewal means for the request it was making.
+      return null;
+    } finally {
+      refreshInFlight = null;
+    }
+  })();
+
+  return refreshInFlight;
+}
+
+/**
+ * `fetch` against the API with a Bearer token that is kept current, and one -- exactly one --
+ * retry after a renewal. Shared with `lib/simulation/remote.ts` so the simulation's own calls
+ * sit on the same session handling as everything else rather than a parallel copy of it.
+ */
+export async function authorizedFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  const send = (token: string | null) => {
+    const headers = new Headers(init.headers);
+    if (token) headers.set("Authorization", `Bearer ${token}`);
+    else headers.delete("Authorization");
+    return fetch(`${getApiBase()}${path}`, { ...init, headers });
+  };
+
+  let token = getToken();
+  if (token && isExpiringSoon(token)) token = (await refreshSession()) ?? token;
+
+  let res = await send(token);
+
+  if (res.status === 401 && getRefreshToken()) {
+    const renewed = await refreshSession();
+    if (renewed) res = await send(renewed);
+  }
+
+  // Still 401 with a fresh token (or nothing left to refresh with): the session really is
+  // over. This is the only path that signs the user out.
+  if (res.status === 401) unauthorizedHandler?.();
+
+  return res;
+}
+
 async function request<T>(
   path: string,
   init: RequestInit = {},
@@ -113,12 +235,14 @@ async function request<T>(
   if (!headers.has("Content-Type") && init.body && !(init.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
   }
-  if (auth) {
-    const token = getToken();
-    if (token) headers.set("Authorization", `Bearer ${token}`);
-  }
 
-  const res = await fetch(`${getApiBase()}${path}`, { ...init, headers });
+  // `auth` is false for register/login/forgot/reset and for the refresh call itself -- a 401
+  // there means "those credentials are wrong", not "your session expired", and must not clear
+  // a session, renew anything, or bounce the page.
+  const res = auth
+    ? await authorizedFetch(path, { ...init, headers })
+    : await fetch(`${getApiBase()}${path}`, { ...init, headers });
+
   if (res.status === 204) return undefined as T;
 
   const text = await res.text();
@@ -132,9 +256,6 @@ async function request<T>(
   }
 
   if (!res.ok) {
-    // `auth` is false for register/login themselves -- a 401 there means "those credentials are
-    // wrong", not "your session expired", and must not clear a session or bounce the page.
-    if (res.status === 401 && auth) unauthorizedHandler?.();
     throw new ApiError(res.status, (body ?? {}) as ApiErrorBody);
   }
   return body as T;
@@ -160,6 +281,15 @@ export const api = {
   login: (body: LoginRequest) =>
     request<AuthResponse>(
       "/auth/login",
+      { method: "POST", body: JSON.stringify(body) },
+      false,
+    ),
+
+  /** Trade the stored refresh token for a fresh session. Normally driven by `authorizedFetch`
+   *  rather than called directly. */
+  refresh: (body: RefreshRequest) =>
+    request<AuthResponse>(
+      "/auth/refresh",
       { method: "POST", body: JSON.stringify(body) },
       false,
     ),

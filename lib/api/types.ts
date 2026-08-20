@@ -27,6 +27,7 @@ export type AuthResponse = {
 };
 
 export type LoginRequest = { email: string; password: string };
+export type RefreshRequest = { refresh_token: string };
 export type RegisterRequest = { email: string; password: string };
 export type ForgotPasswordRequest = { email: string };
 export type ResetPasswordRequest = { access_token: string; new_password: string };

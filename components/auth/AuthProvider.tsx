@@ -13,6 +13,7 @@ import {
   clearSession,
   getStoredUser,
   getToken,
+  onSessionChange,
   onUnauthorized,
   persistSession,
   type StoredUser,
@@ -73,12 +74,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // An expired token otherwise leaves the UI signed-in-looking while every request 401s.
   // Registered at module scope inside an effect so it runs once, not per render.
+  //
+  // This now only fires once a renewal has already been tried and refused (see
+  // `authorizedFetch`), so reaching here really does mean the session is over -- an access
+  // token merely aging out mid-run is renewed silently and never gets this far.
   useEffect(() => {
     onUnauthorized(() => {
       clearSession();
       emit({ user: null, token: null, ready: true });
     });
   }, []);
+
+  // A silent refresh replaces the stored token without going through `login`, so re-read it
+  // when that happens -- otherwise anything rendering off `token` keeps the dead one.
+  useEffect(() => onSessionChange(hydrate), []);
 
   const login = useCallback(async (body: LoginRequest) => {
     const auth = await api.login(body);
