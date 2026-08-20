@@ -35,7 +35,16 @@ import {
 } from "@/lib/simulation/constants";
 import { inr, lakh, n0, n1, n2, num, pct, pw } from "@/lib/simulation/format";
 import { pipelineBoard } from "@/lib/simulation/insights";
-import { Bar, Eyebrow, Panel, TeachingNote } from "@/components/simulation/Kit";
+import {
+  Bar,
+  Eyebrow,
+  Panel,
+  TeachingNote,
+  optionCard,
+  optionMeta,
+  optionNote,
+  optionTitle,
+} from "@/components/simulation/Kit";
 import type {
   Alloc,
   CompanyState,
@@ -53,8 +62,10 @@ import type {
 const v = (r: QuarterResultShape, k: string) => r[k] as number;
 
 const choiceClass = (on: boolean) =>
-  "text-left border px-3 py-2 text-sm " +
-  (on ? "border-line-2 bg-chrome text-white" : "border-line bg-raise hover:border-line-2");
+  "text-left border px-3 py-2 text-sm transition-colors duration-150 ease-out " +
+  (on
+    ? "border-teal-deep bg-chrome text-white"
+    : "border-line bg-raise text-ink hover:border-teal/50 hover:bg-raise-2");
 
 /* ── the innovation board ─────────────────────────────────────────── */
 
@@ -118,18 +129,18 @@ export function InnovationBoard({
                   disabled={shipped || inFlight}
                   onClick={() => toggle(card.id)}
                   className={
-                    "text-left border p-3 " +
+                    "text-left border p-3 transition-colors duration-150 ease-out " +
                     (shipped
-                      ? "border-teal-deep bg-teal/10"
+                      ? "border-teal-deep bg-teal/10 text-ink"
                       : inFlight
-                        ? "border-ember bg-ember/10"
+                        ? "border-ember bg-ember/10 text-ink"
                         : picked
-                          ? "border-line-2 bg-chrome text-white"
-                          : "border-line bg-raise hover:border-line-2")
+                          ? "border-teal-deep bg-chrome text-white"
+                          : "border-line bg-raise text-ink hover:border-teal/50 hover:bg-raise-2")
                   }
                 >
                   <div className="flex items-baseline justify-between gap-2">
-                    <div className="font-serif text-base leading-snug">{card.name}</div>
+                    <div className={"font-serif text-base leading-snug " + optionTitle(picked)}>{card.name}</div>
                     <div className="font-mono text-sm shrink-0">
                       {shipped ? "Shipped" : inFlight ? n0(s.pipeline[card.id]) + "q left" : inr(card.cost)}
                     </div>
@@ -244,12 +255,12 @@ export function ProductPortfolio({
               >
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <div>
-                    <div className="font-serif text-xl">{prod.name}</div>
+                    <div className="font-serif text-xl text-ink">{prod.name}</div>
                     <div className="text-xs text-dim">{prod.blurb}</div>
                   </div>
                   <div className="text-right">
                     <Eyebrow>Stock on hand</Eyebrow>
-                    <div className="font-mono text-lg">{n0(num(cur.inv))} units</div>
+                    <div className="font-mono text-lg text-ink">{n0(num(cur.inv))} units</div>
                     <div className="text-xs text-dim">at {inr(num(cur.invCost))} each</div>
                   </div>
                 </div>
@@ -317,15 +328,12 @@ export function ProductPortfolio({
                         <button
                           key={status}
                           onClick={() => update(prod.id, { status })}
-                          className={
-                            "text-left border p-2 " +
-                            (on ? "border-line-2 bg-chrome text-white" : "border-line bg-raise hover:border-line-2")
-                          }
+                          className={optionCard(on, "p-2")}
                         >
-                          <div className="font-serif capitalize">
+                          <div className={"font-serif capitalize " + optionTitle(on)}>
                             {status === "active" ? "Keep building" : status === "paused" ? "Pause production" : "Discontinue"}
                           </div>
-                          <div className={"text-xs mt-1 " + (on ? "text-faint" : "text-dim")}>
+                          <div className={"text-xs mt-1 " + optionNote(on)}>
                             {PRODUCT_STATUS_COPY[status]}
                           </div>
                         </button>
@@ -384,13 +392,13 @@ export function PeoplePanel({
             <div key={d.id} className={"border p-3 " + (ratio >= 0.999 ? "border-line bg-raise" : TONE_CARD[tone])}>
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <div>
-                  <div className="font-serif text-lg">{d.name}</div>
+                  <div className="font-serif text-lg text-ink">{d.name}</div>
                   <div className="text-xs text-dim">
                     {d.drives} · {inr(d.salary)} a quarter each
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="font-mono text-lg">
+                  <div className="font-mono text-lg text-ink">
                     {n0(now)} → {n0(after)}
                   </div>
                   <div className={"text-xs font-mono " + TONE_TEXT[tone]}>
@@ -544,17 +552,14 @@ export function FinancePanel({
               <button
                 key={t.id}
                 onClick={() => setPayTerms(t.id)}
-                className={
-                  "text-left border p-3 " +
-                  (on ? "border-line-2 bg-chrome text-white" : "border-line bg-raise hover:border-line-2")
-                }
+                className={optionCard(on)}
               >
-                <div className={"font-serif text-base " + (on ? "text-white" : "text-ink")}>{t.name}</div>
-                <div className={"text-xs font-mono mt-1 " + (on ? "text-teal-bright" : "text-teal-deep")}>
+                <div className={"font-serif text-base " + optionTitle(on)}>{t.name}</div>
+                <div className={"text-xs font-mono mt-1 " + optionMeta(on)}>
                   cost {t.cogsMult === 1 ? "unchanged" : (t.cogsMult < 1 ? "−" : "+") + pct(Math.abs(1 - t.cogsMult) * 100)} ·
                   reliability {(t.rel >= 0 ? "+" : "") + t.rel}
                 </div>
-                <div className={"text-xs mt-1 " + (on ? "text-faint" : "text-dim")}>{t.note}</div>
+                <div className={"text-xs mt-1 " + optionNote(on)}>{t.note}</div>
               </button>
             );
           })}
@@ -586,15 +591,12 @@ export function WarrantyPanel({
             <button
               key={opt.id}
               onClick={() => setWarranty(opt.id)}
-              className={
-                "text-left border p-3 " +
-                (on ? "border-line-2 bg-chrome text-white" : "border-line bg-raise hover:border-line-2")
-              }
+              className={optionCard(on)}
             >
-              <div className="font-serif text-lg">{opt.name}</div>
-              <div className={"text-xs mt-1 " + (on ? "text-teal-bright" : "text-teal-deep")}>{opt.conv}</div>
-              <div className={"text-xs mt-1 " + (on ? "text-faint" : "text-dim")}>{opt.cost}</div>
-              <div className={"text-xs font-mono mt-2 " + (on ? "text-faint" : "text-dim")}>
+              <div className={"font-serif text-lg " + optionTitle(on)}>{opt.name}</div>
+              <div className={"text-xs mt-1 " + optionMeta(on)}>{opt.conv}</div>
+              <div className={"text-xs mt-1 " + optionNote(on)}>{opt.cost}</div>
+              <div className={"text-xs font-mono mt-2 " + optionNote(on)}>
                 {opt.mult ? inr(1000 * (defect / 100) * 1500 * opt.mult) + " per 1,000 units" : "₹0 per 1,000 units"}
               </div>
             </button>
@@ -708,7 +710,7 @@ export function ProductFocus({
       <div className="bg-raise border border-line">
         <header className="border-b border-line px-4 py-3">
           <Eyebrow tone="text-danger-deep">Product pipeline</Eyebrow>
-          <h3 className="font-serif text-lg">Where everything stands</h3>
+          <h3 className="font-serif text-lg text-ink">Where everything stands</h3>
         </header>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-line border-b border-line">
@@ -724,7 +726,7 @@ export function ProductFocus({
                 </span>
                 <span className="text-sm font-semibold text-ink">{stage.label}</span>
               </div>
-              <div className="font-mono text-2xl mt-1">{board.counts[stage.id as keyof typeof board.counts]}</div>
+              <div className="font-mono text-2xl mt-1 text-ink">{board.counts[stage.id as keyof typeof board.counts]}</div>
               <div className="text-xs text-dim">{stage.sub}</div>
             </div>
           ))}
@@ -754,7 +756,7 @@ export function ProductFocus({
                   }
                 >
                   <div className="flex items-baseline justify-between gap-2">
-                    <div className="font-serif text-base leading-snug">{item.name}</div>
+                    <div className="font-serif text-base leading-snug text-ink">{item.name}</div>
                     <span
                       className={
                         "px-1.5 py-0.5 text-xs uppercase tracking-widest shrink-0 " +

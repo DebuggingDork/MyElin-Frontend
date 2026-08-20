@@ -33,6 +33,33 @@ export function Eyebrow({
   return <div className={"text-xs uppercase tracking-widest font-semibold " + tone}>{children}</div>;
 }
 
+/* ── selectable option cards ──────────────────────────────────────────
+   Every "pick one of these" control in the simulation -- payment terms,
+   warranty, priorities, crisis strategies, innovation cards -- is the same
+   card in two states, so the classes live here once rather than being
+   retyped at each call site.
+
+   Each part names its own colour instead of inheriting one. Selected cards
+   sit on the fixed-dark `bg-chrome`, unselected on the cream `bg-raise`, so
+   a child that leaves `color` unset inherits whichever surface it happens to
+   land on -- which is what left unselected card titles rendering near-white
+   on cream. Stating the colour per state removes that coupling. */
+
+export const optionCard = (on: boolean, pad = "p-3") =>
+  `text-left border ${pad} transition-colors duration-150 ease-out ` +
+  (on
+    ? "border-teal-deep bg-chrome text-white"
+    : "border-line bg-raise text-ink hover:border-teal/50 hover:bg-raise-2");
+
+/** The card's name. Carries the weight, so it takes the strongest ink either way. */
+export const optionTitle = (on: boolean) => (on ? "text-white" : "text-ink");
+
+/** The teal consequence line ("cost -3.0% · reliability +3"). */
+export const optionMeta = (on: boolean) => (on ? "text-teal-bright" : "text-teal-deep");
+
+/** Supporting prose under the title. One step quieter than the name, never faint enough to lose. */
+export const optionNote = (on: boolean) => (on ? "text-faint" : "text-dim");
+
 export function Panel({
   eyebrow,
   title,
