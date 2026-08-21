@@ -197,7 +197,7 @@ export function Profile() {
                           setFirstName(e.target.value);
                         }}
                         placeholder="What should we call you?"
-                        className="mt-3 w-full rounded-2xl border border-line bg-field px-4 py-3.5 text-[14px] text-ink placeholder:text-faint focus:border-teal/60 focus:outline-none"
+                        className="mt-3 w-full rounded-2xl border border-line bg-[var(--field)] px-4 py-3.5 text-[14px] text-ink placeholder:text-faint focus:border-teal/60 focus:outline-none"
                       />
                     </div>
 
