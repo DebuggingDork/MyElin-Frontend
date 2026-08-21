@@ -1668,10 +1668,13 @@ export const TICKER_TONE: Record<Tone, string> = {
   flat: "text-tone-flat",
 };
 
+/** `border` is the *left* rule only: the card it lands on already carries `border-line` on all
+ *  four sides, and a whole-border utility next to that is a coin toss between two rules of
+ *  equal weight -- which is how the tone stopped showing at all. */
 export const MESSAGE_TONE: Record<string, { border: string; tag: string; label: string }> = {
-  critical: { border: "border-danger", tag: "bg-danger text-white", label: "Urgent" },
-  warning: { border: "border-ember", tag: "bg-ember-deep text-white", label: "Needs a view" },
-  info: { border: "border-line-2", tag: "bg-chrome text-white", label: "For information" },
+  critical: { border: "border-l-danger", tag: "bg-danger text-white", label: "Urgent" },
+  warning: { border: "border-l-ember", tag: "bg-ember-deep text-white", label: "Needs a view" },
+  info: { border: "border-l-line-2", tag: "bg-chrome text-white", label: "For information" },
 };
 
 /** Readiness level -> tone. Levels are the strings `readiness()` emits. */

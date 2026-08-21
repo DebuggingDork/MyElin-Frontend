@@ -22,10 +22,14 @@ import type {
   StrategyId,
 } from "@/lib/simulation/types";
 
+/** The left rule that tells damage from noise. Side-specific on purpose: the row already
+ *  carries `border-line` on every side, and a whole-border utility beside it is decided by
+ *  stylesheet order rather than intent -- which is why every function's evidence was reading
+ *  as the same neutral, hiding the one signal this step exists to be read for. */
 const EVIDENCE_BORDER: Record<string, string> = {
-  bad: "border-danger",
-  watch: "border-ember",
-  flat: "border-line-2",
+  bad: "border-l-danger",
+  watch: "border-l-ember",
+  flat: "border-l-line-2",
 };
 
 export function CrisisScreen({
