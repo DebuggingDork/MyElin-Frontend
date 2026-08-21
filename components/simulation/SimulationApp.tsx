@@ -36,6 +36,13 @@ import {
 } from "@/lib/simulation/constants";
 import { inr } from "@/lib/simulation/format";
 import {
+  playQuarterClosed,
+  setSoundEnabled,
+  soundEnabled,
+  soundEnabledOnServer,
+  subscribeSound,
+} from "@/lib/sound";
+import {
   bindingConstraint,
   boardAsks,
   changesSince,
@@ -244,6 +251,10 @@ export function SimulationApp() {
   const [phase, setPhase] = useState<Phase>("intro");
   const [advanced, setAdvanced] = useState(false);
   const [notesOn, setNotesOn] = useState(true);
+  // `localStorage` is the store here, not component state: reading it during render would
+  // differ between server and client and trip hydration, and mirroring it into `useState`
+  // would mean a second render for a value that was already known.
+  const soundOn = useSyncExternalStore(subscribeSound, soundEnabled, soundEnabledOnServer);
   const [ts, setTs] = useState<TermSheet | null>(null);
   const [endgameOutcome, setEndgameOutcome] = useState<Record<string, unknown> | null>(null);
   const [closed, setClosed] = useState<{ result: QuarterResultShape; score: QuarterScore } | null>(null);
@@ -569,6 +580,10 @@ export function SimulationApp() {
       if (locked.settlement) setEndgameOutcome(locked.settlement as unknown as Record<string, unknown>);
       if (locked.quarter >= 4) setRunStatus("completed");
       setPhase("closed");
+      // The quarter took real thought to close and the numbers arrive a beat later, so the
+      // report gets an audible arrival. Fired from the same gesture that closed the quarter,
+      // which is what makes it legal under the browser's autoplay rules.
+      playQuarterClosed();
       setWorking(null);
     } catch (err) {
       setError(
@@ -922,6 +937,23 @@ export function SimulationApp() {
                     }
                   >
                     Notes {notesOn ? "on" : "off"}
+                  </button>
+                  {/* The chime that marks a closed quarter, and the only way to silence it.
+                      A sound with no visible switch is a sound people mute the whole tab for. */}
+                  <button
+                    onClick={() => {
+                      setSoundEnabled(!soundOn);
+                      // Play it on the way on, so the switch demonstrates what it controls.
+                      if (!soundOn) playQuarterClosed();
+                    }}
+                    aria-pressed={soundOn}
+                    title={soundOn ? "Mute the quarter-close chime" : "Play a chime when a quarter closes"}
+                    className={
+                      "px-2 py-1 text-xs uppercase tracking-widest border transition-colors " +
+                      (soundOn ? "border-teal text-teal-bright" : "border-line-2 text-dim")
+                    }
+                  >
+                    Sound {soundOn ? "on" : "off"}
                   </button>
                 </div>
               )}

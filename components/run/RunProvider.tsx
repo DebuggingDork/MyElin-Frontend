@@ -21,6 +21,7 @@ import type {
   RunStateResponse,
 } from "@/lib/api/types";
 import { ApiError } from "@/lib/api/types";
+import { playQuarterClosed } from "@/lib/sound";
 
 type RunContextValue = {
   /** The uuid. Every API call takes this; it is never put in a URL. */
@@ -189,6 +190,10 @@ export function RunProvider({
     try {
       const rep = await api.lockQuarter(companyId, quarterId);
       setReport(rep);
+      // Same cue the four-quarter run uses when a report lands, fired here rather than on the
+      // report screen: the browser only allows playback while the click that locked the
+      // quarter is still the active gesture, and that is gone by the time the page changes.
+      playQuarterClosed();
       await refresh();
       return rep;
     } catch (err) {
