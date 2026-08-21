@@ -28,6 +28,7 @@ import { formatDecimal, humanizeId } from "@/lib/format/display";
 import { Action, Container, Eyebrow, Meter, Panel, Pill, type Accent } from "@/components/ui/Kit";
 import { cn } from "@/lib/utils";
 import { useSimulationHref } from "@/components/play/entry";
+import { InlineLoading } from "@/components/ui/Loading";
 
 const RUN_STATUS_LABEL: Record<RunStatus, string> = {
   active: "Active",
@@ -188,7 +189,7 @@ export function MyRuns() {
               )}
 
               {!error && runs === null && (
-                <p className="mt-8 text-[14px] text-dim">Loading your simulations…</p>
+                <InlineLoading className="mt-8" label="Loading your simulations…" />
               )}
 
               {!error && runs !== null && visible.length === 0 && (

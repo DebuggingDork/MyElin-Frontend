@@ -24,6 +24,7 @@ import type { InstitutionRef } from "@/lib/institutions";
 import { MAX_GOALS, degreeOptions, goalOptions, yearOptions } from "@/lib/profile";
 import { Action, Container, Eyebrow, Panel, Pill, type Accent } from "@/components/ui/Kit";
 import { cn } from "@/lib/utils";
+import { ButtonSpinner, InlineLoading } from "@/components/ui/Loading";
 
 const RUN_STATUS_LABEL: Record<RunStatus, string> = {
   active: "Active",
@@ -157,7 +158,7 @@ export function Profile() {
             </Panel>
           )}
 
-          {user && loading && <p className="text-[14px] text-dim">Loading your profile…</p>}
+          {user && loading && <InlineLoading label="Loading your profile…" />}
 
           {user && !loading && loadError && (
             <p className="rounded-xl border border-rose/30 bg-rose/[0.07] px-4 py-3 text-[13px] text-rose">
@@ -284,7 +285,7 @@ export function Profile() {
 
                     <div className="flex items-center gap-4">
                       <Action type="submit" disabled={saving}>
-                        <Save className="h-4 w-4" />
+                        {saving ? <ButtonSpinner /> : <Save className="h-4 w-4" />}
                         {saving ? "Saving…" : "Save changes"}
                       </Action>
                       {saved && <span className="text-[12.5px] text-teal">Saved.</span>}

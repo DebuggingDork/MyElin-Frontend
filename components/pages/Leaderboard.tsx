@@ -14,6 +14,7 @@ import { ApiError } from "@/lib/api/types";
 import { Action, Container, Eyebrow, Panel, Pill, type Accent } from "@/components/ui/Kit";
 import { cn } from "@/lib/utils";
 import { useSimulationHref } from "@/components/play/entry";
+import { InlineLoading } from "@/components/ui/Loading";
 
 const STATUS_ACCENT: Record<string, Accent> = {
   active: "teal",
@@ -128,7 +129,7 @@ export function Leaderboard() {
             </Panel>
           )}
 
-          {user && loading && <p className="text-[14px] text-dim">Loading standings…</p>}
+          {user && loading && <InlineLoading label="Loading standings…" sub="Reading every run on the board." />}
 
           {user && error && (
             <p className="rounded-xl border border-rose/30 bg-rose/[0.07] px-4 py-3 text-[13px] text-rose">

@@ -1,10 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { Loader2 } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useRun } from "@/components/run/RunProvider";
+import { PageLoading } from "@/components/ui/Loading";
 
 /**
  * Thin chrome for every run screen: just the auth/loading guard. The
@@ -38,32 +39,38 @@ export function RunShell({ children }: { children: React.ReactNode }) {
 
   if (!ready || loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-void text-dim">
-        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-        Loading run state…
+      <div className="flex min-h-screen items-center justify-center bg-void text-ink">
+        <PageLoading
+          label={ready ? "Loading run state…" : "Checking your session…"}
+          sub={ready ? "Resolving the run and its closed quarters." : undefined}
+        />
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-void text-dim">
-        Redirecting to login…
+      <div className="flex min-h-screen items-center justify-center bg-void text-ink">
+        <PageLoading label="Taking you to sign in…" sub="This run reopens straight after." />
       </div>
     );
   }
 
   /**
-   * The run reference in the URL is not one this account owns.
-   *
-   * Rendering the screens anyway would fire every request against a company that does not
-   * exist and bury the real reason under a stack of 404s, so stop here and state it. This is
-   * the case a mistyped `/run/<n>` lands in, which the uuid URLs could not produce.
+   * The run number in the URL is not one of this account's. Say so and stop -- rendering the
+   * screens anyway would fire every request against a company that does not exist and bury the
+   * real reason under a stack of 404s.
    */
   if (!companyId) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-void px-6 text-center text-dim">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-void px-6 text-center">
         <p className="text-[15px] text-ink">{error ?? "That run could not be found."}</p>
+        <Link
+          href="/runs"
+          className="rounded-full border border-line px-4 py-2 text-[13px] text-dim transition-colors hover:border-line-2 hover:text-ink"
+        >
+          See your simulations
+        </Link>
       </div>
     );
   }
