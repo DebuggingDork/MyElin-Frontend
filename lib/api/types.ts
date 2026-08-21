@@ -308,6 +308,60 @@ export type CompanyOutcomeSchema = {
   valuation_gap_reason: string | null;
 };
 
+/**
+ * Vertical-format balance sheet as at the quarter close -- assets first, then equity and
+ * liabilities, which is the vertical format the course teaches.
+ *
+ * Every line is nullable and the sheet carries a `gap_reason`, because the engine does not
+ * report a full position for every scenario. That mirrors how `valuation_inr` /
+ * `valuation_gap_reason` already behave: render what was reported, say "not reported" for the
+ * rest, and never print a zero the engine did not actually produce.
+ *
+ * Section grouping, row labels and row order are deliberately NOT on the wire -- the
+ * statement's layout is presentation, and lives in `QuarterBalanceSheet.tsx`.
+ */
+export type BalanceSheetSchema = {
+  /** Close-of-quarter date, when the engine dates the position. */
+  as_at: string | null;
+
+  /* Non-current assets */
+  property_plant_equipment_inr: Money | null;
+  intangible_assets_inr: Money | null;
+  non_current_investments_inr: Money | null;
+  other_non_current_assets_inr: Money | null;
+
+  /* Current assets */
+  inventories_inr: Money | null;
+  current_investments_inr: Money | null;
+  trade_receivables_inr: Money | null;
+  cash_and_equivalents_inr: Money | null;
+  other_current_assets_inr: Money | null;
+
+  total_assets_inr: Money | null;
+
+  /* Equity */
+  share_capital_inr: Money | null;
+  retained_earnings_inr: Money | null;
+  other_equity_inr: Money | null;
+
+  /* Non-current liabilities */
+  long_term_borrowings_inr: Money | null;
+  long_term_provisions_inr: Money | null;
+  deferred_tax_liabilities_inr: Money | null;
+  other_non_current_liabilities_inr: Money | null;
+
+  /* Current liabilities */
+  short_term_borrowings_inr: Money | null;
+  trade_payables_inr: Money | null;
+  other_current_liabilities_inr: Money | null;
+  short_term_provisions_inr: Money | null;
+
+  total_equity_and_liabilities_inr: Money | null;
+
+  /** Why the position is partial or absent, when it is. */
+  gap_reason: string | null;
+};
+
 export type ModifierLineSchema = {
   id: string;
   points: Money;
@@ -363,6 +417,8 @@ export type QuarterReportResponse = {
   binding_constraints: BindingConstraintSchema[];
   decision_quality: DecisionQualitySchema;
   evidence: Record<string, EvidenceObservationSchema[]>;
+  /** Optional: quarters locked before the engine reported a position simply omit it. */
+  balance_sheet?: BalanceSheetSchema | null;
   run_status: RunStatus;
   survival_triggered_by: string | null;
   survival_detail: string | null;
