@@ -190,11 +190,15 @@ export type QuarterResultShape = {
   warranty: WarrantyId;
   notes: string[];
   neutralised: boolean;
-  terms: { id: PayTermsId; name: string; days: number; cogsMult: number; rel: number; note: string };
+  /** Optional because the engine does not send it: the terms in force are read off
+   *  `next.payTerms` through `PAY_TERMS`. Kept in the shape for the ported screens that still
+   *  reach for it, but every read has to cope with it being absent. */
+  terms?: { id: PayTermsId; name: string; days: number; cogsMult: number; rel: number; note: string };
   entering: CompanyState;
   next: CompanyState;
   P: Record<ProductId, ProductState>;
-  crisis: { variant: ArchetypeId; choice: StrategyId | null } | null;
+  /** Also not sent: the engine reports `crisisVariant`/`crisisStrategy` as flat fields. */
+  crisis?: { variant: ArchetypeId; choice: StrategyId | null } | null;
   situation: CrisisSituation | null;
   staffing: Record<DeptId, number>;
   need: Record<DeptId, number>;

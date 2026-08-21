@@ -10,7 +10,7 @@
  * marked where they occur. Every figure and every class is otherwise unchanged.
  */
 
-import { PRODUCTS } from "@/lib/simulation/constants";
+import { PAY_TERMS, PRODUCTS } from "@/lib/simulation/constants";
 import { cr, inr, lakh, n0, n1, n2, pct } from "@/lib/simulation/format";
 import { Eyebrow, LedgerRow, Panel } from "@/components/simulation/Kit";
 import type { BalanceView } from "@/lib/simulation/balance";
@@ -219,7 +219,9 @@ export function ProfitAndLoss({ r }: { r: QuarterResultShape }) {
 /* ── cash flow ────────────────────────────────────────────────────── */
 
 export function CashFlow({ r }: { r: QuarterResultShape }) {
-  const terms = r.terms as { name: string };
+  /* The engine does not return a `terms` object -- it returns the terms the quarter left in
+     force on the state. Reading `r.terms.name` threw the moment this statement was opened. */
+  const terms = r.terms ?? PAY_TERMS[r.next.payTerms] ?? PAY_TERMS.net30;
 
   return (
     <Panel
