@@ -1,4 +1,3 @@
-import { Footer } from "@/components/layout/Footer";
 import { Nav } from "@/components/layout/Nav";
 
 /**
@@ -10,15 +9,16 @@ import { Nav } from "@/components/layout/Nav";
  * nav's geometry and the accent set underneath a bar that had not moved. Same shell, same
  * tokens, every route: the only thing a nav click changes is the content.
  *
- * `min-h-screen` with `flex-1` on the main column keeps the footer on the fold for the short
- * pages (pricing, account) without pushing the long ones around.
+ * The footer is not here. `(marketing)` carries it -- see that layout for why the account
+ * pages do without -- so both nested layouts render their own `<main>` as direct children of
+ * this flex column, which is what lets a footer sit under a full-height main rather than
+ * inside it.
  */
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="ledger flex min-h-screen flex-col">
       <Nav />
-      <main className="flex-1">{children}</main>
-      <Footer />
+      {children}
     </div>
   );
 }
