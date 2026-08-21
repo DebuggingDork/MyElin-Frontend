@@ -1182,6 +1182,25 @@ body {
   --ember-soft: #f2a488;
   --ember-deep: #b8542f;
 
+  /* The document's own red. Left undefined, the app's rose (#fda4af) came
+     through, and since every section marker on these screens is an Eyebrow in
+     `tone-bad`, the whole report read as a page of alerts. In the cream theme
+     that accent is a deep editorial maroon; this is its dark-theme twin --
+     warm, in the same family as --ember, and unmistakably "this cost you
+     something" on a number without shouting it on a heading. */
+  --danger: #e2694a;
+  --danger-soft: #f0a48c;
+  /* A background, so it has to carry white -- but #881337 read as a bruise on
+     this surface, and the constraint card it frames disappeared into it. */
+  --danger-deep: #a8452a;
+
+  /* The masthead band, the "biggest constraint" header, the selected option
+     card, the primary button. `--chrome` is #0a221c app-wide, which is this
+     surface's own --base to the eye: every one of those bands vanished. On a
+     cream page a band works by going dark; on a dark page it has to go the
+     other way, so this sits a step *above* the document rather than below it. */
+  --chrome: #1a453b;
+
   --violet: #2fbdbd;
   --violet-2: #8fdada;
   --indigo: #0f6b6b;
@@ -1196,7 +1215,7 @@ body {
      are free to go light on a dark surface and dark on a light one. */
   --tone-good: #5fd6d6;
   --tone-watch: #f2a488;
-  --tone-bad: #fda4af;
+  --tone-bad: #e87a5c;
   --tone-flat: var(--text);
 
   /* The rail and its toolbar. Their own names because the rail sits one step
@@ -1204,7 +1223,9 @@ body {
   --sim-surface: #0d2621;
   --sim-surface-raised: #12302a;
   --sim-surface-hover: #1a4038;
-  --sim-line: #1d3f38;
+  /* Every border in here resolves to this. At #1d3f38 the ruled structure the
+     whole document is built from was barely present on the dark ground. */
+  --sim-line: #26534a;
   --sim-faint: #869890;
   --sim-ink: #f5ece3;
 }
@@ -1245,6 +1266,14 @@ body {
   --emerald: #0f9d9d;
   --rose: #1c1917;
   --pink: #24b1b1;
+
+  /* Restated, not inherited: the block above is the base for both themes, so
+     without these the dark surface's warm red and raised band would follow the
+     document onto cream. These are the values the light theme already had. */
+  --danger: #be123c;
+  --danger-soft: #fda4af;
+  --danger-deep: #881337;
+  --chrome: #0a221c;
 
   --tone-good: #004f4f;
   --tone-watch: #7d3311;
