@@ -945,23 +945,29 @@ body {
   color: var(--text);
 }
 
-/* A true low-chroma document white, deliberately not the warm cream that every
-   generated "editorial" theme reaches for. Ink is near-black with just enough
-   green in it to belong to the same family as the dark surface. */
+/* A document white with the brand in it, deliberately not the warm cream that
+   every generated "editorial" theme reaches for -- and not the flat office
+   white it started as either. The page is paper with a trace of teal in the
+   pulp, the rules are drawn in teal ink rather than grey, and the ink is
+   near-black with enough green to belong to the same family as the dark
+   surface. Roughly a fifth of the page carries the brand; the rest is white
+   and ink, which is what keeps it readable. */
 :root[data-theme="light"] .ledger {
-  --void: #fbfbfa;
-  --base: #f4f4f2;
-  --raise: #ecedea;
-  --raise-2: #dfe1dd;
+  --void: #f7fbf9;
+  --base: #eff6f3;
+  --raise: #e6f0ed;
+  --raise-2: #d7e8e3;
 
-  --panel: rgba(10, 107, 96, 0.04);
-  --panel-2: rgba(10, 107, 96, 0.07);
-  --line: rgba(13, 20, 18, 0.14);
-  --line-2: rgba(13, 20, 18, 0.3);
+  --panel: rgba(10, 107, 96, 0.05);
+  --panel-2: rgba(10, 107, 96, 0.09);
+  /* Teal ink, not grey: a ruled page reads as drawn rather than as a table
+     with its gridlines left on. */
+  --line: rgba(10, 107, 96, 0.2);
+  --line-2: rgba(10, 107, 96, 0.38);
 
-  --text: #0d1412;
-  --dim: #47524f;
-  --faint: #5d6864;
+  --text: #0b1614;
+  --dim: #3f4d4a;
+  --faint: #5b6a66;
 
   --teal: #0a6b60;
   --teal-bright: #0a6b60;
