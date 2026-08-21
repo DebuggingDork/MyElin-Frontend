@@ -606,8 +606,10 @@ export function SimulationApp() {
    *  the two can never drift apart. */
   const navBody = (
     <>
-      {/* The collapse control lives on the rail it collapses, not out beside the brand
-          mark, so it reads as part of the panel rather than a stray toolbar icon. */}
+      {/* No collapse control here any more: one toggle owns the rail, and it lives in the
+          simulation header where it is in the same place whether the rail is open or shut.
+          A second control on the panel could only ever close it, which is the half of the job
+          that was already easy. */}
       {/* pl-3 against the rail's px-5 puts this label on the same 32px left rule as the
           toolbar's logo above it and the nav labels below it. */}
       <div className="flex items-center justify-between gap-2 pb-2 pl-3">
@@ -678,38 +680,13 @@ export function SimulationApp() {
             the simulation's fixed cream surface below. */}
         <div className="shrink-0 border-b border-line bg-base">
           <div className={SHELL + " flex items-center justify-between gap-3 px-4 py-2 sm:px-6 lg:px-8"}>
-          <div className="flex min-w-0 items-center gap-3">
-            <Link href="/" aria-label="Myelin home" className="flex shrink-0 items-center">
-              <Logo variant="glyph" />
-            </Link>
-            {/* Only shown when there is no rail to collapse from: the drawer trigger below
-                lg, and the re-open control once the desktop rail is closed. */}
-            {showNav && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => setMobileNavOpen(true)}
-                  aria-label="Open navigation"
-                  className="flex h-8 items-center gap-1.5 rounded-md px-2 text-[13px] text-dim transition-colors hover:bg-[var(--panel-2)] hover:text-ink lg:hidden"
-                >
-                  <PanelLeftOpen className="h-4 w-4" />
-                  Menu
-                </button>
-                {!navOpen && (
-                  <button
-                    type="button"
-                    onClick={toggleNav}
-                    aria-label="Expand navigation"
-                    aria-expanded={false}
-                    className="hidden h-8 items-center gap-1.5 rounded-md px-2 text-[13px] text-dim transition-colors hover:bg-[var(--panel-2)] hover:text-ink lg:flex"
-                  >
-                    <PanelLeftOpen className="h-4 w-4" />
-                    Departments
-                  </button>
-                )}
-              </>
-            )}
-          </div>
+          {/* Account chrome only. The department toggle used to sit here, which put the
+              control for a panel inside the simulation on the bar that carries "log out" --
+              two different scopes on one rule. It now lives in the simulation's own header
+              below, beside the quarter it belongs to. */}
+          <Link href="/" aria-label="Myelin home" className="flex shrink-0 items-center">
+            <Logo variant="glyph" />
+          </Link>
           <div className="flex shrink-0 items-center gap-3">
             <ThemeToggle />
             <div className="h-5 w-px bg-line" aria-hidden />
@@ -720,10 +697,22 @@ export function SimulationApp() {
 
         <div className="simulation min-h-0 flex-1 overflow-hidden bg-base text-ink">
           <div className={SHELL + " flex h-full"}>
-          {showNav && navOpen && (
+          {/* Always mounted while there is a rail to show, and collapsed by animating its
+              width to zero rather than by unmounting.
+
+              Mounting and unmounting could not be transitioned -- the panel and the document
+              both jumped by 220px -- and it also threw away the rail's scroll position every
+              time it was closed. The outer element is the only thing that changes size; the
+              inner one keeps the full rail width throughout, so the nav labels slide out of
+              view intact instead of reflowing to nothing on the way. */}
+          {showNav && (
             <aside
-              className="hidden shrink-0 flex-col border-r border-sim-line bg-sim-surface px-5 py-4 lg:flex"
-              style={{ width: RAIL_W }}
+              inert={!navOpen ? true : undefined}
+              className={cn(
+                "hidden shrink-0 overflow-hidden bg-sim-surface transition-[width] duration-300 ease-out motion-reduce:transition-none lg:block",
+                navOpen ? "border-r border-sim-line" : "border-r-0",
+              )}
+              style={{ width: navOpen ? RAIL_W : 0 }}
             >
               {navBody}
             </aside>
@@ -747,14 +736,58 @@ export function SimulationApp() {
           {/* Sticky: quarter, cash and what is left to commit are the figures you are deciding
               against, so they stay on screen while the document scrolls under them. */}
           <header className="sticky top-0 z-20 shrink-0 bg-chrome text-white">
-            <div className={COLUMN + " py-3 flex flex-wrap items-center justify-between gap-3"}>
-              <div className="flex items-baseline gap-3">
-                <span className="font-serif text-xl">Nadi Wear</span>
-                <span className="text-xs uppercase tracking-widest text-dim">Chief Executive</span>
+            {/* `min-w-0` on both halves and `flex-wrap` on the row: the status cluster is the
+                widest thing in the simulation and it has to be allowed to drop to its own line
+                rather than push the title off the left edge. Nothing here is `nowrap`. */}
+            <div className={COLUMN + " py-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2"}>
+              <div className="flex min-w-0 items-center gap-3">
+                {/* The department toggle, in the workspace it belongs to.
+
+                    Two controls rather than one because they do different things: below `lg`
+                    the departments are a drawer over the document, at `lg` and up they are a
+                    rail beside it. Splitting them on a breakpoint class keeps both correct
+                    without reading the viewport width during render, which the server cannot
+                    do. */}
+                {showNav && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={toggleNav}
+                      aria-expanded={navOpen}
+                      aria-label={navOpen ? "Collapse departments" : "Expand departments"}
+                      className={
+                        "hidden shrink-0 items-center gap-1.5 border px-2 py-1 text-xs uppercase tracking-widest transition-colors lg:inline-flex " +
+                        (navOpen
+                          ? "border-teal text-teal-bright hover:bg-white/5"
+                          : "border-line-2 text-dim hover:text-white")
+                      }
+                    >
+                      {navOpen ? (
+                        <PanelLeftClose className="h-3.5 w-3.5" />
+                      ) : (
+                        <PanelLeftOpen className="h-3.5 w-3.5" />
+                      )}
+                      <span className="hidden sm:inline">Departments</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMobileNavOpen(true)}
+                      aria-label="Open departments"
+                      className="inline-flex shrink-0 items-center gap-1.5 border border-line-2 px-2 py-1 text-xs uppercase tracking-widest text-dim transition-colors hover:text-white lg:hidden"
+                    >
+                      <PanelLeftOpen className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline">Departments</span>
+                    </button>
+                  </>
+                )}
+                <span className="truncate font-serif text-xl">Nadi Wear</span>
+                <span className="hidden text-xs uppercase tracking-widest text-dim md:inline">
+                  Chief Executive
+                </span>
               </div>
 
               {showNav && (
-                <div className="flex flex-wrap items-center gap-x-5 gap-y-1 font-mono text-sm">
+                <div className="flex min-w-0 flex-wrap items-center gap-x-5 gap-y-1 font-mono text-sm">
                   <span>
                     <span className="text-dim text-xs uppercase tracking-widest mr-2">Quarter</span>
                     {state.quarter}/4
