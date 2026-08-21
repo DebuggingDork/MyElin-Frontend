@@ -1,5 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import { Action, Container } from "@/components/ui/Kit";
+import { Figures, Masthead } from "@/components/layout/PageChrome";
 import { DecisionPanel } from "@/components/home/DecisionPanel";
 
 /** Kept honest against the shipped engine: the scenario runs 4 quarters (config/scenarios,
@@ -24,20 +25,7 @@ export function Hero() {
     >
       <div className="grid-lines absolute inset-0" />
 
-      {/* Masthead strip. A newspaper puts its edition line above the fold and so does
-          this: what the thing is on the left, what state it is in on the right. */}
-      <div className="relative z-10 border-b border-line">
-        <Container
-          wide
-          className="flex flex-wrap items-center justify-between gap-3 py-3"
-        >
-          <p className="tick-label">Myelin · Decision Intelligence</p>
-          <p className="tick-label flex items-center gap-2">
-            <span className="live-dot h-1.5 w-1.5 rounded-full bg-teal" />
-            S-25 cohort open
-          </p>
-        </Container>
-      </div>
+      <Masthead section="Decision Intelligence" />
 
       {/* `flex-1` hands this row whatever the masthead and the footing leave, and `items-center`
           settles the content in the middle of it -- so the hero re-centres as the viewport
@@ -82,25 +70,7 @@ export function Hero() {
         </div>
       </Container>
 
-      {/* The figures, set as a ledger footing: hairline-divided columns, monospace
-          numerals, label under value. No cards, no icons, no tinted panels. */}
-      <div className="relative z-10 border-t border-line">
-        <Container wide className="px-0 sm:px-0">
-          <dl className="grid grid-cols-2 divide-x divide-y divide-line sm:grid-cols-4 sm:divide-y-0">
-            {figures.map((figure) => (
-              <div
-                key={figure.label}
-                className="rise rise-3 px-5 py-7 first:border-l-0 sm:px-8"
-              >
-                <dt className="num text-[clamp(1.9rem,3vw,2.6rem)] leading-none text-ink">
-                  {figure.value}
-                </dt>
-                <dd className="tick-label mt-3">{figure.label}</dd>
-              </div>
-            ))}
-          </dl>
-        </Container>
-      </div>
+      <Figures items={figures} />
     </section>
   );
 }

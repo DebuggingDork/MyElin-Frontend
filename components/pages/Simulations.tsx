@@ -2,33 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import {
-  ArrowRight,
-  Bell,
-  Clock,
-  Gauge,
-  Layers,
-  Play,
-  Signal,
-  Sparkles,
-} from "lucide-react";
-import { easeOut } from "@/lib/media";
+import { ArrowRight, Play } from "lucide-react";
+import { duration, easeOut } from "@/lib/media";
 import { api, getToken } from "@/lib/api/client";
 import { runHref } from "@/lib/run/ref";
 import type { CompanyListItem } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import { useSimulationHref } from "@/components/play/entry";
-import {
-  Action,
-  Container,
-  Eyebrow,
-  Meter,
-  Panel,
-  Pill,
-  SectionHead,
-  accentVar,
-  type Accent,
-} from "@/components/ui/Kit";
+import { Figures, Masthead } from "@/components/layout/PageChrome";
+import { LedgerHead } from "@/components/home/LedgerHead";
+import { Action, Container } from "@/components/ui/Kit";
 
 type Status = "LIVE" | "BETA" | "COMING";
 
@@ -40,8 +23,8 @@ type Scenario = {
   copy: string;
   duration: string;
   level: string;
+  /** 0-100. Rendered as a tick bar, never as a coloured pill — it is a reading, not a badge. */
   intensity: number;
-  accent: Accent;
 };
 
 const scenarios: Scenario[] = [
@@ -50,87 +33,101 @@ const scenarios: Scenario[] = [
     title: "Startup Survival",
     status: "LIVE",
     category: "Founder",
-    copy: "Run a seed-stage SaaS for 4 simulated quarters. Pressure: cash, crisis, co-founder, competitor.",
+    copy: "Run a consumer-hardware company for four quarters. Pressure: cash, a market event, the board, a competitor who does not wait.",
     duration: "30 min",
     level: "Beginner → Pro",
     intensity: 62,
-    accent: "violet",
   },
   {
     index: "02",
     title: "M&A War Room",
     status: "BETA",
     category: "Strategy",
-    copy: "You're the acquirer. Diligence, deal structure, integration. Hidden liabilities mature post-close.",
+    copy: "You are the acquirer. Diligence, deal structure, integration — and hidden liabilities that only mature after close.",
     duration: "45 min",
     level: "Pro",
     intensity: 84,
-    accent: "indigo",
   },
   {
     index: "03",
     title: "Crisis Comms",
     status: "COMING",
     category: "Leadership",
-    copy: "A safety incident just hit Twitter. Your CEO is offline. You have 90 minutes.",
+    copy: "A safety incident is trending. Your CEO is on a flight. You have ninety minutes and one statement.",
     duration: "20 min",
     level: "Pro",
     intensity: 78,
-    accent: "rose",
   },
   {
     index: "04",
     title: "Turnaround",
     status: "COMING",
     category: "Operator",
-    copy: "You inherited a Series C company at ₹4M burn and 5 months runway. Save it or wind it down.",
+    copy: "You inherit a Series C company at ₹4 Cr of burn and five months of runway. Save it or wind it down.",
     duration: "40 min",
     level: "Expert",
     intensity: 96,
-    accent: "amber",
   },
   {
     index: "05",
     title: "Fundraise",
     status: "COMING",
     category: "Founder",
-    copy: "Pitch 12 VCs, negotiate term sheets, choose your lead. Dilution vs. control.",
+    copy: "Pitch twelve funds, negotiate the term sheets, choose your lead. Dilution against control, priced in public.",
     duration: "25 min",
     level: "Beginner",
     intensity: 34,
-    accent: "emerald",
   },
   {
     index: "06",
     title: "Product Pivot",
     status: "COMING",
     category: "PM",
-    copy: "Growth has flatlined. Pivot, pivot-and-bridge, or persevere?",
+    copy: "Growth has flatlined for three quarters. Pivot, bridge, or persevere — and defend it to the people who funded the old plan.",
     duration: "30 min",
     level: "Intermediate",
     intensity: 58,
-    accent: "cyan",
   },
 ];
 
-const statusAccent: Record<Status, Accent> = {
-  LIVE: "emerald",
-  BETA: "amber",
-  COMING: "indigo",
-};
-
 const filters = ["All", "Founder", "Strategy", "Leadership", "Operator", "PM"] as const;
 
-const shelfStats = [
-  { value: "1", label: "live now", accent: "emerald" as Accent },
-  { value: "1", label: "in beta", accent: "amber" as Accent },
-  { value: "4", label: "shipping soon", accent: "indigo" as Accent },
-  { value: "7", label: "dimensions scored", accent: "cyan" as Accent },
+const figures = [
+  { value: "1", label: "Live now" },
+  { value: "1", label: "In beta" },
+  { value: "4", label: "Shipping soon" },
+  { value: "7", label: "Dimensions scored" },
 ];
+
+/** Teal is the live system; anything unshipped stays on the quiet rule. */
+const statusTone: Record<Status, string> = {
+  LIVE: "text-teal",
+  BETA: "text-ember",
+  COMING: "text-faint",
+};
+
+/** Intensity as seven ticks, so six cases can be compared at a glance instead of each
+ *  asserting its own number against its own colour. */
+function TickBar({ value, lit }: { value: number; lit: boolean }) {
+  const on = Math.round((value / 100) * 7);
+  return (
+    <span aria-hidden className="flex items-end gap-[3px]">
+      {Array.from({ length: 7 }).map((_, i) => (
+        <span
+          key={i}
+          className={cn(
+            "w-[3px] transition-colors duration-300",
+            i < on ? (lit ? "bg-teal" : "bg-dim") : "bg-line-2",
+          )}
+          style={{ height: 5 + i * 2.2 }}
+        />
+      ))}
+    </span>
+  );
+}
 
 export function Simulations() {
   const simulationHref = useSimulationHref();
-
   const [filter, setFilter] = useState<(typeof filters)[number]>("All");
 
   /**
@@ -169,44 +166,32 @@ export function Simulations() {
     : null;
 
   const visible =
-    filter === "All"
-      ? scenarios
-      : scenarios.filter((s) => s.category === filter);
+    filter === "All" ? scenarios : scenarios.filter((s) => s.category === filter);
 
   return (
     <>
-      <section className="relative overflow-hidden border-b border-line bg-void pb-14 pt-[68px]">
-        <div className="aurora" />
+      {/* ── the opening band ──────────────────────────────────────── */}
+      <section className="relative border-b border-line pt-[68px]">
         <div className="grid-lines absolute inset-0" />
+        <Masthead section="Simulations" />
 
-        <Container wide className="relative z-10 pt-16 sm:pt-24">
-          <div className="grid gap-12 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
-            <div>
-              <Eyebrow accent="teal">MYELIN — SIMULATIONS / MARKETPLACE</Eyebrow>
-              <motion.h1
-                initial={{ opacity: 0, y: 22 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, ease: easeOut }}
-                className="display mt-7 text-[clamp(2.5rem,6.4vw,4.6rem)] leading-[0.98] text-ink"
-              >
-                Pick your <span className="text-grad">weight class.</span>
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.12, ease: easeOut }}
-                className="mt-7 max-w-xl text-[17px] leading-[1.7] text-dim"
-              >
-                Scenarios published by Myelin Labs and partner institutions. New
-                cases every month.
-              </motion.p>
+        <Container
+          wide
+          className="relative z-10 grid gap-x-16 gap-y-12 py-[clamp(3rem,7vh,5.5rem)] lg:grid-cols-[1.15fr_1fr] lg:items-end"
+        >
+          <div>
+            <h1 className="ledger-display rise text-balance text-[clamp(2.5rem,5.4vw,4.5rem)] text-ink">
+              Pick your <span className="italic text-teal">weight class.</span>
+            </h1>
 
-              <motion.div
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2, ease: easeOut }}
-                className="mt-9 flex flex-wrap items-center gap-3"
-              >
+            <div className="rise rise-1 mt-[clamp(1.75rem,4vh,2.25rem)] max-w-[46ch] border-t border-line pt-6">
+              <p className="text-pretty text-[16.5px] leading-[1.7] text-dim">
+                Cases published by Myelin Labs and partner institutions. One
+                engine, one scorecard — so a Turnaround run is comparable to a
+                Fundraise run.
+              </p>
+
+              <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-3">
                 {resumable ? (
                   <Action href={runHref(resumable.seq, "/simulation")} size="lg">
                     <Play className="h-4 w-4" />
@@ -220,106 +205,82 @@ export function Simulations() {
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                   </Action>
                 )}
-                <span className="flex items-center gap-2 text-[13px] text-faint">
-                  <Sparkles className="h-3.5 w-3.5 text-pink" />
+                <span className="tick-label">
                   {resumable
                     ? `${resumable.quarters_locked} of 4 quarters closed`
-                    : "6 scenarios in the catalogue"}
+                    : "6 cases in the catalogue"}
                 </span>
-              </motion.div>
+              </div>
+            </div>
+          </div>
+
+          {/* Catalogue status: the shelf read as an instrument, hairline rows and a
+              monospace column, rather than a rounded glass card floating over a glow. */}
+          <div className="ticked rise rise-2 border border-line bg-[var(--panel)]">
+            <div className="flex items-center justify-between border-b border-line px-5 py-3">
+              <p className="tick-label flex items-center gap-2">
+                <span className="live-dot h-1.5 w-1.5 rounded-full bg-teal" />
+                Catalogue status
+              </p>
+              <p className="num text-[11px] text-teal">S-25</p>
             </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.75, delay: 0.16, ease: easeOut }}
-              className="ring-grad panel relative overflow-hidden rounded-[1.6rem] p-1.5"
-            >
-              <div className="rounded-[1.25rem] bg-void/70 p-5 sm:p-6">
-                <div className="flex items-center justify-between">
-                  <span className="eyebrow flex items-center gap-2 text-dim">
-                    <Signal className="h-3.5 w-3.5 text-emerald" />
-                    Catalogue status
+            <ul>
+              {scenarios.map((s) => (
+                <li
+                  key={s.index}
+                  className="flex items-center gap-4 border-b border-line px-5 py-3"
+                >
+                  <span className="num w-6 shrink-0 text-[11px] text-faint">
+                    {s.index}
                   </span>
-                  <Pill accent="teal">S-25</Pill>
-                </div>
-                <div className="mt-5 space-y-3.5">
-                  {scenarios.map((s) => (
-                    <div key={s.index} className="flex items-center gap-3">
-                      <span className="num w-6 shrink-0 text-[11px] text-faint">
-                        {s.index}
-                      </span>
-                      <span className="min-w-0 flex-1 truncate text-[13px] text-dim">
-                        {s.title}
-                      </span>
-                      <div className="w-20 shrink-0">
-                        <Meter value={s.intensity} accent={s.accent} height={3} />
-                      </div>
-                      <span
-                        className="num w-7 shrink-0 text-right text-[11px]"
-                        style={{ color: accentVar[s.accent] }}
-                      >
-                        {s.intensity}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-5 flex items-center justify-between border-t border-line pt-4">
-                  <span className="eyebrow text-faint">Difficulty index</span>
-                  <span className="num text-[12px] text-ink">avg 68</span>
-                </div>
-              </div>
-            </motion.div>
+                  <span
+                    className={cn(
+                      "min-w-0 flex-1 truncate text-[13.5px]",
+                      s.status === "LIVE" ? "text-ink" : "text-dim",
+                    )}
+                  >
+                    {s.title}
+                  </span>
+                  <TickBar value={s.intensity} lit={s.status === "LIVE"} />
+                  <span className="num w-7 shrink-0 text-right text-[11px] text-dim">
+                    {s.intensity}
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="flex items-center justify-between px-5 py-3">
+              <p className="tick-label">Difficulty index</p>
+              <p className="num text-[12px] text-ink">avg 68</p>
+            </div>
           </div>
         </Container>
 
-        <Container wide className="relative z-10 mt-16">
-          <div className="grid divide-line overflow-hidden rounded-2xl border border-line bg-[var(--panel)] sm:grid-cols-2 sm:divide-x lg:grid-cols-4">
-            {shelfStats.map((stat, i) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 + i * 0.08, ease: easeOut }}
-                className={cn(
-                  "relative px-6 py-7",
-                  i < 2 && "border-b border-line lg:border-b-0",
-                )}
-              >
-                <p
-                  className="display text-[34px] leading-none"
-                  style={{ color: accentVar[stat.accent] }}
-                >
-                  {stat.value}
-                </p>
-                <p className="eyebrow mt-3 text-faint">{stat.label}</p>
-              </motion.div>
-            ))}
-          </div>
-        </Container>
+        <Figures items={figures} stagger />
       </section>
 
-      <section className="relative overflow-hidden border-b border-line bg-base">
-        <div className="dot-grid absolute inset-0" />
-        <Container wide className="relative z-10 section-pad">
-          <SectionHead
-            kicker="The catalogue"
-            accent="teal"
+      {/* ── the catalogue ─────────────────────────────────────────── */}
+      <section className="relative border-b border-line">
+        <Container wide className="ledger-section relative z-10">
+          <LedgerHead
             title={
               <>
-                Six cases. <span className="text-grad-iris">One scorecard.</span>
+                Six cases. <span className="text-teal">One scorecard.</span>
               </>
             }
-            copy={
+            deck={
               <p>
-                Every scenario runs on the same deterministic engine and grades the
-                same seven dimensions — so a Turnaround run is comparable to a
-                Fundraise run.
+                Every scenario runs on the same deterministic engine and grades
+                the same seven dimensions. What changes is the pressure, the
+                counterparty, and how little time you get to read them.
               </p>
             }
           />
 
-          <div className="mt-10 flex flex-wrap items-center gap-2 rounded-full border border-line bg-[var(--panel-2)] p-1.5">
+          {/* Squared segmented control. The active tab is a filled block on the rule, not a
+              floating pill: the same geometry as every other control on the site. */}
+          <div className="mt-12 flex flex-wrap border border-line">
             {filters.map((option) => {
               const active = option === filter;
               return (
@@ -327,202 +288,152 @@ export function Simulations() {
                   key={option}
                   type="button"
                   onClick={() => setFilter(option)}
+                  aria-pressed={active}
                   className={cn(
-                    "relative rounded-full px-4 py-2 text-[13px] transition-colors",
-                    active ? "text-white" : "text-dim hover:text-ink",
+                    "border-r border-line px-4 py-2.5 text-[13px] transition-colors duration-200 last:border-r-0",
+                    active
+                      ? "bg-teal/[0.12] text-teal"
+                      : "text-dim hover:bg-[var(--panel)] hover:text-ink",
                   )}
                 >
-                  {active && (
-                    <motion.span
-                      layoutId="sim-filter-pill"
-                      className="absolute inset-0 rounded-full"
-                      style={{ background: "var(--grad-primary)" }}
-                      transition={{ duration: 0.32, ease: easeOut }}
-                    />
-                  )}
-                  <span className="relative">{option}</span>
+                  {option}
                 </button>
               );
             })}
           </div>
 
-          <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-8 grid gap-px bg-line md:grid-cols-2 xl:grid-cols-3">
             {visible.map((s, i) => (
-              <ScenarioCard key={s.index} scenario={s} delay={i * 0.06} />
+              <ScenarioCard key={s.index} scenario={s} delay={i * 0.05} />
             ))}
           </div>
 
           {visible.length === 0 && (
-            <Panel className="mt-8 p-8 text-center">
-              <p className="text-[15px] text-dim">
-                No cases in this track yet — new scenarios ship monthly.
-              </p>
-            </Panel>
+            <p className="mt-8 border border-line px-6 py-10 text-center text-[15px] text-dim">
+              No cases in this track yet — new scenarios ship monthly.
+            </p>
           )}
         </Container>
       </section>
 
-      <section className="relative overflow-hidden bg-void">
-        <div className="aurora opacity-70" />
-        <Container wide className="relative z-10 section-pad">
-          <Panel gradientRing glow accent="teal" className="overflow-hidden p-0">
-            <div className="grid gap-0 lg:grid-cols-[1.4fr_1fr]">
-              <div className="p-8 sm:p-11">
-                <Eyebrow accent="teal">Publish with us</Eyebrow>
-                <p className="display mt-6 max-w-lg text-[clamp(1.6rem,3vw,2.4rem)] leading-[1.1] text-ink">
-                  Bring your own case.{" "}
-                  <span className="text-grad-warm">We run the consequences.</span>
-                </p>
-                <p className="mt-5 max-w-lg text-[15.5px] leading-[1.7] text-dim">
-                  Faculty and accelerator partners author scenarios on the Myelin
-                  engine — same telemetry, same DI Report, your curriculum.
-                </p>
-                <div className="mt-8 flex flex-wrap gap-3">
-                  <Action href="/#institutions">
-                    Talk to us about institution plans
-                    <ArrowRight className="h-4 w-4" />
-                  </Action>
-                  <Action href="/manifesto" variant="outline">
-                    Read the blueprint
-                  </Action>
-                </div>
-              </div>
-              <div
-                className="grid divide-y divide-line border-line lg:border-l"
-                style={{
-                  background:
-                    "linear-gradient(160deg, rgba(20,184,166,0.14), transparent 72%)",
-                }}
-              >
-                {[
-                  { label: "Authoring time", value: "~2 weeks", accent: "violet" as Accent },
-                  { label: "Engine", value: "deterministic", accent: "cyan" as Accent },
-                  { label: "Narrative layer", value: "AI voiced", accent: "pink" as Accent },
-                  { label: "Cohort analytics", value: "included", accent: "emerald" as Accent },
-                ].map((row) => (
-                  <div
-                    key={row.label}
-                    className="flex items-center justify-between gap-4 px-7 py-5 sm:px-9"
-                  >
-                    <span className="eyebrow text-faint">{row.label}</span>
-                    <span
-                      className="num text-[14px]"
-                      style={{ color: accentVar[row.accent] }}
-                    >
-                      {row.value}
-                    </span>
-                  </div>
-                ))}
+      {/* ── publish with us ───────────────────────────────────────── */}
+      <section className="relative">
+        <Container wide className="ledger-section relative z-10">
+          <div className="grid border border-line lg:grid-cols-[1.4fr_1fr]">
+            <div className="px-6 py-8 sm:px-10 sm:py-11">
+              <p className="tick-label">Publish with us</p>
+              <p className="ledger-display mt-5 max-w-[20ch] text-[clamp(1.5rem,3vw,2.4rem)] text-ink">
+                Bring your own case.{" "}
+                <span className="italic text-teal">We run the consequences.</span>
+              </p>
+              <p className="mt-5 max-w-[52ch] text-[15.5px] leading-[1.7] text-dim">
+                Faculty and accelerator partners author scenarios on the Myelin
+                engine — same telemetry, same DI Report, your curriculum.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Action href="/#institutions">
+                  Talk to us about institution plans
+                  <ArrowRight className="h-4 w-4" />
+                </Action>
+                <Action href="/manifesto" variant="outline">
+                  Read the blueprint
+                </Action>
               </div>
             </div>
-          </Panel>
+
+            <dl className="border-t border-line lg:border-l lg:border-t-0">
+              {[
+                { label: "Authoring time", value: "~2 weeks" },
+                { label: "Engine", value: "deterministic" },
+                { label: "Narrative layer", value: "AI voiced" },
+                { label: "Cohort analytics", value: "included" },
+              ].map((row) => (
+                <div
+                  key={row.label}
+                  className="flex items-center justify-between gap-4 border-b border-line px-6 py-5 last:border-b-0 sm:px-9"
+                >
+                  <dt className="tick-label">{row.label}</dt>
+                  <dd className="num text-[13.5px] text-ink">{row.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
         </Container>
       </section>
     </>
   );
 }
 
-function ScenarioCard({
-  scenario,
-  delay,
-}: {
-  scenario: Scenario;
-  delay: number;
-}) {
+/**
+ * One case, set as a ruled block.
+ *
+ * The grid that holds these is `gap-px` on a `bg-line` surface, so the gutters between cards
+ * *are* the rules -- the catalogue reads as one divided sheet rather than six floating cards,
+ * and no card needs a border of its own to be separated from its neighbour.
+ */
+function ScenarioCard({ scenario, delay }: { scenario: Scenario; delay: number }) {
   const simulationHref = useSimulationHref();
-  const color = accentVar[scenario.accent];
   const isLive = scenario.status === "LIVE";
-  const badge = statusAccent[scenario.status];
 
   return (
-    <Panel
-      accent={scenario.accent}
-      glow
-      gradientRing={isLive}
-      delay={delay}
-      className="hover-lift flex flex-col p-0"
+    <motion.article
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: duration.reveal, delay, ease: easeOut }}
+      className={cn(
+        "flex flex-col bg-[var(--void)] transition-colors duration-300",
+        isLive ? "bg-teal/[0.05]" : "hover:bg-[var(--panel)]",
+      )}
     >
-      <span
-        aria-hidden
-        className="absolute inset-x-0 top-0 h-px"
-        style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)` }}
-      />
-
-      <div className="flex items-start justify-between gap-4 px-6 pt-6">
-        <span
-          className="flex h-11 w-11 items-center justify-center rounded-xl border"
-          style={{
-            borderColor: `color-mix(in srgb, ${color} 40%, transparent)`,
-            background: `color-mix(in srgb, ${color} 14%, transparent)`,
-            color,
-          }}
-        >
-          <span className="num text-[13px] font-semibold">{scenario.index}</span>
-        </span>
-
-        <Pill accent={badge}>
-          {isLive && (
-            <span
-              className="live-dot h-1.5 w-1.5 rounded-full"
-              style={{ background: accentVar[badge] }}
-            />
-          )}
+      <div className="flex items-baseline justify-between gap-4 border-b border-line px-5 py-3">
+        <span className="num text-[11px] text-faint">{scenario.index}</span>
+        <span className={cn("tick-label flex items-center gap-2", statusTone[scenario.status])}>
+          {isLive && <span className="live-dot h-1.5 w-1.5 rounded-full bg-teal" />}
           {scenario.status}
-        </Pill>
+        </span>
       </div>
 
-      <div className="px-6 pt-5">
-        <div className="flex items-center gap-2.5">
-          <Layers className="h-3.5 w-3.5" style={{ color }} />
-          <span className="eyebrow" style={{ color }}>
-            {scenario.category}
-          </span>
-        </div>
-        <p className="display mt-3 text-[21px] leading-tight text-ink">
+      {/* `flex-1` on the copy block, not on the footer: the cards stretch to the tallest in
+          their row, so absorbing the slack here is what lines the intensity reading, the
+          duration/level pair and the action up across all six. */}
+      <div className="flex-1 px-5 pt-6">
+        <p className="tick-label">{scenario.category}</p>
+        <h3 className="ledger-display mt-3 text-[clamp(1.25rem,2vw,1.6rem)] text-ink">
           {scenario.title}
-        </p>
-        <p className="mt-3 text-[14px] leading-[1.65] text-dim">{scenario.copy}</p>
+        </h3>
+        <p className="mt-3 text-[14.5px] leading-[1.65] text-dim">{scenario.copy}</p>
       </div>
 
-      <div className="mt-6 px-6">
-        <div className="flex items-center justify-between">
-          <span className="eyebrow text-faint">Intensity</span>
-          <span className="num text-[11.5px]" style={{ color }}>
-            {scenario.intensity}/100
-          </span>
-        </div>
-        <Meter value={scenario.intensity} accent={scenario.accent} className="mt-2.5" />
+      <div className="mt-6 flex items-center justify-between gap-4 px-5">
+        <span className="tick-label">Intensity</span>
+        <span className="flex items-center gap-3">
+          <TickBar value={scenario.intensity} lit={isLive} />
+          <span className="num text-[11.5px] text-dim">{scenario.intensity}/100</span>
+        </span>
       </div>
 
-      <div className="mt-6 grid grid-cols-2 divide-x divide-line border-y border-line">
-        <div className="px-6 py-4">
-          <span className="eyebrow flex items-center gap-1.5 text-faint">
-            <Clock className="h-3 w-3" />
-            Duration
-          </span>
-          <p className="num mt-2 text-[13.5px] text-ink">{scenario.duration}</p>
+      <dl className="mt-6 grid grid-cols-2 border-y border-line">
+        <div className="border-r border-line px-5 py-4">
+          <dt className="tick-label">Duration</dt>
+          <dd className="num mt-2 text-[13.5px] text-ink">{scenario.duration}</dd>
         </div>
-        <div className="px-6 py-4">
-          <span className="eyebrow flex items-center gap-1.5 text-faint">
-            <Gauge className="h-3 w-3" />
-            Level
-          </span>
-          <p className="mt-2 text-[13.5px] text-ink">{scenario.level}</p>
+        <div className="px-5 py-4">
+          <dt className="tick-label">Level</dt>
+          <dd className="mt-2 text-[13.5px] text-ink">{scenario.level}</dd>
         </div>
-      </div>
+      </dl>
 
-      <div className="mt-auto flex items-center justify-between gap-3 px-6 py-5">
+      <div className="mt-auto px-5 py-5">
         {isLive ? (
           <Action href={simulationHref} className="w-full">
-            Play →
+            Play
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
           </Action>
         ) : (
-          <Action variant="outline" disabled className="w-full opacity-45">
-            <Bell className="h-3.5 w-3.5" />
-            Notify me
-          </Action>
+          <p className="tick-label py-3 text-center">In the build queue</p>
         )}
       </div>
-    </Panel>
+    </motion.article>
   );
 }

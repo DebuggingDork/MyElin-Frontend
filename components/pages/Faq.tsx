@@ -3,237 +3,212 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Minus, Plus } from "lucide-react";
-import { easeOut } from "@/lib/media";
+import { duration, easeOut } from "@/lib/media";
+import { cn } from "@/lib/utils";
 import { useSimulationHref } from "@/components/play/entry";
-import {
-  Action,
-  Container,
-  Eyebrow,
-  Panel,
-  accentVar,
-  type Accent,
-} from "@/components/ui/Kit";
+import { Figures, Masthead } from "@/components/layout/PageChrome";
+import { LedgerHead } from "@/components/home/LedgerHead";
+import { Action, Container } from "@/components/ui/Kit";
 
 type FaqItem = {
   q: string;
   a: string;
-  accent: Accent;
+  /** The one-word filing label. Doubles as the index down the left rule. */
+  topic: string;
 };
 
 const faqs: FaqItem[] = [
   {
     q: "Is this an LMS?",
-    a: "No. There are no videos, no quizzes, no chapters. You make decisions; the system runs consequences.",
-    accent: "violet",
+    a: "No. There are no videos, no quizzes and no chapters. You make decisions; the system runs the consequences and grades how you got there.",
+    topic: "Product",
   },
   {
     q: "How is my decision graded?",
-    a: "Each decision moves real KPIs and a hidden skill telemetry across 7 cognitive dimensions. Your final report aggregates patterns, not single outcomes.",
-    accent: "indigo",
+    a: "Every decision moves real KPIs and a hidden skill telemetry across seven cognitive dimensions. The final report aggregates patterns across the run, not single outcomes — one lucky quarter does not carry it.",
+    topic: "Scoring",
   },
   {
     q: "Can I retake a simulation?",
-    a: "Yes. Variables and crisis triggers re-roll each run — your best-of-three is what's submitted.",
-    accent: "cyan",
+    a: "Yes. The market event and its timing re-roll each run, so the second attempt is a different quarter with the same economics. Your best of three is what gets submitted.",
+    topic: "Runs",
   },
   {
     q: "Is the AI generating the scenarios?",
-    a: "The simulation engine itself is deterministic, formula-based, and audited. Narrative flavor and stakeholder voice are AI-generated; the math is not.",
-    accent: "teal",
+    a: "The engine is deterministic and formula-based: same decisions in, same numbers out, every time. Narrative flavour and stakeholder voice are AI-written; the mathematics is not.",
+    topic: "Engine",
   },
   {
     q: "Will recruiters actually use the DI Report?",
-    a: "We're piloting with universities and accelerators first. The report is designed to be machine-readable and human-readable.",
-    accent: "emerald",
+    a: "We are piloting with universities and accelerators first. The report is built to be read by a person in ninety seconds and parsed by a system in one call.",
+    topic: "Reports",
   },
   {
     q: "Is there a free tier?",
-    a: "Yes — one simulation per month with a basic report. Pro and Institutional unlock the rest.",
-    accent: "amber",
+    a: "Yes — one full simulation a month with a basic report. Pro and Institutional unlock the rest of the catalogue and the cohort analytics.",
+    topic: "Plans",
   },
   {
-    q: "Who's behind Myelin?",
-    a: "A founding team across product, learning science, simulation design, and engineering. Investors update soon.",
-    accent: "rose",
+    q: "Who is behind Myelin?",
+    a: "A founding team across product, learning science, simulation design and engineering. Investor news when there is news.",
+    topic: "Company",
   },
+];
+
+const figures = [
+  { value: "7", label: "Questions answered" },
+  { value: "0", label: "Videos required" },
+  { value: "1", label: "Free run a month" },
+  { value: "4Q", label: "Compressed per case" },
 ];
 
 export function Faq() {
   const simulationHref = useSimulationHref();
-
   const [open, setOpen] = useState(0);
 
   return (
     <>
-      <section className="relative overflow-hidden border-b border-line bg-void pb-14 pt-[68px]">
-        <div className="aurora" />
+      {/* ── the opening band ──────────────────────────────────────── */}
+      <section className="relative border-b border-line pt-[68px]">
         <div className="grid-lines absolute inset-0" />
+        <Masthead section="FAQ" />
 
-        <Container wide className="relative z-10 pt-16 sm:pt-24">
-          <div className="grid gap-12 lg:grid-cols-[1fr_0.9fr] lg:items-end">
-            <div>
-              <Eyebrow accent="teal">MYELIN — FAQ</Eyebrow>
-              <motion.h1
-                initial={{ opacity: 0, y: 22 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, ease: easeOut }}
-                className="display mt-7 text-[clamp(2.4rem,6vw,4.2rem)] leading-[0.98] text-ink"
-              >
-                Questions you{" "}
-                <span className="text-grad">might have.</span>
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.65, delay: 0.1, ease: easeOut }}
-                className="mt-7 max-w-xl text-[17px] leading-[1.7] text-dim"
-              >
-                Short answers about the product, the grading model, and who
-                Myelin is for. Still stuck? Reach out via institutions.
-              </motion.p>
-            </div>
+        <Container
+          wide
+          className="relative z-10 grid gap-x-16 gap-y-8 py-[clamp(3rem,7vh,5.5rem)] lg:grid-cols-[1.15fr_1fr] lg:items-end"
+        >
+          <h1 className="ledger-display rise text-balance text-[clamp(2.5rem,5.4vw,4.5rem)] text-ink">
+            Questions you <span className="italic text-teal">might have.</span>
+          </h1>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.16, ease: easeOut }}
-              className="grid grid-cols-2 gap-3"
-            >
-              {[
-                { n: "7", l: "Q&A covered", a: "violet" as Accent },
-                { n: "0", l: "videos required", a: "rose" as Accent },
-                { n: "1", l: "free run / month", a: "emerald" as Accent },
-                { n: "4", l: "quarters compressed", a: "cyan" as Accent },
-              ].map((s) => (
+          <div className="rise rise-1 max-w-[46ch] border-t border-line pt-6">
+            <p className="text-pretty text-[16.5px] leading-[1.7] text-dim">
+              Short answers about the product, the grading model and who Myelin
+              is for. Still stuck after these — the institutions block on the
+              home page reaches a person.
+            </p>
+          </div>
+        </Container>
+
+        <Figures items={figures} stagger />
+      </section>
+
+      {/* ── the questions ─────────────────────────────────────────── */}
+      <section className="relative border-b border-line">
+        <Container wide className="ledger-section relative z-10">
+          <LedgerHead
+            title={
+              <>
+                Seven answers, <span className="text-teal">no hedging.</span>
+              </>
+            }
+            deck={
+              <p>
+                Open one. Every answer is the same one we would give a dean, a
+                recruiter or a student who has already run a case.
+              </p>
+            }
+          />
+
+          {/* A ruled index, not a stack of rounded cards: topic on the left rule, question in
+              the middle, the state marker on the right. The open row tints rather than lifts,
+              so nothing on this page casts a shadow it has not earned. */}
+          <div className="mt-14 border-t border-line">
+            {faqs.map((item, i) => {
+              const isOpen = open === i;
+              return (
                 <div
-                  key={s.l}
-                  className="rounded-2xl border border-line bg-[var(--panel-2)] px-5 py-5"
+                  key={item.q}
+                  className={cn(
+                    "border-b border-line transition-colors duration-300",
+                    isOpen && "bg-[var(--panel)]",
+                  )}
                 >
-                  <p
-                    className="display text-[28px] leading-none"
-                    style={{ color: accentVar[s.a] }}
+                  <button
+                    type="button"
+                    onClick={() => setOpen(isOpen ? -1 : i)}
+                    aria-expanded={isOpen}
+                    className="grid w-full grid-cols-[3.25rem_1fr_1.75rem] items-baseline gap-x-4 py-6 text-left sm:grid-cols-[7rem_1fr_1.75rem] sm:gap-x-8"
                   >
-                    {s.n}
-                  </p>
-                  <p className="eyebrow mt-3 text-faint">{s.l}</p>
+                    <span
+                      className={cn(
+                        "tick-label transition-colors duration-300",
+                        isOpen && "text-teal",
+                      )}
+                    >
+                      <span className="sm:hidden">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <span className="hidden sm:inline">{item.topic}</span>
+                    </span>
+
+                    <span
+                      className={cn(
+                        "ledger-display text-[clamp(1.15rem,2vw,1.5rem)] transition-colors duration-300",
+                        isOpen ? "text-ink" : "text-dim",
+                      )}
+                    >
+                      {item.q}
+                    </span>
+
+                    <span className="flex justify-end self-center">
+                      {isOpen ? (
+                        <Minus className="h-4 w-4 text-teal" />
+                      ) : (
+                        <Plus className="h-4 w-4 text-faint" />
+                      )}
+                    </span>
+                  </button>
+
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <motion.div
+                        key="answer"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: duration.reveal, ease: easeOut }}
+                        className="overflow-hidden"
+                      >
+                        <div className="grid grid-cols-[3.25rem_1fr] gap-x-4 pb-7 sm:grid-cols-[7rem_1fr] sm:gap-x-8">
+                          <span aria-hidden />
+                          <p className="max-w-[62ch] border-t border-line pt-5 text-[15.5px] leading-[1.75] text-dim">
+                            {item.a}
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
-              ))}
-            </motion.div>
+              );
+            })}
           </div>
         </Container>
       </section>
 
-      <section className="relative overflow-hidden border-b border-line bg-base">
-        <div className="dot-grid absolute inset-0" />
-        <Container className="relative z-10 section-pad">
-          <div className="space-y-3">
-            {faqs.map((item, i) => {
-              const isOpen = open === i;
-              const color = accentVar[item.accent];
-              return (
-                <motion.div
-                  key={item.q}
-                  initial={{ opacity: 0, y: 12 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-40px" }}
-                  transition={{ duration: 0.45, delay: i * 0.04, ease: easeOut }}
-                >
-                  <div
-                    className="overflow-hidden rounded-2xl border transition-colors duration-300"
-                    style={{
-                      borderColor: isOpen
-                        ? `color-mix(in srgb, ${color} 45%, transparent)`
-                        : "var(--line)",
-                      background: isOpen
-                        ? `color-mix(in srgb, ${color} 8%, rgba(255,255,255,0.02))`
-                        : "rgba(255,255,255,0.02)",
-                    }}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => setOpen(isOpen ? -1 : i)}
-                      aria-expanded={isOpen}
-                      className="flex w-full items-center gap-4 px-5 py-5 text-left sm:px-6"
-                    >
-                      <span
-                        className="num flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border text-[11px]"
-                        style={{
-                          borderColor: `color-mix(in srgb, ${color} 40%, transparent)`,
-                          color,
-                          background: `color-mix(in srgb, ${color} 12%, transparent)`,
-                        }}
-                      >
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                      <span className="flex-1 text-[15.5px] font-medium text-ink sm:text-[16.5px]">
-                        {item.q}
-                      </span>
-                      <span
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border"
-                        style={{
-                          borderColor: `color-mix(in srgb, ${color} 35%, transparent)`,
-                          color,
-                        }}
-                      >
-                        {isOpen ? (
-                          <Minus className="h-4 w-4" />
-                        ) : (
-                          <Plus className="h-4 w-4" />
-                        )}
-                      </span>
-                    </button>
-
-                    <AnimatePresence initial={false}>
-                      {isOpen && (
-                        <motion.div
-                          key="content"
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.35, ease: easeOut }}
-                          className="overflow-hidden"
-                        >
-                          <div className="border-t border-line px-5 pb-5 pt-1 sm:px-6 sm:pl-[4.75rem]">
-                            <p className="max-w-2xl text-[15px] leading-[1.75] text-dim">
-                              {item.a}
-                            </p>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-
-          <Panel
-            gradientRing
-            glow
-            accent="teal"
-            className="mt-12 overflow-hidden p-0"
-          >
-            <div
-              className="flex flex-col items-start justify-between gap-6 p-7 sm:p-9 lg:flex-row lg:items-center"
-              style={{
-                background:
-                  "linear-gradient(120deg, rgba(20,184,166,0.18), rgba(255,255,255,0.06))",
-              }}
-            >
-              <div>
-                <Eyebrow accent="teal">Still curious?</Eyebrow>
-                <p className="display mt-4 text-[22px] text-ink">
-                  Talk to the team — or just run a case.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                <Action href="/#institutions">Request access</Action>
-                <Action href={simulationHref} variant="outline">
-                  Play Startup Survival
-                </Action>
-              </div>
+      {/* ── the close ─────────────────────────────────────────────── */}
+      <section className="relative">
+        <Container wide className="ledger-section relative z-10">
+          <div className="flex flex-col items-start justify-between gap-8 border border-line bg-[var(--panel)] px-6 py-8 sm:px-10 sm:py-10 lg:flex-row lg:items-center">
+            <div>
+              <p className="tick-label">Still curious</p>
+              <p className="ledger-display mt-4 max-w-[24ch] text-[clamp(1.5rem,2.8vw,2.2rem)] text-ink">
+                Talk to the team — or just{" "}
+                <span className="italic text-teal">run a case.</span>
+              </p>
+              <p className="mt-4 max-w-[48ch] text-[15px] leading-[1.7] text-dim">
+                Thirty minutes answers more of these than this page does.
+              </p>
             </div>
-          </Panel>
+            <div className="flex flex-wrap gap-3">
+              <Action href={simulationHref} size="lg">
+                Play Startup Survival
+              </Action>
+              <Action href="/#institutions" variant="outline" size="lg">
+                Request access
+              </Action>
+            </div>
+          </div>
         </Container>
       </section>
     </>
