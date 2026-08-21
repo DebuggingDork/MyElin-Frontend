@@ -1,105 +1,75 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { easeOut } from "@/lib/media";
-
 /**
- * A physical kitchen-timer dial, not an abstract progress ring -- the needle sits fixed at the
- * scenario's minute count so the "how long this takes" framing reads at a glance, the way an
- * actual twist-timer would if you set it before starting.
+ * The sitting, as an instrument reading.
+ *
+ * This was a photoreal kitchen timer -- chrome bezel, cream face, drop shadow -- which was the
+ * loudest object on the entry screen and belonged to no other part of the product. The whole
+ * app reads its numbers off ruled, monospace instruments, so this is one too: sixty ticks, the
+ * first `minutes` of them lit, and the figure in the middle. No bezel, no gloss, no gradient.
+ *
+ * Angles run clockwise from twelve o'clock, the convention `SpendDial` also follows.
  */
 export function TimerDial({ minutes, size = 168 }: { minutes: number; size?: number }) {
-  const ticks = Array.from({ length: 60 }, (_, i) => i);
-  const majorEvery = 5;
-  const angleFor = (mark: number) => (mark / 60) * 360;
-  const needleAngle = angleFor(minutes % 60);
+  const lit = Math.max(0, Math.min(60, Math.round(minutes)));
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.6, ease: easeOut }}
-      className="relative shrink-0"
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 168 168"
+      role="img"
+      aria-label={`${minutes} minutes, one sitting`}
+      className="shrink-0 overflow-visible"
     >
-      <svg width={size} height={size} viewBox="0 0 168 168" className="drop-shadow-[0_18px_40px_rgba(0,0,0,0.45)]">
-        <defs>
-          <radialGradient id="timer-bezel" cx="35%" cy="30%" r="75%">
-            <stop offset="0%" stopColor="#e6e9ec" />
-            <stop offset="55%" stopColor="#9aa2ab" />
-            <stop offset="100%" stopColor="#5b6169" />
-          </radialGradient>
-          <radialGradient id="timer-face" cx="42%" cy="36%" r="70%">
-            <stop offset="0%" stopColor="#fbf9f2" />
-            <stop offset="100%" stopColor="#eee8da" />
-          </radialGradient>
-        </defs>
+      {Array.from({ length: 60 }, (_, i) => {
+        const major = i % 5 === 0;
+        const on = i < lit;
+        // 12 o'clock is -90deg in SVG's coordinate space.
+        const angle = ((i / 60) * 360 - 90) * (Math.PI / 180);
+        const outer = 80;
+        const inner = outer - (major ? 12 : on ? 8 : 5);
+        return (
+          <line
+            key={i}
+            x1={84 + Math.cos(angle) * inner}
+            y1={84 + Math.sin(angle) * inner}
+            x2={84 + Math.cos(angle) * outer}
+            y2={84 + Math.sin(angle) * outer}
+            stroke={on ? "var(--teal)" : "var(--line-2)"}
+            strokeWidth={major ? 1.6 : 1}
+            opacity={on ? 1 : 0.55}
+          />
+        );
+      })}
 
-        <circle cx="84" cy="84" r="82" fill="url(#timer-bezel)" />
-        <circle cx="84" cy="84" r="70" fill="url(#timer-face)" stroke="#c8bfa8" strokeWidth="1" />
-
-        {ticks.map((t) => {
-          const major = t % majorEvery === 0;
-          const angle = angleFor(t) - 90;
-          const r1 = major ? 56 : 61;
-          const r2 = 66;
-          const x1 = 84 + r1 * Math.cos((angle * Math.PI) / 180);
-          const y1 = 84 + r1 * Math.sin((angle * Math.PI) / 180);
-          const x2 = 84 + r2 * Math.cos((angle * Math.PI) / 180);
-          const y2 = 84 + r2 * Math.sin((angle * Math.PI) / 180);
-          return (
-            <line
-              key={t}
-              x1={x1}
-              y1={y1}
-              x2={x2}
-              y2={y2}
-              stroke="#3a3530"
-              strokeWidth={major ? 1.6 : 0.75}
-              strokeLinecap="round"
-              opacity={major ? 0.75 : 0.4}
-            />
-          );
-        })}
-
-        {ticks
-          .filter((t) => t % (majorEvery * 2) === 0)
-          .map((t) => {
-            const angle = angleFor(t) - 90;
-            const r = 46;
-            const x = 84 + r * Math.cos((angle * Math.PI) / 180);
-            const y = 84 + r * Math.sin((angle * Math.PI) / 180);
-            return (
-              <text
-                key={t}
-                x={x}
-                y={y}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fontSize="11"
-                fontWeight={600}
-                fill="#3a3530"
-              >
-                {t}
-              </text>
-            );
-          })}
-
-        <line
-          x1="84"
-          y1="84"
-          x2={84 + 50 * Math.cos(((needleAngle - 90) * Math.PI) / 180)}
-          y2={84 + 50 * Math.sin(((needleAngle - 90) * Math.PI) / 180)}
-          stroke="#9c2b2b"
-          strokeWidth="3"
-          strokeLinecap="round"
-        />
-        <circle cx="84" cy="84" r="5.5" fill="#2a2622" />
-        <circle cx="84" cy="84" r="2" fill="#c8bfa8" />
-      </svg>
-
-      <p className="mt-3 text-center text-[11px] uppercase tracking-[0.16em] text-faint">
-        {minutes} minutes, set
-      </p>
-    </motion.div>
+      <text
+        x="84"
+        y="84"
+        textAnchor="middle"
+        dominantBaseline="central"
+        fill="var(--text)"
+        style={{
+          fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+          fontSize: 40,
+          letterSpacing: "-0.03em",
+        }}
+      >
+        {minutes}
+      </text>
+      <text
+        x="84"
+        y="112"
+        textAnchor="middle"
+        fill="var(--faint)"
+        style={{
+          fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+          fontSize: 10,
+          letterSpacing: "0.18em",
+        }}
+      >
+        MINUTES
+      </text>
+    </svg>
   );
 }

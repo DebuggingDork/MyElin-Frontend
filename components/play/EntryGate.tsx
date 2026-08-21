@@ -1,50 +1,50 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { ArrowRight, Check } from "lucide-react";
-import { easeOut } from "@/lib/media";
-import { Action, Container, Pill } from "@/components/ui/Kit";
+import { Action, Container } from "@/components/ui/Kit";
 import { TimerDial } from "@/components/play/TimerDial";
 import { DEPARTMENTS } from "@/lib/api/catalog";
 import type { Scenario } from "@/lib/play/types";
+import { cn } from "@/lib/utils";
 
-const RULES = [
-  (s: Scenario) => `You take over ${s.company.name} — ${s.company.stage}-stage, ${s.company.sector} — mid-flight.`,
-  () => `Each quarter you allocate spend across ${DEPARTMENTS.length} departments before it locks.`,
-  () => "Decisions lock the moment you submit. No undo once a quarter locks.",
-  () => "At the end: a Decision Intelligence Report, scored on seven dimensions.",
-];
-
-const ACCEPTS = [
+/** The four things a CEO is agreeing to. Each one names its own consequence: a term whose
+ *  cost is not stated is a term nobody has actually accepted. */
+const TERMS = [
   {
     id: "time",
-    label: "I have 30 uninterrupted minutes.",
-    hint: "Pausing mid-quarter resets the run.",
+    label: "I have thirty uninterrupted minutes.",
+    cost: "Pausing mid-quarter resets the run.",
   },
   {
     id: "consequence",
-    label: "Decisions here are irreversible.",
-    hint: "Cash and morale move the moment you commit.",
+    label: "Every decision here is irreversible.",
+    cost: "Cash and morale move the moment you commit.",
   },
   {
     id: "hidden",
-    label: "Hidden variables stay sealed until resolution.",
-    hint: "You won't see every variable while deciding.",
+    label: "I will decide without seeing everything.",
+    cost: "Hidden variables stay sealed until they resolve.",
   },
   {
     id: "report",
-    label: "I want a Decision Intelligence Report.",
-    hint: "Scored across seven cognitive dimensions.",
+    label: "I want to be scored on how I decided.",
+    cost: "Seven cognitive dimensions, in one report.",
   },
 ];
 
-/** Phase 1 of /play/[slug]: rules and consent only -- no narrative framing here on purpose,
- *  that's reserved for NewspaperStory once this gate is cleared.
+/**
+ * The threshold: rules and consent, and nothing else.
  *
- *  Fits one viewport by construction (h-dvh, no page scroll): the panel is the tall element, so
- *  it -- not the page -- carries `overflow-y-auto` as a safety valve for unusually short windows.
- *  Everything is sized to not need that valve on a normal desktop. */
+ * Deliberately quiet. This is the last screen before someone takes a desk they cannot put
+ * down for half an hour, and it should read like the front of a document rather than a
+ * product page -- masthead, one serif line naming the company, four terms set as a ruled
+ * index, and the opening balance sheet along the bottom. No narrative framing: that is
+ * `NewspaperStory`'s job once this gate is cleared.
+ *
+ * Fits one viewport by construction (`h-dvh`, no page scroll); the terms are the tall element,
+ * so they carry the safety valve for short windows rather than the page doing it.
+ */
 export function EntryGate({
   scenario,
   onEnter,
@@ -52,123 +52,136 @@ export function EntryGate({
   scenario: Scenario;
   onEnter: () => void;
 }) {
-  const [checked, setChecked] = useState<Record<string, boolean>>({});
-  const ready = ACCEPTS.every((item) => checked[item.id]);
+  const [accepted, setAccepted] = useState<Record<string, boolean>>({});
+  const count = TERMS.filter((term) => accepted[term.id]).length;
+  const ready = count === TERMS.length;
+
+  const footing = [
+    ...scenario.metrics.slice(0, 3).map((m) => ({ value: m.value, label: m.label })),
+    { value: String(DEPARTMENTS.length), label: "Departments" },
+    { value: "4", label: "Quarters" },
+  ];
 
   return (
-    <div className="relative h-dvh overflow-hidden bg-void">
-      <div className="aurora" />
+    <div className="ledger relative flex h-dvh flex-col overflow-hidden bg-void">
       <div className="grid-lines absolute inset-0" />
 
-      <Container className="relative z-10 flex h-full flex-col justify-center">
-        <div className="grid items-center gap-6 lg:grid-cols-[0.8fr_1.1fr] lg:gap-10">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, ease: easeOut }}
-            className="hidden flex-col items-center lg:flex"
-          >
-            <TimerDial minutes={scenario.minutes} size={128} />
-            <p className="mt-3 max-w-[13rem] text-center text-[13px] leading-snug text-dim">
-              One sitting. No pause. The quarter runs once you enter.
-            </p>
-          </motion.div>
+      {/* ── masthead ─────────────────────────────────────────────── */}
+      <header className="relative z-10 border-b border-line">
+        <Container wide className="flex flex-wrap items-center justify-between gap-3 py-3">
+          <p className="tick-label">Myelin · {scenario.name}</p>
+          <p className="tick-label flex items-center gap-2">
+            <span className="live-dot h-1.5 w-1.5 rounded-full bg-teal" />
+            Live · {scenario.company.stage} · {scenario.quarterLabel}
+          </p>
+        </Container>
+      </header>
 
-          <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1, ease: easeOut }}
-            className="ring-grad panel max-h-[92dvh] overflow-y-auto rounded-[1.5rem] p-5 sm:p-6"
-          >
-            <div className="flex flex-wrap items-center gap-2">
-              <Pill accent="emerald" solid>
-                Live
-              </Pill>
-              <Pill accent="teal">{scenario.company.stage}</Pill>
-              <Pill accent="teal">{scenario.quarterLabel}</Pill>
-              <div className="ml-auto flex items-center gap-2 lg:hidden">
-                <TimerDial minutes={scenario.minutes} size={40} />
-              </div>
-            </div>
-
-            <h1 className="display mt-3 text-[clamp(1.4rem,2.6vw,1.9rem)] leading-[1.08] text-ink">
-              {scenario.name}
+      {/* ── the threshold ────────────────────────────────────────── */}
+      <Container
+        wide
+        className="relative z-10 flex min-h-0 flex-1 flex-col justify-center py-[clamp(1.5rem,4vh,3rem)]"
+      >
+        <div className="grid items-end gap-x-16 gap-y-8 lg:grid-cols-[1.35fr_auto]">
+          <div>
+            <p className="tick-label rise">The desk is yours in a moment</p>
+            <h1 className="ledger-display rise rise-1 mt-4 text-balance text-[clamp(2.6rem,6vw,4.6rem)] text-ink">
+              {scenario.company.name}
+              <span className="text-dim">.</span>
             </h1>
+            <p className="rise rise-2 mt-5 max-w-[58ch] border-t border-line pt-5 text-[15.5px] leading-[1.65] text-dim">
+              {scenario.company.stage}-stage {scenario.company.sector}, taken over mid-flight.
+              Four quarters, {DEPARTMENTS.length} departments, one sitting — and a report at the
+              end that grades how you decided, not how it turned out.
+            </p>
+          </div>
 
-            <ul className="mt-3 space-y-1">
-              {RULES.map((rule, i) => (
-                <motion.li
-                  key={i}
-                  initial={{ opacity: 0, x: 10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.35, delay: 0.08 + i * 0.04, ease: easeOut }}
-                  className="flex items-start gap-2 text-[12.5px] leading-snug text-dim"
+          <div className="rise rise-2 hidden justify-self-end lg:block">
+            <TimerDial minutes={scenario.minutes} size={168} />
+          </div>
+        </div>
+
+        {/* ── the terms, as a two-by-two matrix ──────────────────────
+            Four rules stacked down a wide page put the check target a thousand pixels from
+            the sentence it belongs to, and pushed the footing off a laptop screen. As a
+            matrix each term is one bordered cell, the check sits beside its own words, and
+            the whole gate lands inside one viewport. */}
+        <div className="mt-[clamp(1.25rem,3.5vh,2.25rem)] min-h-0 overflow-y-auto border-l border-t border-line sm:grid sm:grid-cols-2">
+          {TERMS.map((term, i) => {
+            const on = Boolean(accepted[term.id]);
+            return (
+              <button
+                key={term.id}
+                type="button"
+                role="checkbox"
+                aria-checked={on}
+                onClick={() =>
+                  setAccepted((prev) => ({ ...prev, [term.id]: !prev[term.id] }))
+                }
+                className={cn(
+                  "group flex w-full items-start gap-4 border-b border-r border-line px-5 py-4",
+                  "text-left transition-colors duration-200",
+                  on ? "bg-teal/[0.06]" : "hover:bg-[var(--panel)]",
+                )}
+              >
+                <span
+                  className={cn(
+                    "num shrink-0 pt-[3px] text-[12px] transition-colors duration-200",
+                    on ? "text-teal" : "text-faint",
+                  )}
                 >
-                  <span className="mt-[6px] h-1 w-1 shrink-0 rounded-full bg-teal" />
-                  {rule(scenario)}
-                </motion.li>
-              ))}
-            </ul>
+                  {String(i + 1).padStart(2, "0")}
+                </span>
 
-            <div className="mt-3 space-y-1.5 border-t border-line pt-3">
-              <p className="eyebrow text-faint">Before you start</p>
-              {ACCEPTS.map((item, i) => {
-                const on = !!checked[item.id];
-                return (
-                  <motion.button
-                    key={item.id}
-                    type="button"
-                    initial={{ opacity: 0, x: 12 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.35, delay: 0.24 + i * 0.05 }}
-                    onClick={() =>
-                      setChecked((prev) => ({ ...prev, [item.id]: !prev[item.id] }))
-                    }
-                    className="flex w-full items-center gap-3 rounded-xl border px-3 py-2 text-left transition-all duration-300"
-                    style={{
-                      borderColor: on
-                        ? "color-mix(in srgb, var(--violet) 50%, transparent)"
-                        : "var(--line)",
-                      background: on
-                        ? "color-mix(in srgb, var(--violet) 10%, transparent)"
-                        : "var(--panel)",
-                    }}
+                <span className="min-w-0 flex-1">
+                  <span
+                    className={cn(
+                      "block text-[15px] leading-snug transition-colors duration-200",
+                      on ? "text-ink" : "text-dim group-hover:text-ink",
+                    )}
                   >
-                    <span
-                      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-all"
-                      style={{
-                        borderColor: on ? "transparent" : "var(--line-2)",
-                        background: on ? "var(--grad-primary)" : "transparent",
-                        color: on ? "#fff" : "transparent",
-                      }}
-                    >
-                      <Check className="h-3 w-3" />
-                    </span>
-                    <span className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-1.5">
-                      <span className="text-[13px] font-medium text-ink">
-                        {item.label}
-                      </span>
-                      <span className="text-[11px] leading-snug text-faint">
-                        {item.hint}
-                      </span>
-                    </span>
-                  </motion.button>
-                );
-              })}
-            </div>
+                    {term.label}
+                  </span>
+                  <span className="mt-1.5 block text-[12.5px] leading-snug text-faint">
+                    {term.cost}
+                  </span>
+                </span>
 
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              <Action onClick={onEnter} disabled={!ready}>
-                Start
-                <ArrowRight className="h-4 w-4" />
-              </Action>
-              <p className="text-[12px] text-faint">
-                {ready
-                  ? "The front page opens next."
-                  : "Accept all four to proceed."}
-              </p>
-            </div>
-          </motion.div>
+                <span
+                  className={cn(
+                    "flex h-5 w-5 shrink-0 items-center justify-center border transition-colors duration-200",
+                    on ? "border-teal bg-teal/20 text-teal" : "border-line-2 text-transparent",
+                  )}
+                >
+                  <Check className="h-3 w-3" />
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* ── the opening position, and the way in ───────────────── */}
+        <div className="mt-[clamp(1.25rem,3vh,2rem)] flex flex-wrap items-end justify-between gap-x-10 gap-y-6">
+          <dl className="flex flex-wrap items-baseline gap-x-8 gap-y-4 sm:gap-x-12">
+            {footing.map((figure) => (
+              <div key={figure.label}>
+                <dt className="tick-label">{figure.label}</dt>
+                <dd className="num mt-2 text-[clamp(1.1rem,1.8vw,1.5rem)] leading-none text-ink">
+                  {figure.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+
+          <div className="flex items-center gap-4">
+            <p className="num text-[11.5px] text-faint">
+              {count}/{TERMS.length} accepted
+            </p>
+            <Action onClick={onEnter} disabled={!ready} size="lg">
+              Take the desk
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </Action>
+          </div>
         </div>
       </Container>
     </div>

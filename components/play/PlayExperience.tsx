@@ -12,8 +12,9 @@ import { forgetRunIndex, runHref } from "@/lib/run/ref";
 import { asNumber } from "@/lib/api/catalog";
 import { ApiError, type CompanyListItem } from "@/lib/api/types";
 import type { Scenario } from "@/lib/play/types";
-import { Action, Pill } from "@/components/ui/Kit";
+import { Action, Container } from "@/components/ui/Kit";
 import { PageLoading } from "@/components/ui/Loading";
+import { cn } from "@/lib/utils";
 
 type Phase = "rules" | "picker" | "story" | "kpi";
 
@@ -171,33 +172,55 @@ export function PlayExperience({ scenario }: { scenario: Scenario }) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-8 bg-void px-5 py-16">
-      <div className="w-full max-w-xl text-center">
-        <p className="eyebrow text-cyan">{scenario.name}</p>
-        <h1 className="display mt-3 text-[clamp(1.6rem,3vw,2.2rem)] text-ink">
-          Pick up where you left off
-        </h1>
-        <p className="mt-3 text-[14px] text-dim">
-          Each run is a company you own, played over four quarters. Your runs
-          live on the server, not in this browser.
-        </p>
-      </div>
+    <div className="ledger relative flex min-h-dvh flex-col bg-void">
+      <div className="grid-lines absolute inset-0" />
 
-      <div className="w-full max-w-xl space-y-3">
-        {[...resumable, ...finished].map((run) => (
-          <RunCard key={run.id} run={run} onResume={() => resume(run)} />
-        ))}
-      </div>
+      <header className="relative z-10 border-b border-line">
+        <Container wide className="flex flex-wrap items-center justify-between gap-3 py-3">
+          <p className="tick-label">Myelin · {scenario.name}</p>
+          <p className="tick-label">
+            {resumable.length} open · {finished.length} closed
+          </p>
+        </Container>
+      </header>
 
-      <div className="flex flex-col items-center gap-3">
-        <Action onClick={() => setPhase("story")} size="lg">
-          <Plus className="h-4 w-4" />
-          Start a new run
-        </Action>
-        <p className="text-[12px] text-faint">
-          Opens the front page for {scenario.company.name} first.
-        </p>
-      </div>
+      <Container wide className="relative z-10 flex flex-1 flex-col justify-center py-[clamp(2rem,6vh,4rem)]">
+        <div className="grid items-end gap-x-16 gap-y-6 lg:grid-cols-[1.3fr_auto]">
+          <div>
+            <p className="tick-label rise">Your desks</p>
+            <h1 className="ledger-display rise rise-1 mt-4 text-balance text-[clamp(2.2rem,4.6vw,3.6rem)] text-ink">
+              Pick up where you <span className="italic text-teal">left off.</span>
+            </h1>
+            <p className="rise rise-2 mt-5 max-w-[52ch] border-t border-line pt-5 text-[15.5px] leading-[1.7] text-dim">
+              Each run is a company you own, played over four quarters. They live on the
+              server, not in this browser — so they are here on any machine you sign in from.
+            </p>
+          </div>
+
+          <div className="rise rise-2 lg:justify-self-end">
+            <Action onClick={() => setPhase("story")} size="lg">
+              <Plus className="h-4 w-4" />
+              Start a new run
+            </Action>
+            <p className="tick-label mt-3 lg:text-right">
+              Opens the front page first
+            </p>
+          </div>
+        </div>
+
+        {/* A ruled index, newest first: the run, where it stands, and what it last scored. */}
+        <div className="mt-[clamp(1.5rem,4vh,2.5rem)] border-t border-line">
+          {[...resumable, ...finished].map((run) => (
+            <RunRow key={run.id} run={run} onResume={() => resume(run)} />
+          ))}
+        </div>
+
+        {error && (
+          <p className="mt-6 border border-ember/40 bg-ember/[0.08] px-4 py-3 text-[13px] text-ember">
+            {error}
+          </p>
+        )}
+      </Container>
     </div>
   );
 }
@@ -209,50 +232,60 @@ function Shade({ children }: { children: React.ReactNode }) {
   );
 }
 
-function RunCard({
-  run,
-  onResume,
-}: {
-  run: CompanyListItem;
-  onResume: () => void;
-}) {
+/** Teal is the live system; vermilion is what it cost. */
+const RUN_TONE: Record<string, string> = {
+  active: "text-teal",
+  distressed: "text-ember-soft",
+  failed: "text-ember",
+  completed: "text-dim",
+};
+
+function RunRow({ run, onResume }: { run: CompanyListItem; onResume: () => void }) {
   const terminal = run.run_status === "completed" || run.run_status === "failed";
-  const accent =
-    run.run_status === "failed"
-      ? "rose"
-      : run.run_status === "distressed"
-        ? "amber"
-        : run.run_status === "completed"
-          ? "emerald"
-          : "cyan";
+  const live = !terminal;
 
   return (
     <button
       type="button"
       onClick={onResume}
-      className="group flex w-full items-center justify-between gap-4 rounded-xl border border-line bg-raise/50 px-5 py-4 text-left transition-colors hover:border-line-2 hover:bg-[var(--panel-2)]"
+      className="group grid w-full grid-cols-[1fr_auto] items-baseline gap-x-6 gap-y-2 border-b border-line py-4 text-left transition-colors duration-200 hover:bg-[var(--panel)] sm:grid-cols-[1fr_10rem_7rem_6rem]"
     >
-      <div className="min-w-0">
-        <p className="truncate text-[14.5px] font-medium text-ink">{run.name}</p>
-        <p className="num mt-1 text-[12px] text-faint">
-          Q{run.current_quarter_number ?? 0}/{run.total_quarters} ·{" "}
-          {run.quarters_locked} locked
-          {run.latest_ceo_score != null && (
-            <>
-              {" "}
-              · last score {asNumber(run.latest_ceo_score).toFixed(1)}
-              {run.latest_band ? ` (${run.latest_band})` : ""}
-            </>
-          )}
-        </p>
-      </div>
-      <div className="flex shrink-0 items-center gap-3">
-        <Pill accent={accent}>{run.run_status}</Pill>
-        <span className="text-[13px] text-dim">
+      <span className="min-w-0">
+        <span className="block truncate text-[15.5px] text-ink">{run.name}</span>
+        <span className="num mt-1.5 block text-[11.5px] text-faint">Run {run.seq}</span>
+      </span>
+
+      {/* Progress as one tick per quarter -- four of them do not need a percentage. */}
+      <span className="hidden items-center gap-3 sm:flex">
+        <span aria-hidden className="flex gap-[3px]">
+          {Array.from({ length: run.total_quarters || 4 }).map((_, i) => (
+            <span
+              key={i}
+              className={cn("h-2 w-4", i < run.quarters_locked ? "bg-teal" : "bg-line-2")}
+            />
+          ))}
+        </span>
+        <span className="num text-[11.5px] text-dim">
+          {run.quarters_locked}/{run.total_quarters}
+        </span>
+      </span>
+
+      <span className="num hidden text-[11.5px] text-dim sm:block">
+        {run.latest_ceo_score != null
+          ? `${asNumber(run.latest_ceo_score).toFixed(1)}${run.latest_band ? ` · ${run.latest_band}` : ""}`
+          : "—"}
+      </span>
+
+      <span className="flex items-baseline justify-end gap-3 justify-self-end">
+        <span className={cn("tick-label", RUN_TONE[run.run_status] ?? "text-dim")}>
+          {live && <span className="live-dot mr-2 inline-block h-1.5 w-1.5 rounded-full bg-teal align-middle" />}
+          {run.run_status}
+        </span>
+        <span className="hidden text-[13px] text-teal sm:inline">
           {terminal ? "Review" : "Resume"}
           <ArrowRight className="ml-1 inline h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
         </span>
-      </div>
+      </span>
     </button>
   );
 }
