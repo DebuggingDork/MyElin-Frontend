@@ -778,8 +778,11 @@ export function SimulationApp() {
               control for a panel inside the simulation on the bar that carries "log out" --
               two different scopes on one rule. It now lives in the simulation's own header
               below, beside the quarter it belongs to. */}
+          {/* The full lockup, as everywhere else. The glyph alone read as a missing asset here
+              rather than as a deliberate mark -- this bar has the room the run's own header
+              does not. */}
           <Link href="/" aria-label="Myelin home" className="flex shrink-0 items-center">
-            <Logo variant="glyph" />
+            <Logo />
           </Link>
           <div className="flex shrink-0 items-center gap-3">
             <ThemeToggle />
@@ -1115,6 +1118,7 @@ export function SimulationApp() {
     body = (
       <ReviewScreen
         quarter={state.quarter}
+        state={state}
         dirs={dirs}
         inbox={messages}
         constraint={liveConstraint}
