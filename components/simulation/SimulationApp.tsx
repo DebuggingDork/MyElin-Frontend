@@ -82,6 +82,7 @@ import { ClosedScreen } from "@/components/simulation/screens/Closed";
 import { TermSheetScreen } from "@/components/simulation/screens/TermSheet";
 import { FinalScreen } from "@/components/simulation/screens/Final";
 import { PrinciplesScreen } from "@/components/simulation/screens/Principles";
+import { BalanceSheetScreen } from "@/components/simulation/screens/BalanceSheetScreen";
 import type {
   Alloc,
   ArchetypeId,
@@ -117,6 +118,7 @@ export const SIMULATION_TABS = [
   { id: "hr", label: "People" },
   { id: "finance", label: "Finance" },
   { id: "crisis", label: "Market event" },
+  { id: "balance", label: "Balance sheet" },
   { id: "learning", label: "Principles" },
   { id: "review", label: "Close the quarter" },
 ] as const;
@@ -688,6 +690,7 @@ export function SimulationApp() {
     { id: "dashboard", label: "Company", badge: messages.filter((m) => m.tone === "critical").length, hot: false },
     ...Object.keys(SCREEN_META).map((id) => ({ id, label: SCREEN_META[id].label, badge: 0, hot: false })),
     ...(crisisLive ? [{ id: "crisis", label: "Market event", badge: 0, hot: true }] : []),
+    { id: "balance", label: "Balance sheet", badge: 0, hot: false },
     { id: "learning", label: "Principles", badge: 0, hot: false },
     { id: "review", label: "Close the quarter", badge: 0, hot: false },
   ];
@@ -1080,6 +1083,8 @@ export function SimulationApp() {
 
   if (tab === "learning") {
     body = <PrinciplesScreen />;
+  } else if (tab === "balance") {
+    body = <BalanceSheetScreen s={state} budget={budget} history={history} />;
   } else if (tab === "dashboard") {
     body = (
       <DashboardScreen
