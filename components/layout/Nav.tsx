@@ -22,7 +22,7 @@ const links = [
 
 export function Nav() {
   const pathname = usePathname();
-  const { user, logout, ready } = useAuth();
+  const { user, ready } = useAuth();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -79,9 +79,10 @@ export function Nav() {
         <div className="relative z-10 flex shrink-0 items-center gap-2">
           <ThemeToggle />
           {ready && user ? (
-            <div className="hidden sm:block">
-              <ProfileMenu />
-            </div>
+            /* Shown at every width: the account menu is where profile, runs, password,
+               appearance and log out now live, so hiding it on a phone would leave the mobile
+               drawer as a second, thinner copy of the same list -- which is what it used to be. */
+            <ProfileMenu />
           ) : (
             <>
               <Link
@@ -122,21 +123,11 @@ export function Nav() {
               </Link>
             ))}
             {user ? (
-              <>
-                <div className="mt-2 border-t border-line px-3 pb-1 pt-4 text-[12px] text-faint">
-                  Signed in as {user.email}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    logout();
-                    setOpen(false);
-                  }}
-                  className="rounded-xl px-3 py-3 text-left text-[15px] text-dim"
-                >
-                  Log out
-                </button>
-              </>
+              /* Account actions live in the profile menu at every width -- this drawer is the
+                 site nav only, so the two never disagree about what an account can do. */
+              <div className="mt-2 border-t border-line px-3 pb-1 pt-4 text-[12px] text-faint">
+                Signed in as {user.email}
+              </div>
             ) : (
               <>
                 <Link
