@@ -7,11 +7,14 @@
  */
 
 import { inr } from "@/lib/simulation/format";
+import { balanceCommitted, balanceOpening } from "@/lib/simulation/balance";
+import { BalanceSheetDoc } from "@/components/simulation/BalanceSheetDoc";
 import { BudgetMeter, Eyebrow, Inbox, Panel, ReadinessGrid } from "@/components/simulation/Kit";
 import { ReflectionForm, reflectionComplete } from "@/components/simulation/Panels";
 import type {
   Alloc,
   Budget,
+  CompanyState,
   Constraint,
   CrisisInput,
   InboxMessage,
@@ -23,6 +26,7 @@ import { Spinner } from "@/components/ui/Loading";
 
 export function ReviewScreen({
   quarter,
+  state,
   dirs,
   inbox,
   constraint,
@@ -38,6 +42,7 @@ export function ReviewScreen({
   error,
 }: {
   quarter: number;
+  state: CompanyState;
   dirs: Readiness[];
   inbox: InboxMessage[];
   constraint: Constraint | null;
@@ -84,6 +89,27 @@ export function ReviewScreen({
       />
 
       <BudgetMeter budget={budget} />
+
+      {/* The sheet, before the quarter runs.
+          Everything committed is on it -- plant, the innovation board, credit drawn, a signed
+          investment, and the operating spend that leaves both the bank and the reserves. What
+          is deliberately *not* on it is the quarter's outcome: revenue, profit and closing cash
+          stay sealed until the quarter locks, which is the whole design. */}
+      <BalanceSheetDoc
+        title="Balance sheet"
+        caption={"As it stands before you close quarter " + quarter}
+        openLabel="As at open"
+        closeLabel="With this plan"
+        open={balanceOpening(state)}
+        close={balanceCommitted(state, budget)}
+        note={
+          <>
+            The second column is your plan applied to the opening sheet — every rupee you have
+            committed, and nothing the quarter has yet to decide. Revenue, profit and closing
+            cash arrive when you close it.
+          </>
+        }
+      />
 
       {budget.committed > budget.ceiling && (
         <div className="border-l-4 border-danger bg-danger/10 px-4 py-3 text-sm text-tone-bad">
