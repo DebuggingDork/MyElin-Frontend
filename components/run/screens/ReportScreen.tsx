@@ -8,7 +8,7 @@ import { useRun } from "@/components/run/RunProvider";
 import { ApiError } from "@/lib/api/types";
 
 export function ReportScreen({ quarterId }: { quarterId: string }) {
-  const { companyId, report, loadReport, can, run } = useRun();
+  const { href, report, loadReport, can, run } = useRun();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(!report);
 
@@ -46,7 +46,7 @@ export function ReportScreen({ quarterId }: { quarterId: string }) {
             "No report yet. Lock the quarter to generate one (POST …/lock)."}
         </p>
         {can("lock_quarter") && (
-          <Action href={`/run/${companyId}/quarter/${quarterId}/lock`}>
+          <Action href={href(`/quarter/${quarterId}/lock`)}>
             Go to lock <ArrowRight className="h-4 w-4" />
           </Action>
         )}
@@ -65,9 +65,9 @@ export function ReportScreen({ quarterId }: { quarterId: string }) {
           the most buttons here (hub, endgame, run complete, leaderboard) and is the case that
           wraps first. */}
       <footer className="flex flex-wrap items-center gap-3 border-t border-line pt-6">
-        <Action href={`/run/${companyId}`}>Back to hub</Action>
+        <Action href={href()}>Back to hub</Action>
         {canOpenNext && (
-          <Action href={`/run/${companyId}`}>
+          <Action href={href()}>
             Open next quarter from hub
             <ArrowRight className="h-4 w-4" />
           </Action>
@@ -75,13 +75,13 @@ export function ReportScreen({ quarterId }: { quarterId: string }) {
         {can("submit_endgame_decision") && (
           <Action
             variant="outline"
-            href={`/run/${companyId}/quarter/${quarterId}/endgame`}
+            href={href(`/quarter/${quarterId}/endgame`)}
           >
             Endgame
           </Action>
         )}
         {terminal && (
-          <Action variant="outline" href={`/run/${companyId}/complete`}>
+          <Action variant="outline" href={href("/complete")}>
             Run complete
           </Action>
         )}

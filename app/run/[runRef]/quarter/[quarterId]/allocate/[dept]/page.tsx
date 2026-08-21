@@ -5,11 +5,11 @@ import { DEPARTMENTS, type DeptId } from "@/lib/api/catalog";
 import { Action } from "@/components/ui/Kit";
 
 type Props = {
-  params: Promise<{ companyId: string; quarterId: string; dept: string }>;
+  params: Promise<{ runRef: string; quarterId: string; dept: string }>;
 };
 
 export default async function AllocateDeptPage({ params }: Props) {
-  const { companyId, quarterId, dept } = await params;
+  const { runRef, quarterId, dept } = await params;
   if (!DEPARTMENTS.some((d) => d.id === dept)) notFound();
 
   const index = DEPARTMENTS.findIndex((d) => d.id === dept);
@@ -23,26 +23,26 @@ export default async function AllocateDeptPage({ params }: Props) {
         {prev ? (
           <Action
             variant="outline"
-            href={`/run/${companyId}/quarter/${quarterId}/allocate/${prev.id}`}
+            href={`/run/${runRef}/quarter/${quarterId}/allocate/${prev.id}`}
           >
             ← {prev.name}
           </Action>
         ) : (
           <Action
             variant="outline"
-            href={`/run/${companyId}/quarter/${quarterId}/briefing`}
+            href={`/run/${runRef}/quarter/${quarterId}/briefing`}
           >
             ← Briefing
           </Action>
         )}
         {next ? (
           <Action
-            href={`/run/${companyId}/quarter/${quarterId}/allocate/${next.id}`}
+            href={`/run/${runRef}/quarter/${quarterId}/allocate/${next.id}`}
           >
             {next.name} →
           </Action>
         ) : (
-          <NextAfterAllocationLink companyId={companyId} quarterId={quarterId} />
+          <NextAfterAllocationLink runRef={runRef} quarterId={quarterId} />
         )}
       </footer>
     </div>

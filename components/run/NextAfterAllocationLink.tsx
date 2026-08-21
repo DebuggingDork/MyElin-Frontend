@@ -2,6 +2,7 @@
 
 import { Action } from "@/components/ui/Kit";
 import { useRun } from "@/components/run/RunProvider";
+import { runHref } from "@/lib/run/ref";
 
 /**
  * The "next" action after the last department (finance_admin). Routes through the crisis
@@ -12,10 +13,11 @@ import { useRun } from "@/components/run/RunProvider";
  * never see.
  */
 export function NextAfterAllocationLink({
-  companyId,
+  runRef,
   quarterId,
 }: {
-  companyId: string;
+  /** The run number from the URL, not the company id -- this only builds links. */
+  runRef: string;
   quarterId: string;
 }) {
   const { run } = useRun();
@@ -24,14 +26,14 @@ export function NextAfterAllocationLink({
 
   if (isCrisisQuarter) {
     return (
-      <Action href={`/run/${companyId}/quarter/${quarterId}/crisis`}>
+      <Action href={runHref(runRef, `/quarter/${quarterId}/crisis`)}>
         Crisis response →
       </Action>
     );
   }
 
   return (
-    <Action href={`/run/${companyId}/quarter/${quarterId}/lock`}>
+    <Action href={runHref(runRef, `/quarter/${quarterId}/lock`)}>
       Lock quarter →
     </Action>
   );

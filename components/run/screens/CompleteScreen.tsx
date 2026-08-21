@@ -8,7 +8,7 @@ import { useRun } from "@/components/run/RunProvider";
 
 /** Terminal screen when run_status is completed or failed. */
 export function CompleteScreen() {
-  const { companyId, company, run, report } = useRun();
+  const { href, company, run, report } = useRun();
   const failed = run?.run_status === "failed";
   const completed = run?.run_status === "completed";
   const last = run?.score_trajectory?.[run.score_trajectory.length - 1];
@@ -20,7 +20,7 @@ export function CompleteScreen() {
         <p className="text-[15px] text-dim">
           This run is still active — finish all quarters first.
         </p>
-        <Action href={`/run/${companyId}`}>Back to hub</Action>
+        <Action href={href()}>Back to hub</Action>
       </div>
     );
   }
@@ -122,7 +122,7 @@ export function CompleteScreen() {
         <Action href="/simulations" variant="outline">
           New simulation
         </Action>
-        <Action href={`/run/${companyId}`} variant="ghost">
+        <Action href={href()} variant="ghost">
           Back to hub
         </Action>
       </div>

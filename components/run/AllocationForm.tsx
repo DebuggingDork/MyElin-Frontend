@@ -47,7 +47,7 @@ function fromAlloc(
 }
 
 export function AllocationWorkspace({ deptId }: { deptId: DeptId }) {
-  const { companyId, run, quarter, can, setAllocations, refresh, financeUnlocked, allocatedLakhs } =
+  const { companyId, href, run, quarter, can, setAllocations, refresh, financeUnlocked, allocatedLakhs } =
     useRun();
   const catalog = DEPARTMENTS.find((d) => d.id === deptId)!;
   const keys = catalog.fields.map((f) => f.key);
@@ -193,7 +193,7 @@ export function AllocationWorkspace({ deptId }: { deptId: DeptId }) {
             className="mt-4"
             href={
               quarterId
-                ? `/run/${companyId}/quarter/${quarterId}/allocate/finance_admin`
+                ? href(`/quarter/${quarterId}/allocate/finance_admin`)
                 : "#"
             }
           >

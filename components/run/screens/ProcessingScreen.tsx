@@ -20,7 +20,7 @@ const STAGES = [
 /** Screen 9 — calls POST …/lock while naming each pipeline stage. */
 export function ProcessingScreen({ quarterId }: { quarterId: string }) {
   const router = useRouter();
-  const { companyId, lockQuarter, can, report } = useRun();
+  const { href, lockQuarter, can, report } = useRun();
   const [stage, setStage] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const started = useRef(false);
@@ -31,7 +31,7 @@ export function ProcessingScreen({ quarterId }: { quarterId: string }) {
 
     // Already locked — skip straight to report.
     if (report && !can("lock_quarter")) {
-      router.replace(`/run/${companyId}/quarter/${quarterId}/report`);
+      router.replace(href(`/quarter/${quarterId}/report`));
       return;
     }
 
@@ -45,7 +45,7 @@ export function ProcessingScreen({ quarterId }: { quarterId: string }) {
         window.clearInterval(timer);
         setStage(STAGES.length - 1);
         window.setTimeout(() => {
-          router.replace(`/run/${companyId}/quarter/${quarterId}/report`);
+          router.replace(href(`/quarter/${quarterId}/report`));
         }, 500);
       } catch (err) {
         window.clearInterval(timer);
@@ -54,7 +54,7 @@ export function ProcessingScreen({ quarterId }: { quarterId: string }) {
     })();
 
     return () => window.clearInterval(timer);
-  }, [companyId, quarterId, lockQuarter, can, report, router]);
+  }, [href, quarterId, lockQuarter, can, report, router]);
 
   return (
     <div className="flex min-h-[60vh] items-center justify-center">

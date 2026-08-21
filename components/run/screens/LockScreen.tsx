@@ -10,7 +10,7 @@ import { useRun } from "@/components/run/RunProvider";
 /** Screen: confirm then navigate to processing which calls POST …/lock. */
 export function LockScreen({ quarterId }: { quarterId: string }) {
   const router = useRouter();
-  const { companyId, run, quarter, can } = useRun();
+  const { href, run, quarter, can } = useRun();
   const [armed, setArmed] = useState(false);
 
   const alloc = quarter?.allocations;
@@ -104,13 +104,13 @@ export function LockScreen({ quarterId }: { quarterId: string }) {
           <Action
             key={d.id}
             variant="ghost"
-            href={`/run/${companyId}/quarter/${quarterId}/allocate/${d.id}`}
+            href={href(`/quarter/${quarterId}/allocate/${d.id}`)}
           >
             Edit {d.name}
           </Action>
         ))}
         {isCrisisQuarter && (
-          <Action variant="ghost" href={`/run/${companyId}/quarter/${quarterId}/crisis`}>
+          <Action variant="ghost" href={href(`/quarter/${quarterId}/crisis`)}>
             Edit Crisis response
           </Action>
         )}
@@ -132,7 +132,7 @@ export function LockScreen({ quarterId }: { quarterId: string }) {
           <Action
             onClick={() =>
               router.push(
-                `/run/${companyId}/quarter/${quarterId}/processing`,
+                href(`/quarter/${quarterId}/processing`),
               )
             }
           >

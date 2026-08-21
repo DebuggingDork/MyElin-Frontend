@@ -81,6 +81,10 @@ export type QuarterSummary = {
 
 export type CompanyDetailResponse = {
   id: string;
+  /** This owner's run number -- their 1st, 2nd, 3rd run. Unique per owner and never
+   *  reassigned, which is what makes it safe to put in a URL (`/run/2`) in place of `id`.
+   *  `id` stays the only value any API path takes. */
+  seq: number;
   created_at: string;
   name: string;
   scenario_id: string;
@@ -97,6 +101,10 @@ export type CompanyDetailResponse = {
 /** One row of `GET /companies` -- everything needed to render a "resume a run" card. */
 export type CompanyListItem = {
   id: string;
+  /** This owner's run number -- their 1st, 2nd, 3rd run. Unique per owner and never
+   *  reassigned, which is what makes it safe to put in a URL (`/run/2`) in place of `id`.
+   *  `id` stays the only value any API path takes. */
+  seq: number;
   name: string;
   created_at: string;
   run_status: RunStatus;

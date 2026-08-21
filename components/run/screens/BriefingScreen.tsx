@@ -30,7 +30,7 @@ const DEPT_ICON: Record<DeptIcon, React.ComponentType<{ className?: string }>> =
  * GET company + GET quarter + GET run before any allocation is staged.
  */
 export function BriefingScreen({ quarterId }: { quarterId: string }) {
-  const { companyId, company, run, quarter, financeUnlocked } = useRun();
+  const { href, company, run, quarter, financeUnlocked } = useRun();
   const q = quarter?.id === quarterId ? quarter : quarter;
   const financeDept = DEPARTMENTS[0];
 
@@ -170,7 +170,7 @@ export function BriefingScreen({ quarterId }: { quarterId: string }) {
             ) : (
               <Link
                 key={d.id}
-                href={`/run/${companyId}/quarter/${quarterId}/allocate/${d.id}`}
+                href={href(`/quarter/${quarterId}/allocate/${d.id}`)}
                 className="hover-lift block"
               >
                 {card}
@@ -182,14 +182,14 @@ export function BriefingScreen({ quarterId }: { quarterId: string }) {
 
       <div className="flex flex-wrap gap-3 border-t border-line pt-6">
         <Action
-          href={`/run/${companyId}/quarter/${quarterId}/allocate/${financeDept.id}`}
+          href={href(`/quarter/${quarterId}/allocate/${financeDept.id}`)}
         >
           Start with {financeDept.name}
           <ArrowRight className="h-4 w-4" />
         </Action>
         <Action
           variant="outline"
-          href={`/run/${companyId}/quarter/${quarterId}/lock`}
+          href={href(`/quarter/${quarterId}/lock`)}
         >
           Skip to lock
         </Action>
