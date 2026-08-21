@@ -1101,13 +1101,20 @@ body {
 
 /* Every number, label and state on this page is monospace. It is the single
    strongest signal that the thing you are looking at is an instrument. */
-.tick-label {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 10.5px;
-  line-height: 1;
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  color: var(--faint);
+/* In `components`, not unlayered, for the colour alone: Tailwind's utilities live in a layer,
+   and unlayered CSS outranks every layer -- so an unlayered `color` here quietly beat
+   `text-teal` and `text-ember` at every call site that tries to tone a label ("LIVE",
+   "DISTRESSED", "Saved"), rendering all of them faint. Layered, the utility wins when one is
+   present and `--faint` still applies when none is. */
+@layer components {
+  .tick-label {
+    font-family: var(--font-geist-mono), ui-monospace, monospace;
+    font-size: 10.5px;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--faint);
+  }
 }
 
 /* Section rhythm: tighter than the old uniform 8rem, and asymmetric -- more air
