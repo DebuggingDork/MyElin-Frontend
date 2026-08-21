@@ -6,7 +6,12 @@ import {
   formatSigned,
   humanizeId,
 } from "@/lib/format/display";
-import type { CompanyOutcomeSchema, QuarterReportResponse } from "@/lib/api/types";
+import type {
+  BalanceSheetSchema,
+  CompanyOutcomeSchema,
+  Money,
+  QuarterReportResponse,
+} from "@/lib/api/types";
 
 const PAGE_W = 595.28; // A4 in pt
 const PAGE_H = 841.89;
@@ -141,6 +146,160 @@ function drawStatement(c: Cursor, outcome: CompanyOutcomeSchema) {
   );
 }
 
+/* ── the position ─────────────────────────────────────────────────── */
+
+type BsLine = { label: string; note: string; amount: Money | null };
+
+/** Where the `Note` column starts. Left of it is the particular, right of it the amount. */
+const NOTE_X = MARGIN + 250;
+
+/** `Assets` / `Equity And Liabilities`. jsPDF has no underline, so the rule is drawn. */
+function bsGroupHeading(c: Cursor, text: string) {
+  ensureSpace(c, 26);
+  c.y += 8;
+  c.doc.setFont("helvetica", "bolditalic");
+  c.doc.setFontSize(11);
+  c.doc.setTextColor(INK);
+  c.doc.text(text, MARGIN, c.y);
+  c.doc.setDrawColor(INK);
+  c.doc.setLineWidth(0.6);
+  c.doc.line(MARGIN, c.y + 2.5, MARGIN + c.doc.getTextWidth(text), c.y + 2.5);
+  c.y += 17;
+}
+
+function bsSubHeading(c: Cursor, text: string) {
+  ensureSpace(c, 20);
+  c.y += 5;
+  c.doc.setFont("helvetica", "bold");
+  c.doc.setFontSize(10);
+  c.doc.setTextColor(INK);
+  c.doc.text(text, MARGIN, c.y);
+  c.y += 14;
+}
+
+function bsRow(c: Cursor, line: BsLine) {
+  ensureSpace(c, 16);
+  c.doc.setFont("helvetica", "normal");
+  c.doc.setFontSize(10);
+  c.doc.setTextColor(INK_SOFT);
+  c.doc.text(line.label, MARGIN + 10, c.y, { maxWidth: 225 });
+
+  if (line.note) {
+    c.doc.setFontSize(8);
+    c.doc.text(line.note, NOTE_X, c.y, { maxWidth: 150 });
+  }
+
+  const has = line.amount !== null && line.amount !== undefined;
+  c.doc.setFont("helvetica", has ? "normal" : "italic");
+  c.doc.setFontSize(has ? 10 : 8.5);
+  c.doc.setTextColor(has ? INK : INK_SOFT);
+  c.doc.text(has ? formatInr(line.amount) : "not reported", PAGE_W - MARGIN, c.y, {
+    align: "right",
+  });
+  c.y += 15;
+}
+
+/** Mirrors QuarterBalanceSheet.tsx line for line -- same order, same notes, same fallbacks. */
+function drawBalanceSheet(
+  c: Cursor,
+  sheet: BalanceSheetSchema | null | undefined,
+  closingCash: Money | null,
+) {
+  sectionLabel(c, `Balance sheet · as at quarter close${sheet?.as_at ? ` · ${sheet.as_at}` : ""}`);
+
+  if (!sheet) {
+    ensureSpace(c, 18);
+    c.doc.setFont("helvetica", "italic");
+    c.doc.setFontSize(9.5);
+    c.doc.setTextColor(INK_SOFT);
+    c.doc.text("No position reported for this quarter.", MARGIN, c.y);
+    c.y += 16;
+    return;
+  }
+
+  bsGroupHeading(c, "Assets");
+
+  bsSubHeading(c, "Non-Current Assets:");
+  bsRow(c, { label: "Property, Plant & Equipment", note: "net of depreciation", amount: sheet.property_plant_equipment_inr });
+  bsRow(c, { label: "Intangible Assets", note: "capitalised innovation, amortised", amount: sheet.intangible_assets_inr });
+  bsRow(c, { label: "Investments", note: "held beyond twelve months", amount: sheet.non_current_investments_inr });
+  bsRow(c, { label: "Other Non-Current Assets", note: "", amount: sheet.other_non_current_assets_inr });
+
+  bsSubHeading(c, "Current Assets:");
+  bsRow(c, { label: "Inventories", note: "finished units at cost", amount: sheet.inventories_inr });
+  bsRow(c, { label: "Investments", note: "treasury, within twelve months", amount: sheet.current_investments_inr });
+  bsRow(c, { label: "Trade Receivables", note: "sales invoiced, not yet collected", amount: sheet.trade_receivables_inr });
+  bsRow(c, {
+    label: "Cash And Cash Equivalents",
+    note: "closing cash balance",
+    amount: sheet.cash_and_equivalents_inr ?? closingCash,
+  });
+  bsRow(c, { label: "Other Current Assets", note: "", amount: sheet.other_current_assets_inr });
+
+  subtotalRow(
+    c,
+    "Total Assets",
+    sheet.total_assets_inr != null ? formatInr(sheet.total_assets_inr) : "not reported",
+  );
+
+  bsGroupHeading(c, "Equity And Liabilities");
+
+  bsSubHeading(c, "Equity");
+  bsRow(c, { label: "Share Capital", note: "issued and paid up", amount: sheet.share_capital_inr });
+  bsRow(c, { label: "Retained Earnings", note: "accumulated profit and loss", amount: sheet.retained_earnings_inr });
+  bsRow(c, { label: "Other Equity", note: "", amount: sheet.other_equity_inr });
+
+  bsSubHeading(c, "Non-Current Liabilities:");
+  bsRow(c, { label: "Long-Term Borrowings", note: "credit facility drawn", amount: sheet.long_term_borrowings_inr });
+  bsRow(c, { label: "Long-Term Provisions", note: "", amount: sheet.long_term_provisions_inr });
+  bsRow(c, { label: "Deferred Tax Liabilities (Net)", note: "", amount: sheet.deferred_tax_liabilities_inr });
+  bsRow(c, { label: "Other Non-Current Liabilities", note: "", amount: sheet.other_non_current_liabilities_inr });
+
+  bsSubHeading(c, "Current Liabilities:");
+  bsRow(c, { label: "Short-Term Borrowings", note: "repayable within twelve months", amount: sheet.short_term_borrowings_inr });
+  bsRow(c, { label: "Trade Payables", note: "owed to suppliers", amount: sheet.trade_payables_inr });
+  bsRow(c, { label: "Other Current Liabilities", note: "", amount: sheet.other_current_liabilities_inr });
+  bsRow(c, { label: "Short-Term Provisions", note: "warranty cover", amount: sheet.short_term_provisions_inr });
+
+  subtotalRow(
+    c,
+    "Total Equity And Liabilities",
+    sheet.total_equity_and_liabilities_inr != null
+      ? formatInr(sheet.total_equity_and_liabilities_inr)
+      : "not reported",
+    true,
+  );
+
+  /* Same tie-out the on-screen sheet performs, and the same refusal to stay quiet about a
+     position that does not balance. */
+  const assets = sheet.total_assets_inr;
+  const claims = sheet.total_equity_and_liabilities_inr;
+  if (assets != null && claims != null && Math.round(asNumber(assets)) !== Math.round(asNumber(claims))) {
+    ensureSpace(c, 20);
+    c.y += 6;
+    c.doc.setFont("helvetica", "normal");
+    c.doc.setFontSize(8.5);
+    c.doc.setTextColor(BAD);
+    c.doc.text(
+      `Total equity and liabilities does not equal total assets — out by ${formatInr(Math.abs(asNumber(assets) - asNumber(claims)))}.`,
+      MARGIN,
+      c.y,
+    );
+    c.y += 14;
+  }
+
+  if (sheet.gap_reason) {
+    ensureSpace(c, 20);
+    c.y += 4;
+    c.doc.setFont("helvetica", "italic");
+    c.doc.setFontSize(8.5);
+    c.doc.setTextColor(INK_SOFT);
+    const lines = c.doc.splitTextToSize(sheet.gap_reason, PAGE_W - MARGIN * 2) as string[];
+    c.doc.text(lines, MARGIN, c.y);
+    c.y += lines.length * 11;
+  }
+}
+
 /**
  * Builds the report as real vector text/lines, not a screenshot of the DOM -- html2canvas-style
  * DOM capture chokes on backdrop-filter/CSS custom properties (this app uses both heavily for the
@@ -162,7 +321,7 @@ export function buildReportPdf(report: QuarterReportResponse, companyName: strin
   doc.setFontSize(9);
   doc.setTextColor(INK_SOFT);
   doc.text(
-    `Statement of Operations · Unaudited · Quarter ${report.quarter_number} · Generated ${new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}`,
+    `Statement of Operations and Balance Sheet · Unaudited · Quarter ${report.quarter_number} · Generated ${new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}`,
     MARGIN,
     c.y,
   );
@@ -172,6 +331,9 @@ export function buildReportPdf(report: QuarterReportResponse, companyName: strin
 
   sectionLabel(c, "A · Business outcome");
   drawStatement(c, report.outcome);
+  c.y += 20;
+
+  drawBalanceSheet(c, report.balance_sheet, report.outcome.closing_cash_inr.value);
   c.y += 20;
 
   if (report.binding_constraints.length > 0) {
