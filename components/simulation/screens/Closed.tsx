@@ -49,7 +49,8 @@ import { changesSince, lessons, whatHappened } from "@/lib/simulation/insights";
 import { priorityMatch, traitVerdicts } from "@/lib/simulation/scoring";
 import { Eyebrow, Panel, ReadinessGrid, Stat, TeachingNote } from "@/components/simulation/Kit";
 import { QuarterCharts } from "@/components/simulation/QuarterCharts";
-import { BalanceSheet, CashFlow, ConstraintChain, ProfitAndLoss } from "@/components/simulation/Statements";
+import { CashFlow, ConstraintChain, ProfitAndLoss } from "@/components/simulation/Statements";
+import { BalanceSheetDoc } from "@/components/simulation/BalanceSheetDoc";
 import type { QuarterScore } from "@/lib/simulation/remote";
 import type {
   ArchetypeId,
@@ -405,9 +406,9 @@ export function ClosedScreen({
       id: "bs",
       label: "Balance sheet",
       body: (
-        <BalanceSheet
-          eyebrow="Balance sheet"
-          title={"Quarter " + r.q}
+        <BalanceSheetDoc
+          title="Balance sheet"
+          caption={"As at the close of quarter " + r.q}
           open={balanceOpening(r.entering)}
           close={balanceClosing(r)}
         />

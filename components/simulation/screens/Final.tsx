@@ -32,7 +32,7 @@ import {
 } from "@/lib/simulation/scoring";
 import { Bar, Eyebrow, LedgerRow, Panel, Stat } from "@/components/simulation/Kit";
 import { QuarterCharts } from "@/components/simulation/QuarterCharts";
-import { BalanceSheet } from "@/components/simulation/Statements";
+import { BalanceSheetDoc } from "@/components/simulation/BalanceSheetDoc";
 import type { QuarterScore } from "@/lib/simulation/remote";
 import type {
   CompanyState,
@@ -347,9 +347,11 @@ export function FinalScreen({
                 </div>
               );
             })}
-            <BalanceSheet
-              eyebrow="Full year"
-              title="Opening to closing"
+            <BalanceSheetDoc
+              title="Balance sheet"
+              caption="The year, as it opened and as it closed"
+              openLabel="Q1 open"
+              closeLabel="Q4 close"
               open={balanceOpening(history[0].entering)}
               close={balanceClosing(last)}
             />

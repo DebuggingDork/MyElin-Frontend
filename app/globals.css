@@ -1129,6 +1129,33 @@ body {
   padding-block: clamp(4rem, 7vw, 6.5rem);
 }
 
+/* ─────────────────────────── the statement ───────────────────────────
+   A balance sheet is a document, and a document does not change colour with
+   the room. This one is printed on paper in both themes -- same ink, same
+   rules, same accent -- because half of what makes a filed statement read as
+   a statement is that you have seen exactly this before, in black on off-
+   white, with the totals ruled twice.
+
+   Its own tokens rather than the app's, and deliberately not overridden by
+   `[data-theme]`: everything inside `.statement` opts out of the theme. */
+.statement {
+  --paper: #fbfaf6;
+  --paper-2: #f4f2ea;
+  --stmt-ink: #15191b;
+  --stmt-ink-2: #4d5457;
+  --stmt-faint: #8b8578;
+  --stmt-rule: #ded9cc;
+  --stmt-rule-2: #a8a08c;
+  /* The one colour on the page: section numerals and the heads they carry. */
+  --stmt-accent: #0a6b60;
+  /* A figure in brackets on a real sheet. Used for anything that reads negative. */
+  --stmt-negative: #a8481c;
+
+  background: var(--paper);
+  color: var(--stmt-ink);
+  color-scheme: light;
+}
+
 /* ─────────────────── Nadi Wear simulation surface ───────────────────
    The four-quarter simulation ships as a light, ruled document: cream
    panels, warm-teal rules, a serif for headings and monospace for every

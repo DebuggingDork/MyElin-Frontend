@@ -13,108 +13,11 @@
 import { PAY_TERMS, PRODUCTS } from "@/lib/simulation/constants";
 import { cr, inr, lakh, n0, n1, n2, pct } from "@/lib/simulation/format";
 import { Eyebrow, LedgerRow, Panel } from "@/components/simulation/Kit";
-import type { BalanceView } from "@/lib/simulation/balance";
 import type { QuarterResultShape } from "@/lib/simulation/types";
 
 const v = (r: QuarterResultShape, k: string) => r[k] as number;
 
 /* ── balance sheet ────────────────────────────────────────────────── */
-
-export function BalanceSheet({
-  open,
-  close,
-  title,
-  eyebrow,
-}: {
-  open: BalanceView;
-  close?: BalanceView;
-  title: React.ReactNode;
-  eyebrow?: React.ReactNode;
-}) {
-  const row = (label: string, key: keyof BalanceView, working: string, indent?: boolean) => {
-    const move = close ? close[key] - open[key] : 0;
-    return (
-      <div className="grid grid-cols-12 gap-2 items-baseline py-1.5 border-b border-line">
-        <div
-          className={
-            "col-span-5 sm:col-span-4 text-sm " + (indent ? "pl-4 text-ink" : "font-semibold text-ink")
-          }
-        >
-          {label}
-        </div>
-        <div className="hidden sm:block sm:col-span-3 text-xs text-dim font-mono">{working}</div>
-        <div className="col-span-3 sm:col-span-2 text-right font-mono text-sm text-dim">{inr(open[key])}</div>
-        {close && (
-          <>
-            <div className="col-span-4 sm:col-span-2 text-right font-mono text-sm text-ink">{inr(close[key])}</div>
-            <div
-              className={
-                "hidden sm:block sm:col-span-1 text-right font-mono text-xs " +
-                (move >= 0 ? "text-tone-good" : "text-tone-bad")
-              }
-            >
-              {(move >= 0 ? "+" : "") + n0(move / 1000)}k
-            </div>
-          </>
-        )}
-      </div>
-    );
-  };
-
-  return (
-    <Panel eyebrow={eyebrow} title={title}>
-      <div className="grid grid-cols-12 gap-2 pb-2 border-b-2 border-line-2">
-        <div className="col-span-5 sm:col-span-4" />
-        <div className="hidden sm:block sm:col-span-3" />
-        <div className="col-span-3 sm:col-span-2 text-right">
-          <Eyebrow>Opening</Eyebrow>
-        </div>
-        {close && (
-          <>
-            <div className="col-span-4 sm:col-span-2 text-right">
-              <Eyebrow>Closing</Eyebrow>
-            </div>
-            <div className="hidden sm:block sm:col-span-1 text-right">
-              <Eyebrow>Move</Eyebrow>
-            </div>
-          </>
-        )}
-      </div>
-
-      <div className="mt-2 text-xs uppercase tracking-widest text-tone-bad font-semibold py-1">Assets</div>
-      {row("Cash and equivalents", "cash", "", true)}
-      {row("Accounts receivable", "ar", "uncollected sales", true)}
-      {row("Inventory", "inventory", n0((close || open).invUnits) + " units at cost", true)}
-      {row("Plant and equipment", "equipment", "net of depreciation", true)}
-      {row("Intellectual property", "ip", "innovation board, amortised", true)}
-      {row("Total assets", "assets", "")}
-
-      <div className="mt-3 text-xs uppercase tracking-widest text-tone-bad font-semibold py-1">Liabilities</div>
-      {row("Accounts payable", "ap", "owed to suppliers", true)}
-      {row("Borrowings", "debt", "credit facility drawn", true)}
-      {row("Other liabilities", "other", "fixed", true)}
-      {row("Total liabilities", "liabilities", "")}
-
-      <div className="mt-3 text-xs uppercase tracking-widest text-tone-bad font-semibold py-1">Equity</div>
-      {row("Share capital", "share", "seed round", true)}
-      {row("Retained earnings", "re", "accumulated profit and loss", true)}
-      {row("Total equity", "equity", "")}
-
-      <div className="mt-3 pt-2 border-t-2 border-line-2 grid grid-cols-12 gap-2">
-        <div className="col-span-5 sm:col-span-4 text-sm font-semibold">Liabilities and equity</div>
-        <div className="hidden sm:block sm:col-span-3 text-xs text-dim font-mono">must equal total assets</div>
-        <div className="col-span-3 sm:col-span-2 text-right font-mono text-sm text-dim">
-          {inr(open.liabilities + open.equity)}
-        </div>
-        {close && (
-          <div className="col-span-4 sm:col-span-2 text-right font-mono text-sm font-semibold">
-            {inr(close.liabilities + close.equity)}
-          </div>
-        )}
-      </div>
-    </Panel>
-  );
-}
 
 /* ── profit and loss ──────────────────────────────────────────────── */
 
