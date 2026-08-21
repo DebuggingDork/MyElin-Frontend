@@ -12,6 +12,7 @@ import { OnboardingProfile } from "@/components/auth/OnboardingProfile";
 import { easeOut, photos } from "@/lib/media";
 import { ApiError } from "@/lib/api/types";
 import { Action, Eyebrow } from "@/components/ui/Kit";
+import { ButtonSpinner } from "@/components/ui/Loading";
 
 type Mode = "login" | "signup";
 
@@ -345,6 +346,9 @@ function AuthForm({
           </p>
         )}
 
+        {/* The label already changes while the request is open; the spinner is what says the
+            wait is *live* rather than a button stuck on a different word. Same swap on both
+            sides so the control never changes width mid-request. */}
         <Action type="submit" className="w-full" size="lg" disabled={pending}>
           {pending
             ? isLogin
@@ -353,7 +357,7 @@ function AuthForm({
             : isLogin
               ? "Log in"
               : "Continue"}
-          <ArrowRight className="h-4 w-4" />
+          {pending ? <ButtonSpinner /> : <ArrowRight className="h-4 w-4" />}
         </Action>
       </form>
 

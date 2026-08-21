@@ -8,6 +8,7 @@ import { Logo } from "@/components/brand/Logo";
 import { Action, Eyebrow } from "@/components/ui/Kit";
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/types";
+import { ButtonSpinner } from "@/components/ui/Loading";
 
 /** Supabase's recovery-link redirect carries the token in the URL *fragment*
  *  (`#access_token=...&type=recovery`) -- fragments never reach a server, so this must be read
@@ -194,6 +195,7 @@ export function ResetPassword() {
               )}
 
               <Action type="submit" className="w-full" size="lg" disabled={pending}>
+                {pending && <ButtonSpinner />}
                 {pending ? "Updating…" : "Update password"}
               </Action>
             </form>

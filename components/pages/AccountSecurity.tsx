@@ -26,6 +26,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { api, getToken } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/types";
 import { Action, Container, Eyebrow, Panel } from "@/components/ui/Kit";
+import { ButtonSpinner } from "@/components/ui/Loading";
 
 /**
  * The `exp` claim, read without verifying anything.
@@ -234,7 +235,7 @@ export function AccountSecurity() {
 
                   <div className="flex flex-wrap items-center gap-4">
                     <Action type="submit" disabled={changing}>
-                      <KeyRound className="h-4 w-4" />
+                      {changing ? <ButtonSpinner /> : <KeyRound className="h-4 w-4" />}
                       {changing ? "Updating…" : "Update password"}
                     </Action>
                     {changed && <span className="text-[12.5px] text-teal">Password updated.</span>}
@@ -274,6 +275,7 @@ export function AccountSecurity() {
 
                   <div className="mt-5">
                     <Action variant="outline" onClick={onEmailLink} disabled={emailing}>
+                      {emailing && <ButtonSpinner />}
                       {emailing ? "Sending…" : "Send reset link"}
                     </Action>
                   </div>

@@ -7,6 +7,7 @@ import { Logo } from "@/components/brand/Logo";
 import { Action, Eyebrow } from "@/components/ui/Kit";
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/types";
+import { ButtonSpinner } from "@/components/ui/Loading";
 
 export function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -87,6 +88,7 @@ export function ForgotPassword() {
               )}
 
               <Action type="submit" className="w-full" size="lg" disabled={pending}>
+                {pending && <ButtonSpinner />}
                 {pending ? "Sending…" : "Send reset link"}
               </Action>
             </form>
