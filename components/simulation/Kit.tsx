@@ -28,10 +28,10 @@ import type { Budget, HealthBar, InboxMessage, QuarterResultShape, Readiness, To
    theme the same way everything else in `.simulation` does -- a literal hex
    here would go stale against the dark theme. */
 
-const CHART_RISE = "var(--tone-good)";
-const CHART_FALL = "var(--tone-bad)";
-const CHART_GRID = "var(--sim-line)";
-const CHART_AXIS = "var(--faint)";
+export const CHART_RISE = "var(--tone-good)";
+export const CHART_FALL = "var(--tone-bad)";
+export const CHART_GRID = "var(--sim-line)";
+export const CHART_AXIS = "var(--faint)";
 
 /* ── type and rules ───────────────────────────────────────────────── */
 
@@ -79,17 +79,30 @@ export function Panel({
   right,
   children,
   className = "",
+  headerClassName = "",
+  bodyClassName = "",
 }: {
   eyebrow?: React.ReactNode;
   title?: React.ReactNode;
   right?: React.ReactNode;
   children?: React.ReactNode;
   className?: string;
+  /** For panels laid out side by side: a shared min-height here keeps two headers of
+   *  different title lengths from pushing their bodies onto different baselines. */
+  headerClassName?: string;
+  /** Lets a panel in a stretched grid cell grow its body to fill the cell (`flex-1`), which is
+   *  what makes a row of charts end on one line rather than three ragged ones. */
+  bodyClassName?: string;
 }) {
   return (
     <section className={"bg-raise border border-line " + className}>
       {(eyebrow || title) && (
-        <header className="border-b border-line px-4 py-3 flex flex-wrap items-end justify-between gap-2">
+        <header
+          className={
+            "border-b border-line px-4 py-3 flex flex-wrap items-end justify-between gap-2 " +
+            headerClassName
+          }
+        >
           <div>
             {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
             {title && <h3 className="font-serif text-lg text-ink leading-snug">{title}</h3>}
@@ -97,7 +110,7 @@ export function Panel({
           {right}
         </header>
       )}
-      <div className="p-4">{children}</div>
+      <div className={"p-4 " + bodyClassName}>{children}</div>
     </section>
   );
 }
@@ -114,10 +127,10 @@ export function Stat({
   tone?: string;
 }) {
   return (
-    <div className="border-l-2 border-line pl-3">
+    <div className="h-full border border-line border-l-2 border-l-line-2 bg-raise p-3 flex flex-col justify-start">
       <Eyebrow>{label}</Eyebrow>
-      <div className={"font-mono text-xl leading-tight " + tone}>{value}</div>
-      {sub && <div className="text-xs text-dim mt-0.5">{sub}</div>}
+      <div className={"font-mono text-xl leading-tight mt-1 " + tone}>{value}</div>
+      {sub && <div className="text-xs text-dim mt-1">{sub}</div>}
     </div>
   );
 }
@@ -310,7 +323,7 @@ export function ValuationTrendChart({ history }: { history: QuarterResultShape[]
   return (
     <Panel
       eyebrow="Valuation trajectory"
-      title={"Q1 " + cr(opening) + " → " + latest.q + " " + cr(latest.valuation)}
+      title={"Q1 " + cr(opening) + " â†’ " + latest.q + " " + cr(latest.valuation)}
     >
       <div className="h-56">
         <ResponsiveContainer width="100%" height="100%">
@@ -365,9 +378,9 @@ export function TrendStat({
   const better = delta === null ? null : invert ? delta < 0 : delta > 0;
 
   return (
-    <div className="border-l-2 border-line pl-3">
+    <div className="h-full border border-line border-l-2 border-l-line-2 bg-raise p-3 flex flex-col justify-start">
       <Eyebrow>{label}</Eyebrow>
-      <div className="flex items-end justify-between gap-2">
+      <div className="mt-1 flex flex-1 items-end justify-between gap-2">
         <div>
           <div className={"font-mono text-xl leading-tight " + TONE_TEXT[tone]}>{value}</div>
           {sub && <div className="text-xs text-dim mt-0.5">{sub}</div>}
@@ -427,8 +440,22 @@ export function ReadinessGrid({ dirs, only }: { dirs: Readiness[]; only?: string
   const shown = only ? dirs.filter((d) => only.indexOf(d.id) >= 0) : dirs;
   if (!shown.length) return null;
 
+  /* The column count is chosen from how many cards there are, not from the viewport alone.
+
+     `lg:grid-cols-4` was wrong for both cases it had to serve. The full set is nine, and four
+     columns left the last row three-quarters empty on every screen; a department screen passes
+     two or three through `only`, and four columns left those stranded at a quarter width each.
+
+     So: nine cards get 1/3/5, the counts that divide nine with at most one cell to spare and
+     never the 4 or 6 that strand three. Anything smaller gets auto-fit, which collapses the
+     tracks it does not need so a subset always fills its row exactly. */
+  const cols =
+    shown.length > 6
+      ? "grid-cols-1 min-[560px]:grid-cols-3 xl:grid-cols-5"
+      : "[grid-template-columns:repeat(auto-fit,minmax(190px,1fr))]";
+
   return (
-    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+    <div className={"grid gap-2 " + cols}>
       {shown.map((d) => {
         const tone: Tone = LEVEL_TONE[d.level] ?? "watch";
         return (

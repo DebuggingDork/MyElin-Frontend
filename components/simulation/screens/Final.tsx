@@ -30,7 +30,8 @@ import {
   mostImportantDecision,
   traitRollup,
 } from "@/lib/simulation/scoring";
-import { Bar, Eyebrow, LedgerRow, Panel, Stat, ValuationTrendChart } from "@/components/simulation/Kit";
+import { Bar, Eyebrow, LedgerRow, Panel, Stat } from "@/components/simulation/Kit";
+import { QuarterCharts } from "@/components/simulation/QuarterCharts";
 import { BalanceSheet } from "@/components/simulation/Statements";
 import type { QuarterScore } from "@/lib/simulation/remote";
 import type {
@@ -115,7 +116,7 @@ export function FinalScreen({
       </div>
 
       <Panel eyebrow="Final company outcome" title="Where twelve months left the business">
-        <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="grid items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-4">
           <Stat label="Revenue, final quarter" value={cr(v(last, "revenueT"))} sub={n0(v(last, "unitsSold")) + " units"} />
           <Stat
             label="Net cash flow"
@@ -142,7 +143,7 @@ export function FinalScreen({
         </div>
       </Panel>
 
-      <ValuationTrendChart history={history} />
+      <QuarterCharts history={history} />
 
       <Panel eyebrow="Market share" title="Across the year">
         {history.map((h) => (
@@ -187,7 +188,7 @@ export function FinalScreen({
         </div>
       </Panel>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid items-stretch gap-5 lg:grid-cols-2">
         <Panel eyebrow="Biggest strength" title={humanizeId(strength.name)}>
           <p className="text-sm text-ink">{strength.why}</p>
         </Panel>

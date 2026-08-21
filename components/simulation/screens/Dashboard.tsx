@@ -69,7 +69,7 @@ export function DashboardScreen({
 
   return (
     <div className="space-y-5">
-      <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <Stat label="Quarter" value={s.quarter + " of 4"} sub={QUARTER_BRIEFS[s.quarter - 1].title} />
         <TrendStat
           label="Cash"
@@ -137,7 +137,7 @@ export function DashboardScreen({
 
       {history.length > 0 && (
         <Panel eyebrow="Market share" title="Your share of a category that is growing without you">
-          <div className="h-56">
+          <div className="h-52 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chart} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                 <CartesianGrid stroke="#e7e5e4" strokeDasharray="2 4" />
