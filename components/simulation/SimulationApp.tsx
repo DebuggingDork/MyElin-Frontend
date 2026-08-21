@@ -475,6 +475,13 @@ export function SimulationApp() {
   const liveConstraint = useMemo(() => bindingConstraint(projection, state), [projection, state]);
   const board = useMemo(() => boardAsks(state, last, history), [state, last, history]);
   const dirs = useMemo(() => readiness(projection, state), [projection, state]);
+  /* The report's readiness is read from the *closed* result, never from `dirs` above: that one
+     belongs to the preview of a plan which stopped existing the moment the quarter locked.
+     Both call the same `readiness()`, so the report and the decision screens are one scale. */
+  const closedDirs = useMemo(
+    () => (closed ? readiness(closed.result, state) : []),
+    [closed, state],
+  );
   const messages = useMemo(() => buildInbox(projection, state, history), [projection, state, history]);
   const ticker = useMemo(
     () => tickerItems(state, projection, history, liveConstraint),
@@ -851,6 +858,7 @@ export function SimulationApp() {
         history={history}
         score={closed.score}
         constraint={bindingConstraint(closed.result, closed.result.entering)}
+        dirs={closedDirs}
         priority={priorities[priorities.length - 1] ?? null}
         reflection={reflection}
         onNext={afterClosed}
