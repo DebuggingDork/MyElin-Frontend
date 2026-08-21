@@ -1135,6 +1135,27 @@ body {
   padding-block: clamp(4rem, 7vw, 6.5rem);
 }
 
+/* ── the auth photo panel ─────────────────────────────────────────────
+   A photograph is a dark surface in both themes, so the copy over it is
+   light in both themes. Left to the app's tokens it read as near-black ink
+   on a bright photo in the light theme -- unreadable -- while the scrim that
+   made it work in the dark theme was heavy enough to hide the photograph
+   completely. Pinning the panel's own tokens fixes both at once. */
+.photo-panel {
+  --text: #ffffff;
+  --dim: rgba(255, 255, 255, 0.78);
+  --faint: rgba(255, 255, 255, 0.62);
+  /* Accents step up to their bright values: a deep teal on a photograph is
+     a smudge whichever theme asked for it. */
+  --teal: #5eead4;
+  --teal-bright: #99f6e4;
+  --pink: #99f6e4;
+  --emerald: #5eead4;
+  --violet: #5eead4;
+  --violet-2: #99f6e4;
+  color: var(--text);
+}
+
 /* ─────────────────────────── the statement ───────────────────────────
    A balance sheet is a document, and a document does not change colour with
    the room. This one is printed on paper in both themes -- same ink, same

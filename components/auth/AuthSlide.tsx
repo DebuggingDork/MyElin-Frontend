@@ -422,7 +422,7 @@ function PhotoPanel({
 
   return (
     <div
-      className={`relative overflow-hidden ${compact ? "h-52" : "h-full min-h-[36rem]"}`}
+      className={`photo-panel relative overflow-hidden ${compact ? "h-52" : "h-full min-h-[36rem]"}`}
     >
       <Image
         src={src}
@@ -436,12 +436,14 @@ function PhotoPanel({
         sizes="(min-width: 1024px) 40vw, 100vw"
         className="object-cover"
       />
+      {/* Bottom-weighted, so the photograph reads across the top two-thirds and the copy
+          sits on enough ground to be legible. A single ramp from the top left the image
+          invisible in the dark theme and the words unreadable in the light one. */}
       <div
         className="absolute inset-0"
         style={{
-          background: isLogin
-            ? "linear-gradient(160deg, rgba(6,8,14,0.35) 0%, rgba(6,8,14,0.82) 100%)"
-            : "linear-gradient(200deg, rgba(6,8,14,0.3) 0%, rgba(6,8,14,0.85) 100%)",
+          background:
+            "linear-gradient(180deg, rgba(4,14,12,0.12) 0%, rgba(4,14,12,0.42) 45%, rgba(4,14,12,0.9) 100%)",
         }}
       />
 
