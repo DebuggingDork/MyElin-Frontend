@@ -277,8 +277,14 @@
   --font-mono: var(--font-geist-mono);
 }
 
-* {
-  border-color: var(--line);
+/* The app's default rule colour, in `base` so that a `border-*` utility still beats it.
+   Unlayered -- which this was -- an element selector outranks every layered rule regardless
+   of specificity, so `border-teal`, `border-danger`, `border-l-ember` and every other border
+   colour in the codebase silently resolved to `--line`. */
+@layer base {
+  * {
+    border-color: var(--line);
+  }
 }
 
 html {
@@ -1306,8 +1312,14 @@ body {
   --tone-flat: #ffffff;
 }
 
-:where(.simulation) * {
-  border-color: var(--sim-line);
+/* Same reasoning as the app-wide rule above, and the same layer: `:where()` was chosen here
+   to keep the selector at zero specificity so utilities would win, but specificity never got a
+   say while this sat outside the cascade layers. Ordered after it, so an unspecified border
+   inside the simulation takes the document's rule rather than the app's. */
+@layer base {
+  :where(.simulation) * {
+    border-color: var(--sim-line);
+  }
 }
 
 .simulation :focus-visible {
