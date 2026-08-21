@@ -1259,3 +1259,81 @@ body {
   outline: none;
   box-shadow: 0 0 0 2px rgba(0, 121, 121, 0.85);
 }
+
+/* ── loading indicators ───────────────────────────────────────────────
+   The three motions behind `components/ui/Loading.tsx`. They live here
+   rather than in Tailwind config because all three are used by SVG and by
+   plain spans, and because the reduced-motion rule below has to reach every
+   one of them from a single place.
+
+   `myelin-spin` is deliberately slower than Tailwind's `animate-spin`
+   (1.4s vs 1s): at 1s a hairline ring reads as urgency, which is the wrong
+   note for "your quarter is being scored". */
+.myelin-spin {
+  animation: myelin-spin 1.4s linear infinite;
+  transform-origin: center;
+}
+
+@keyframes myelin-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* The stagger is on `nth-child` rather than inline styles so the dots stay a
+   plain `<span>` trio at the call site. */
+.myelin-dot {
+  animation: myelin-dot 1.25s ease-in-out infinite;
+  opacity: 0.25;
+}
+
+.myelin-dot:nth-child(2) {
+  animation-delay: 0.16s;
+}
+
+.myelin-dot:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
+@keyframes myelin-dot {
+  0%,
+  70%,
+  100% {
+    opacity: 0.25;
+  }
+  35% {
+    opacity: 1;
+  }
+}
+
+.myelin-rail {
+  animation: myelin-rail 1.5s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+@keyframes myelin-rail {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Held still rather than hidden: these are the only thing on screen saying a
+     request is open, so they have to stay legible without moving. The rail
+     parks at a third of its track so it still reads as a progress element. */
+  .myelin-spin,
+  .myelin-dot,
+  .myelin-rail {
+    animation: none;
+  }
+
+  .myelin-dot {
+    opacity: 0.6;
+  }
+
+  .myelin-rail {
+    transform: translateX(0);
+  }
+}
