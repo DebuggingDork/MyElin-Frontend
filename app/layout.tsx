@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Newsreader } from "next/font/google";
 import { AuthProvider } from "@/components/auth/AuthProvider";
+import { RecoveryLinkCatcher } from "@/components/auth/RecoveryLinkCatcher";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import "./globals.css";
 
@@ -78,7 +79,12 @@ export default function RootLayout({
       </head>
       <body className="flex min-h-full flex-col bg-void font-sans text-ink">
         <ThemeProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            {/* Mounted at the root because a recovery link does not always land where it was
+                told to -- see the component. */}
+            <RecoveryLinkCatcher />
+            {children}
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

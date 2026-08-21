@@ -5,11 +5,13 @@ import { useState } from "react";
 import { Mail } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { Action, Eyebrow } from "@/components/ui/Kit";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/types";
 import { ButtonSpinner } from "@/components/ui/Loading";
 
 export function ForgotPassword() {
+  const { user } = useAuth();
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -54,10 +56,29 @@ export function ForgotPassword() {
             Enter the email you registered with and we&apos;ll send a link to reset it.
           </p>
 
+          {user && (
+            /* Someone already signed in does not need a link emailed to them to prove who they
+               are -- the session does that. Offer the direct change first: it is one screen,
+               it works when email delivery is off, and it is the path most people arriving
+               here actually want. */
+            <div className="mt-7 border border-line bg-[var(--panel-2)] px-4 py-4">
+              <p className="text-[13.5px] text-ink">
+                You are signed in as{" "}
+                <span className="font-medium">{user.email}</span> — you can change your
+                password directly, without waiting for an email.
+              </p>
+              <div className="mt-4">
+                <Action href="/account/security" className="w-full">
+                  Change it here
+                </Action>
+              </div>
+            </div>
+          )}
+
           {sent ? (
             <p className="mt-8 rounded-xl border border-line bg-[var(--panel-2)] px-4 py-3 text-[13.5px] text-ink">
-              If that email is registered, a reset link has been sent. Check your inbox (and
-              spam folder) for a message from Supabase.
+              If that email is registered, a reset link is on its way. Check the inbox and the
+              spam folder — the link opens the reset screen here and expires after an hour.
             </p>
           ) : (
             <form onSubmit={onSubmit} className="mt-8 space-y-5">
