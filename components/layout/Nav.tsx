@@ -34,9 +34,12 @@ export function Nav() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-void/80 backdrop-blur-xl">
+      {/* The header is chrome, not content: it runs the width of the viewport with its own
+          gutter, so the mark sits at the left edge and the account menu at the right, rather
+          than being pulled inside the 88rem measure the page columns use. */}
       <Container
         wide
-        className="relative flex h-[68px] items-center justify-between gap-4"
+        className="relative flex h-[68px] max-w-none items-center justify-between gap-4 px-6 sm:px-10"
       >
         <Link
           href="/"
