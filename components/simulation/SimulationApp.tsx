@@ -276,6 +276,7 @@ export function SimulationApp() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const toggleNav = useCallback(() => writeNavOpen(!readNavOpen()), []);
+  const closeNav = useCallback(() => writeNavOpen(false), []);
 
   /**
    * Every section opens at the top.
@@ -667,13 +668,12 @@ export function SimulationApp() {
   ];
 
   /** The department list. Rendered twice -- as the desktop rail and as the mobile drawer -- so
-   *  the two can never drift apart. */
-  const navBody = (
+   *  the two can never drift apart. `onClose` is the one thing that differs: the rail and the
+   *  drawer are two separate pieces of state, and each panel closes only itself. */
+  const navBody = (onClose: () => void) => (
     <>
-      {/* No collapse control here any more: one toggle owns the rail, and it lives in the
-          simulation header where it is in the same place whether the rail is open or shut.
-          A second control on the panel could only ever close it, which is the half of the job
-          that was already easy. */}
+      {/* Each panel carries its own close control. It is no longer `lg:hidden`: the rail
+          needs it just as much as the drawer does, and it is the same gesture in both. */}
       {/* pl-3 against the rail's px-5 puts this label on the same 32px left rule as the
           nav labels below it. */}
       <div className="flex items-center justify-between gap-2 pb-2 pl-3">
@@ -682,9 +682,9 @@ export function SimulationApp() {
         </p>
         <button
           type="button"
-          onClick={() => setMobileNavOpen(false)}
-          aria-label="Close navigation"
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-sim-faint transition-colors hover:bg-sim-surface-hover hover:text-sim-ink lg:hidden"
+          onClick={onClose}
+          aria-label="Close departments"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-sim-faint transition-colors hover:bg-sim-surface-hover hover:text-sim-ink"
         >
           <X className="h-4 w-4" />
         </button>
@@ -789,7 +789,7 @@ export function SimulationApp() {
                 )}
                 style={{ width: RAIL_W }}
               >
-                {navBody}
+                {navBody(closeNav)}
               </div>
             </aside>
           )}
@@ -803,7 +803,7 @@ export function SimulationApp() {
                 className="fixed inset-0 z-40 bg-black/50 lg:hidden"
               />
               <aside className="fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col border-r border-sim-line bg-sim-surface px-3 py-4 shadow-xl lg:hidden">
-                {navBody}
+                {navBody(() => setMobileNavOpen(false))}
               </aside>
             </>
           )}
