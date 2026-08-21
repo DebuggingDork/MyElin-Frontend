@@ -733,8 +733,20 @@ export function SimulationApp() {
       <div className="flex h-full flex-col overflow-hidden">
         {/* App-themed toolbar -- sits outside `.simulation` so ThemeToggle/ProfileMenu keep
             reading the app's own light/dark tokens (text-ink etc.) instead of clashing with
-            the simulation's fixed cream surface below. */}
-        <div className="shrink-0 border-b border-line bg-base">
+            the simulation's fixed cream surface below.
+
+            `relative z-50` is what makes the account menu usable in here. `ProfileMenu` hangs
+            its panel below the button with `position: absolute` and no z-index of its own --
+            everywhere else in the app that is fine, because `Nav` carries it in a
+            `fixed ... z-50` header. On this screen the bar was a static box whose *next
+            sibling* is the positioned, opaque `.simulation` surface, so the panel dropped into
+            the region that surface paints over: same z-index (auto), later in the DOM, so the
+            simulation won. The menu opened on every click -- it was just painted underneath the
+            department it was opened from, and the clicks landed on the screen behind it.
+
+            Lifting the bar to its own layer is the whole fix; the menu keeps the component,
+            the state and the markup it has on every other page. */}
+        <div className="relative z-50 shrink-0 border-b border-line bg-base">
           <div className={SHELL + " flex items-center justify-between gap-3 px-4 py-2 sm:px-6 lg:px-8"}>
           {/* Account chrome only. The department toggle used to sit here, which put the
               control for a panel inside the simulation on the bar that carries "log out" --
