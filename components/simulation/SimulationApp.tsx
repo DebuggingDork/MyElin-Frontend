@@ -763,7 +763,12 @@ export function SimulationApp() {
           </div>
         </div>
 
-        <div className="simulation relative min-h-0 flex-1 overflow-hidden bg-base text-ink">
+        {/* `isolate` keeps every layer the simulation raises -- the sticky quarter header, the
+            processing overlay, the mobile department drawer and its scrim -- inside this
+            subtree. Without it those z-indexes are quoted against the page root, where the
+            drawer's own `z-50` ties with the toolbar's and wins on DOM order, which would put
+            the account menu back underneath a screen it is supposed to open over. */}
+        <div className="simulation relative isolate min-h-0 flex-1 overflow-hidden bg-base text-ink">
           {/* Anchored to the simulation surface rather than the viewport: the account bar
               above stays live and legible, so a quarter being scored reads as this workspace
               being busy rather than the whole app having locked up. */}
