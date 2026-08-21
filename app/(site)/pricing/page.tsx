@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { Footer } from "@/components/layout/Footer";
-import { Nav } from "@/components/layout/Nav";
 import { PricingComingSoon } from "@/components/pages/PricingComingSoon";
 
 export const metadata: Metadata = {
@@ -9,13 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function PricingPage() {
-  return (
-    <>
-      <Nav />
-      <main className="flex-1">
-        <PricingComingSoon />
-      </main>
-      <Footer />
-    </>
-  );
+  return <PricingComingSoon />;
 }

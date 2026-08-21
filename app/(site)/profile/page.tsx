@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { Footer } from "@/components/layout/Footer";
-import { Nav } from "@/components/layout/Nav";
 import { Profile } from "@/components/pages/Profile";
 
 export const metadata: Metadata = {
@@ -9,13 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function ProfilePage() {
-  return (
-    <>
-      <Nav />
-      <main className="flex-1">
-        <Profile />
-      </main>
-      <Footer />
-    </>
-  );
+  return <Profile />;
 }

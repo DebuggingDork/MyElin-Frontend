@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { Footer } from "@/components/layout/Footer";
-import { Nav } from "@/components/layout/Nav";
 import { AccountSecurity } from "@/components/pages/AccountSecurity";
 
 export const metadata: Metadata = {
@@ -9,13 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function AccountSecurityPage() {
-  return (
-    <>
-      <Nav />
-      <main className="flex-1">
-        <AccountSecurity />
-      </main>
-      <Footer />
-    </>
-  );
+  return <AccountSecurity />;
 }
