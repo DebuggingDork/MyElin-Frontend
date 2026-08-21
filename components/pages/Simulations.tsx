@@ -302,7 +302,10 @@ export function Simulations() {
             })}
           </div>
 
-          <div className="mt-8 grid gap-px bg-line md:grid-cols-2 xl:grid-cols-3">
+          {/* The rules are the cards' own borders, not a `gap-px` grid showing its background
+              through: the cards fade in on scroll, and a grid that paints the rule colour
+              behind them flashed a solid block wherever a card had not arrived yet. */}
+          <div className="mt-8 grid border-l border-t border-line md:grid-cols-2 xl:grid-cols-3">
             {visible.map((s, i) => (
               <ScenarioCard key={s.index} scenario={s} delay={i * 0.05} />
             ))}
@@ -382,8 +385,8 @@ function ScenarioCard({ scenario, delay }: { scenario: Scenario; delay: number }
       viewport={{ once: true, margin: "-60px" }}
       transition={{ duration: duration.reveal, delay, ease: easeOut }}
       className={cn(
-        "flex flex-col bg-[var(--void)] transition-colors duration-300",
-        isLive ? "bg-teal/[0.05]" : "hover:bg-[var(--panel)]",
+        "flex flex-col border-b border-r border-line transition-colors duration-300",
+        isLive ? "bg-teal/[0.06]" : "hover:bg-[var(--panel)]",
       )}
     >
       <div className="flex items-baseline justify-between gap-4 border-b border-line px-5 py-3">
