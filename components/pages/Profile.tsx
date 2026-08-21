@@ -24,6 +24,7 @@ import { ApiError } from "@/lib/api/types";
 import { formatDecimal, humanizeId } from "@/lib/format/display";
 import type { InstitutionRef } from "@/lib/institutions";
 import { MAX_GOALS, degreeOptions, goalOptions, yearOptions } from "@/lib/profile";
+import { displayName, setIdentity } from "@/lib/identity";
 import { Masthead } from "@/components/layout/PageChrome";
 import { Action, Container } from "@/components/ui/Kit";
 import { cn } from "@/lib/utils";
@@ -91,6 +92,7 @@ export function Profile() {
         const res = await api.getProfile();
         if (cancelled) return;
         setProfile(res);
+        setIdentity(res);
         setFirstName(res.first_name ?? "");
         setInstitution(res.institution);
         setDegree(res.degree ?? "");
@@ -143,6 +145,9 @@ export function Profile() {
           goals,
         });
         setProfile(res);
+        // Publish it: the account menu in the nav reads the same store, so the chip changes
+        // name with the form rather than on the next reload.
+        setIdentity(res);
         setSaved(true);
       } catch (err) {
         setSaveError(err instanceof ApiError ? err.message : "Could not save your changes");
@@ -168,9 +173,10 @@ export function Profile() {
         >
           <div>
             <h1 className="ledger-display rise text-balance text-[clamp(2.2rem,4.8vw,3.8rem)] text-ink">
-              {profile?.first_name ? (
+              {user ? (
                 <>
-                  {profile.first_name}, <span className="italic text-teal">this is you.</span>
+                  {displayName(profile, user.email)},{" "}
+                  <span className="italic text-teal">this is you.</span>
                 </>
               ) : (
                 <>
@@ -191,8 +197,14 @@ export function Profile() {
           {user && (
             <dl className="rise rise-2 border border-line bg-[var(--panel)]">
               <div className="flex items-baseline justify-between gap-4 border-b border-line px-5 py-3.5">
-                <dt className="tick-label">Signed in as</dt>
-                <dd className="min-w-0 truncate text-[13.5px] text-ink">{user.email}</dd>
+                <dt className="tick-label">Name</dt>
+                <dd className="min-w-0 truncate text-[13.5px] text-ink">
+                  {displayName(profile, user.email)}
+                </dd>
+              </div>
+              <div className="flex items-baseline justify-between gap-4 border-b border-line px-5 py-3.5">
+                <dt className="tick-label">Email</dt>
+                <dd className="min-w-0 truncate text-[13.5px] text-dim">{user.email}</dd>
               </div>
               <div className="flex items-baseline justify-between gap-4 border-b border-line px-5 py-3.5">
                 <dt className="tick-label">Role</dt>

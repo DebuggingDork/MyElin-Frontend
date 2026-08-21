@@ -20,6 +20,7 @@ import {
 } from "@/lib/api/client";
 import type { AuthResponse, LoginRequest, RegisterRequest } from "@/lib/api/types";
 import { ApiError } from "@/lib/api/types";
+import { clearIdentity } from "@/lib/identity";
 
 type AuthState = {
   user: StoredUser | null;
@@ -92,6 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (body: LoginRequest) => {
     const auth = await api.login(body);
     persistSession(auth);
+    clearIdentity();
     emit({ user: { user_id: auth.user_id, email: auth.email }, token: auth.access_token, ready: true });
     return auth;
   }, []);
@@ -100,6 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const auth = await api.register(body);
       persistSession(auth);
+      clearIdentity();
       emit({
         user: { user_id: auth.user_id, email: auth.email },
         token: auth.access_token,
@@ -128,6 +131,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(() => {
     clearSession();
+    // The cached profile belongs to the session that just ended. A stale name over the next
+    // person's account is worse than no name at all.
+    clearIdentity();
     emit({ user: null, token: null, ready: true });
   }, []);
 

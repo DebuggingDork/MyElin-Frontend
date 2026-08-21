@@ -15,7 +15,7 @@
  * "Help" / "Contact" are pages that exist.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import {
   ChevronDown,
@@ -34,10 +34,18 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { api } from "@/lib/api/client";
 import { runHref } from "@/lib/run/ref";
-import type { CompanyListItem, ProfileResponse, RunStatus } from "@/lib/api/types";
+import type { CompanyListItem, RunStatus } from "@/lib/api/types";
 import { ApiError } from "@/lib/api/types";
 import { Pill, type Accent } from "@/components/ui/Kit";
 import { humanizeId } from "@/lib/format/display";
+import {
+  displayName as nameFor,
+  identityServerSnapshot,
+  identitySnapshot,
+  initials,
+  primeIdentity,
+  subscribeIdentity,
+} from "@/lib/identity";
 import { cn } from "@/lib/utils";
 import { useSimulationHref } from "@/components/play/entry";
 
@@ -58,17 +66,6 @@ const RUN_STATUS_ACCENT: Record<RunStatus, Accent> = {
 /** How many runs the menu lists inline before deferring to `/runs`. Three keeps the panel
  *  scannable at a glance; the full history is one click away and always was. */
 const RECENT_LIMIT = 3;
-
-function initials(email: string, firstName?: string | null) {
-  if (firstName?.trim()) {
-    const parts = firstName.trim().split(/\s+/);
-    return (parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "");
-  }
-  const local = email.split("@")[0] ?? "";
-  const parts = local.split(/[._-]/).filter(Boolean);
-  const chars = parts.length >= 2 ? [parts[0]?.[0], parts[1]?.[0]] : [local[0], local[1]];
-  return chars.filter(Boolean).join("").toUpperCase() || "?";
-}
 
 function Avatar({
   email,
@@ -138,26 +135,28 @@ export function ProfileMenu() {
   const { theme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
   const [runs, setRuns] = useState<CompanyListItem[] | null>(null);
-  const [profile, setProfile] = useState<ProfileResponse | null>(null);
+  // The chip is on screen at all times, so the profile behind it is loaded on mount rather
+  // than on first open -- it is one small request, and deferring it meant the nav could only
+  // ever show an email address.
+  const profile = useSyncExternalStore(subscribeIdentity, identitySnapshot, identityServerSnapshot);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
-  // Loaded on first open rather than on mount: the menu is chrome on every page, and a closed
-  // menu has nothing to show for the two requests.
+  useEffect(() => {
+    if (user) primeIdentity();
+  }, [user]);
+
+  // The run list stays deferred to first open: it is the expensive half, and a closed menu has
+  // nothing to show for it.
   useEffect(() => {
     if (!open || !user || runs !== null) return;
     let cancelled = false;
     void (async () => {
       setLoading(true);
       try {
-        const [{ entries }, me] = await Promise.all([
-          api.listCompanies(),
-          api.getProfile().catch(() => null),
-        ]);
-        if (cancelled) return;
-        setRuns(entries);
-        setProfile(me);
+        const { entries } = await api.listCompanies();
+        if (!cancelled) setRuns(entries);
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof ApiError ? err.message : "Could not load your account.");
@@ -196,7 +195,7 @@ export function ProfileMenu() {
   const completed = (runs ?? []).filter(
     (r) => r.run_status === "completed" || r.run_status === "failed",
   ).length;
-  const displayName = profile?.first_name?.trim() || user.email.split("@")[0];
+  const displayName = nameFor(profile, user.email);
 
   return (
     <div className="relative" ref={rootRef}>
