@@ -12,6 +12,7 @@ import {
   humanizeId,
 } from "@/lib/format/display";
 import { BalanceSheet } from "@/components/run/BalanceSheet";
+import { QuarterBalanceSheet } from "@/components/run/QuarterBalanceSheet";
 import { ReportPdfExport } from "@/components/run/ReportPdfExport";
 import type {
   BindingConstraintSchema,
@@ -53,6 +54,15 @@ export function ReportView({ report }: { report: QuarterReportResponse }) {
         <section className="min-w-0 space-y-4">
           <h3 className="eyebrow text-faint">A · Business outcome</h3>
           <BalanceSheet quarterNumber={report.quarter_number} outcome={report.outcome} />
+
+          {/* The position follows the statement: what the quarter *did*, then what it left
+              behind. Reading order matters more than usual here -- the two documents share a
+              paper palette, so stacking them is what tells the player they are one packet. */}
+          <QuarterBalanceSheet
+            quarterNumber={report.quarter_number}
+            sheet={report.balance_sheet}
+            closingCash={report.outcome.closing_cash_inr.value}
+          />
 
           <div>
             <h4 className="mb-3 text-[14px] font-medium text-ink">
