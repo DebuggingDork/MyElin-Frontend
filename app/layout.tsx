@@ -60,10 +60,6 @@ export const metadata: Metadata = {
     description: "Make decisions. Not notes.",
     images: ["/brand/myelin-logo.png"],
   },
-  icons: {
-    icon: "/brand/myelin-logo.png",
-    apple: "/brand/myelin-logo.png",
-  },
 };
 
 export default function RootLayout({
