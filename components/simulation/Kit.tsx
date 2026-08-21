@@ -7,7 +7,6 @@
  */
 
 import { createContext, useContext, useState } from "react";
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import {
   BUFFER,
   LEVEL_TONE,
@@ -18,8 +17,8 @@ import {
   TONE_CARD,
   TONE_TEXT,
 } from "@/lib/simulation/constants";
-import { clamp, cr, inr, n0, n1 } from "@/lib/simulation/format";
-import type { Budget, HealthBar, InboxMessage, QuarterResultShape, Readiness, Tone } from "@/lib/simulation/types";
+import { clamp, inr, n0, n1 } from "@/lib/simulation/format";
+import type { Budget, HealthBar, InboxMessage, Readiness, Tone } from "@/lib/simulation/types";
 
 /* ── chart colours ────────────────────────────────────────────────────
    SVG and recharts take paint values rather than Tailwind classes, so these
@@ -303,57 +302,6 @@ export function Sparkline({
       <polyline points={points} fill="none" stroke={colour} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
       <circle cx={last[0]} cy={last[1]} r="1.9" fill={colour} />
     </svg>
-  );
-}
-
-/**
- * Valuation, quarter by quarter -- the number every closed-quarter report and the final
- * report both lead with, plotted instead of just stated. Reads straight off `history`, the
- * same engine-computed results every other figure on these screens reads from; nothing here
- * is estimated or re-derived. Renders nothing before there are two quarters to compare.
- */
-export function ValuationTrendChart({ history }: { history: QuarterResultShape[] }) {
-  const trend = history.map((h) => ({ q: "Q" + h.q, valuation: h.valuation as number }));
-  if (trend.length < 2) return null;
-
-  const opening = trend[0].valuation;
-  const latest = trend[trend.length - 1];
-  const tone = latest.valuation >= opening ? CHART_RISE : CHART_FALL;
-
-  return (
-    <Panel
-      eyebrow="Valuation trajectory"
-      title={"Q1 " + cr(opening) + " → " + latest.q + " " + cr(latest.valuation)}
-    >
-      <div className="h-56">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={trend} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-            <defs>
-              <linearGradient id="valuationTrend" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={tone} stopOpacity={0.28} />
-                <stop offset="100%" stopColor={tone} stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid stroke={CHART_GRID} strokeDasharray="2 4" />
-            <XAxis dataKey="q" stroke={CHART_AXIS} fontSize={12} />
-            <YAxis stroke={CHART_AXIS} fontSize={11} tickFormatter={(val: number) => cr(val)} width={64} />
-            <Tooltip
-              contentStyle={{ fontFamily: "monospace", fontSize: 12, borderColor: CHART_GRID }}
-              formatter={(val: unknown) => [cr(Number(val)), "Valuation"]}
-            />
-            <Area
-              type="monotone"
-              dataKey="valuation"
-              stroke={tone}
-              strokeWidth={2}
-              fill="url(#valuationTrend)"
-              dot={{ r: 3, fill: tone, strokeWidth: 0 }}
-              activeDot={{ r: 5 }}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
-    </Panel>
   );
 }
 
