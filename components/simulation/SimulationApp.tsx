@@ -204,7 +204,7 @@ function writeNavOpen(next: boolean) {
 }
 
 const EMPTY_BUDGET: RemoteBudget = {
-  opex: 0, capex: 0, inno: 0, people: 0, repay: 0, drawn: 0, committed: 0, ceiling: 0,
+  opex: 0, capex: 0, inno: 0, people: 0, repay: 0, drawn: 0, investment: 0, committed: 0, ceiling: 0,
 };
 
 export function SimulationApp() {
@@ -626,6 +626,12 @@ export function SimulationApp() {
       });
       try {
         await simulationApi.signTermSheet(companyId, path, termSheetName, reasoning);
+        // Re-read the run rather than walking straight into Q4 on the state we already had.
+        // Signing Path A puts the cheque on Q4's opening state as `pendingInvestment`, which
+        // is what raises the ceiling and what every cash figure has to say is coming -- and
+        // it is the server that decides that, so the client has to ask.
+        const run = await loadRun();
+        resetPlan(run.state);
         setPhase("briefing");
         setTab("dashboard");
         setWorking(null);
@@ -636,7 +642,7 @@ export function SimulationApp() {
         setBusy(false);
       }
     },
-    [companyId, setTab],
+    [companyId, loadRun, resetPlan, setTab],
   );
 
   const restart = useCallback(async () => {

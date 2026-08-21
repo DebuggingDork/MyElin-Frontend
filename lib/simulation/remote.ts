@@ -22,6 +22,7 @@ import type { ApiErrorBody } from "@/lib/api/types";
 import { DEPARTMENTS } from "@/lib/simulation/constants";
 import type {
   Alloc,
+  Budget,
   CompanyState,
   CrisisInput,
   PayTermsId,
@@ -32,6 +33,9 @@ import type {
   Reflection,
   WarrantyId,
 } from "@/lib/simulation/types";
+
+/** The budget is the screens' own shape -- re-exported so the API surface stays one import. */
+export type { Budget };
 
 /* ── transport ────────────────────────────────────────────────────── */
 
@@ -237,17 +241,6 @@ export type CrisisBriefing = {
   evidence: { fn: string; line: string; detail: string; tone: string }[];
   level: number;
   ignoringIsLegal: boolean;
-};
-
-export type Budget = {
-  opex: number;
-  capex: number;
-  inno: number;
-  people: number;
-  repay: number;
-  drawn: number;
-  committed: number;
-  ceiling: number;
 };
 
 export type PreviewResponse = {

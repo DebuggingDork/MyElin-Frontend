@@ -69,6 +69,9 @@ export function BriefingScreen({
       label: "Cash",
       value: inr(s.cash),
       tone: s.cash < BUFFER ? "bad" : s.cash < BUFFER * 3 ? "watch" : "good",
+      // The rescue cheque clears into this quarter, not the last one -- so it is not in the
+      // figure above and has to be named beside it, or the morning reads as if nothing was signed.
+      sub: s.pendingInvestment > 0 ? "+" + inr(s.pendingInvestment) + " investment signed" : null,
       series: history.map((h) => v(h, "cash")),
     },
     {

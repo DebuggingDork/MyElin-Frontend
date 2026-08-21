@@ -462,8 +462,16 @@ export function BudgetMeter({ budget }: { budget: Budget }) {
       />
       <div className="text-xs text-dim mt-2 font-mono">
         {inr(budget.opex)} operating + {inr(budget.capex)} plant + {inr(budget.inno)} innovation + {inr(budget.people)}{" "}
-        people. Ceiling = cash + credit drawn, less fixed costs and the {inr(BUFFER)} buffer.
+        people. Ceiling = cash{budget.investment > 0 ? " + the signed investment" : ""} + credit drawn, less fixed costs
+        and the {inr(BUFFER)} buffer.
       </div>
+      {budget.investment > 0 && (
+        // The cheque is in the ceiling before it is in the bank -- say so, or a CEO who has
+        // just signed for it reads a cash line that has not moved and assumes it never landed.
+        <div className="mt-1 font-mono text-xs text-teal-bright">
+          Includes {inr(budget.investment)} of signed investment, banked when this quarter closes.
+        </div>
+      )}
     </div>
   );
 }

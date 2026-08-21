@@ -357,6 +357,8 @@ export type Budget = {
   people: number;
   repay: number;
   drawn: number;
+  /** A term sheet signed but not yet banked: it raises the ceiling before the cash arrives. */
+  investment: number;
   committed: number;
   ceiling: number;
 };

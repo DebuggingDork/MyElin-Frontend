@@ -83,7 +83,13 @@ export function DashboardScreen({
           label="Cash"
           value={inr(s.cash)}
           tone={s.cash < BUFFER ? "bad" : "flat"}
-          sub={"left to commit " + inr(budget.ceiling - budget.committed)}
+          // A signed cheque is in the ceiling but not yet in the bank, so the cash figure on
+          // its own understates what this quarter can spend. Say both.
+          sub={
+            (s.pendingInvestment > 0 ? "+" + inr(s.pendingInvestment) + " signed · " : "") +
+            "left to commit " +
+            inr(budget.ceiling - budget.committed)
+          }
           series={history.map((h) => v(h, "cash"))}
         />
         <TrendStat
