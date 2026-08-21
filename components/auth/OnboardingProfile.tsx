@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, ChevronDown } from "lucide-react";
+import { ArrowRight, Check, ChevronDown } from "lucide-react";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { InstitutionSelect } from "@/components/auth/InstitutionSelect";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -177,13 +177,16 @@ export function OnboardingProfile({
 }
 
 /**
- * A themed native `<select>`.
+ * A single-choice picker, drawn by us rather than by the browser.
  *
- * Native on purpose -- these are short, closed lists, and the platform picker is the better
- * control on a phone. The cost is that the browser paints the popup itself: `.select-field`
- * (globals.css) is what makes that popup follow the theme instead of falling back to a white
- * sheet, and `appearance-none` means the chevron has to be drawn here, the same way the other
- * fields on this screen carry their own leading icon.
+ * It was a native `<select>` with `appearance-none`, which styles the closed control and
+ * nothing else: the open list is painted by the platform, and on Windows Chrome that is a
+ * white sheet with a blue highlight, sitting over a dark page, opening across the whole
+ * viewport when the field is low enough. `color-scheme` never reliably reached it.
+ *
+ * So the menu is ours: same hairline geometry as `InstitutionSelect` next to it in the same
+ * form, same keyboard contract (arrows, Enter, Escape, click-outside), and it flips above the
+ * field when there is more room up there than down.
  */
 export function SelectField({
   id,
@@ -200,30 +203,156 @@ export function SelectField({
   options: readonly string[];
   onChange: (value: string) => void;
 }) {
+  const generatedId = useId();
+  const fieldId = id ?? generatedId;
+  const listId = `${fieldId}-listbox`;
+
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(0);
+  const [dropUp, setDropUp] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+
+  // The placeholder is a row like any other, so the choice can be taken back without
+  // reaching for a separate clear control.
+  const rows = useMemo(() => ["", ...options], [options]);
+
+  useEffect(() => {
+    if (!open) return;
+    function onPointerDown(event: MouseEvent) {
+      if (!wrapRef.current?.contains(event.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onPointerDown);
+    return () => document.removeEventListener("mousedown", onPointerDown);
+  }, [open]);
+
+  // Follow the keyboard down a seventeen-row list: an active option scrolled out of sight is
+  // an active option nobody can see they are about to choose.
+  useEffect(() => {
+    if (!open) return;
+    listRef.current
+      ?.querySelector(`#${CSS.escape(fieldId)}-option-${active}`)
+      ?.scrollIntoView({ block: "nearest" });
+  }, [open, active, fieldId]);
+
+  function show() {
+    const box = wrapRef.current?.getBoundingClientRect();
+    if (box) {
+      const below = window.innerHeight - box.bottom;
+      // 264px is the menu at its tallest. Open upward only when down is genuinely tighter.
+      setDropUp(below < 264 && box.top > below);
+    }
+    setActive(Math.max(0, rows.indexOf(value)));
+    setOpen(true);
+  }
+
+  function commit(index: number) {
+    onChange(rows[index] ?? "");
+    setOpen(false);
+  }
+
+  function onKeyDown(event: React.KeyboardEvent<HTMLButtonElement>) {
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      if (!open) {
+        show();
+        return;
+      }
+      setActive((i) =>
+        event.key === "ArrowDown" ? (i + 1) % rows.length : (i - 1 + rows.length) % rows.length,
+      );
+    } else if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      if (open) commit(active);
+      else show();
+    } else if (event.key === "Escape") {
+      setOpen(false);
+    } else if (event.key === "Home" && open) {
+      event.preventDefault();
+      setActive(0);
+    } else if (event.key === "End" && open) {
+      event.preventDefault();
+      setActive(rows.length - 1);
+    }
+  }
+
   return (
     <div>
-      <label className="eyebrow text-faint" htmlFor={id}>
+      <label className="eyebrow text-faint" htmlFor={fieldId}>
         {label}
       </label>
-      <div className="relative mt-3">
-        <select
-          id={id}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
+      <div ref={wrapRef} className="relative mt-3">
+        <button
+          id={fieldId}
+          type="button"
+          role="combobox"
+          aria-expanded={open}
+          aria-controls={listId}
+          aria-haspopup="listbox"
+          aria-activedescendant={open ? `${fieldId}-option-${active}` : undefined}
+          onClick={() => (open ? setOpen(false) : show())}
+          onKeyDown={onKeyDown}
           className={cn(
-            "select-field w-full cursor-pointer appearance-none rounded-2xl border border-line py-3.5 pl-4 pr-11",
-            "text-[14.5px] outline-none transition-colors hover:border-line-2 focus:border-teal/60",
+            "select-field flex w-full cursor-pointer items-center justify-between gap-3 rounded-2xl",
+            "border border-line py-3.5 pl-4 pr-4 text-left text-[14.5px] outline-none",
+            "transition-colors hover:border-line-2 focus-visible:border-teal",
+            open && "border-teal",
             value ? "text-ink" : "text-faint",
           )}
         >
-          <option value="">{placeholder}</option>
-          {options.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-        <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
+          <span className="min-w-0 truncate">{value || placeholder}</span>
+          <ChevronDown
+            className={cn(
+              "h-4 w-4 shrink-0 text-faint transition-transform duration-200",
+              open && "rotate-180",
+            )}
+          />
+        </button>
+
+        {open && (
+          /* `--panel` is a 5%-alpha wash, so the menu sits on the solid `--void` ground
+             instead -- otherwise the fields underneath read straight through it. */
+          <ul
+            id={listId}
+            ref={listRef}
+            role="listbox"
+            aria-label={label}
+            className={cn(
+              "select-menu absolute z-30 max-h-64 w-full overflow-y-auto rounded-2xl border",
+              "border-line bg-void p-1.5 shadow-[0_24px_60px_rgba(0,0,0,0.45)]",
+              dropUp ? "bottom-full mb-2" : "top-full mt-2",
+            )}
+          >
+            {rows.map((option, i) => {
+              const selected = option === value;
+              return (
+                <li key={option || "__placeholder"}>
+                  <button
+                    type="button"
+                    id={`${fieldId}-option-${i}`}
+                    role="option"
+                    aria-selected={selected}
+                    onMouseEnter={() => setActive(i)}
+                    onClick={() => commit(i)}
+                    className={cn(
+                      "flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[14px] transition-colors",
+                      i === active ? "bg-[var(--panel-2)] text-ink" : "text-dim",
+                      !option && "text-faint",
+                    )}
+                  >
+                    <Check
+                      className={cn(
+                        "h-3.5 w-3.5 shrink-0 text-teal",
+                        selected ? "opacity-100" : "opacity-0",
+                      )}
+                    />
+                    <span className="min-w-0 flex-1 truncate">{option || placeholder}</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
     </div>
   );

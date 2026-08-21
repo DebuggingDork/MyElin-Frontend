@@ -460,38 +460,20 @@ body {
 
 /* ─────────────────────── form controls ─────────────────────── */
 
-/* A native <select> is the one control in the app the browser still paints itself, and Chrome
-   draws the option popup using the *select's own* background-color. The translucent
-   `--panel-2` every other field uses therefore composited over the popup's white base and
-   produced a white sheet under white `--text` in dark mode -- the reported bug. `--field` is
-   the opaque equivalent of that wash, so the closed control is indistinguishable from the
-   inputs beside it while the popup finally has a real surface to sit on. Options are given
-   the same pair explicitly for the engines that colour the list from the option rather than
-   from the select.
+/* The closed picker's surface. `--field` is the opaque equivalent of the translucent
+   `--panel-2` the other inputs use, so a picker sits flush beside them without the wash
+   compositing over whatever is behind it.
 
    Only the surface is set here -- the control's own text colour stays a utility on the element
-   so the closed field can read `faint` while nothing is chosen yet. */
+   so a picker with nothing chosen can read `faint`. There is nothing here for an `option`
+   any more: the browser used to paint that list (a white sheet with a blue highlight over a
+   dark page, however the select itself was styled), and `SelectField` now draws its own. */
 .select-field {
   background-color: var(--field);
 }
 
 .select-field:hover:not(:disabled) {
   background-color: var(--field-hover);
-}
-
-.select-field option {
-  background-color: var(--field);
-  color: var(--text);
-}
-
-/* The placeholder row ("Select your degree") reads as absent, not as a choice. */
-.select-field option[value=""] {
-  color: var(--faint);
-}
-
-.select-field option:checked {
-  background-color: var(--raise-2);
-  color: var(--text);
 }
 
 /* SpendNumberInput draws its own bordered box around a bare input, so the box takes the focus
@@ -1045,8 +1027,10 @@ body {
    one sheet. `.institution-*` are the two containers in `InstitutionSelect` that are divs
    rather than form elements. */
 .ledger input,
-.ledger select,
 .ledger textarea,
+.ledger .select-field,
+.ledger .select-menu,
+.ledger .select-menu button,
 .ledger .institution-field,
 .ledger .institution-menu,
 .ledger .institution-menu button {
