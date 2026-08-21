@@ -93,7 +93,7 @@ export function PlayExperience({ scenario }: { scenario: Scenario }) {
     setError(null);
     try {
       const company = await api.createCompany({
-        name: `${scenario.company.name} Â· ${user?.email?.split("@")[0] ?? "run"}`,
+        name: `${scenario.company.name} · ${user?.email?.split("@")[0] ?? "run"}`,
       });
       setActiveCompanyId(company.id);
       // The new run changes this owner's run list, and the cached copy is what the numbered
@@ -123,7 +123,7 @@ export function PlayExperience({ scenario }: { scenario: Scenario }) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-void text-dim">
         <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-        {!ready || !user ? "Checking sessionâ€¦" : "Loading your runsâ€¦"}
+        {!ready || !user ? "Checking session…" : "Loading your runs…"}
       </div>
     );
   }
@@ -201,12 +201,12 @@ function RunCard({
       <div className="min-w-0">
         <p className="truncate text-[14.5px] font-medium text-ink">{run.name}</p>
         <p className="num mt-1 text-[12px] text-faint">
-          Q{run.current_quarter_number ?? 0}/{run.total_quarters} Â·{" "}
+          Q{run.current_quarter_number ?? 0}/{run.total_quarters} ·{" "}
           {run.quarters_locked} locked
           {run.latest_ceo_score != null && (
             <>
               {" "}
-              Â· last score {asNumber(run.latest_ceo_score).toFixed(1)}
+              · last score {asNumber(run.latest_ceo_score).toFixed(1)}
               {run.latest_band ? ` (${run.latest_band})` : ""}
             </>
           )}

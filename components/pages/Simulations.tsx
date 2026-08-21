@@ -51,7 +51,7 @@ const scenarios: Scenario[] = [
     category: "Founder",
     copy: "Run a seed-stage SaaS for 4 simulated quarters. Pressure: cash, crisis, co-founder, competitor.",
     duration: "30 min",
-    level: "Beginner â†’ Pro",
+    level: "Beginner → Pro",
     intensity: 62,
     accent: "violet",
   },
@@ -82,7 +82,7 @@ const scenarios: Scenario[] = [
     title: "Turnaround",
     status: "COMING",
     category: "Operator",
-    copy: "You inherited a Series C company at â‚¹4M burn and 5 months runway. Save it or wind it down.",
+    copy: "You inherited a Series C company at ₹4M burn and 5 months runway. Save it or wind it down.",
     duration: "40 min",
     level: "Expert",
     intensity: 96,
@@ -179,7 +179,7 @@ export function Simulations() {
         <Container wide className="relative z-10 pt-16 sm:pt-24">
           <div className="grid gap-12 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
             <div>
-              <Eyebrow accent="teal">MYELIN â€” SIMULATIONS / MARKETPLACE</Eyebrow>
+              <Eyebrow accent="teal">MYELIN — SIMULATIONS / MARKETPLACE</Eyebrow>
               <motion.h1
                 initial={{ opacity: 0, y: 22 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -310,7 +310,7 @@ export function Simulations() {
             copy={
               <p>
                 Every scenario runs on the same deterministic engine and grades the
-                same seven dimensions â€” so a Turnaround run is comparable to a
+                same seven dimensions — so a Turnaround run is comparable to a
                 Fundraise run.
               </p>
             }
@@ -352,7 +352,7 @@ export function Simulations() {
           {visible.length === 0 && (
             <Panel className="mt-8 p-8 text-center">
               <p className="text-[15px] text-dim">
-                No cases in this track yet â€” new scenarios ship monthly.
+                No cases in this track yet — new scenarios ship monthly.
               </p>
             </Panel>
           )}
@@ -372,7 +372,7 @@ export function Simulations() {
                 </p>
                 <p className="mt-5 max-w-lg text-[15.5px] leading-[1.7] text-dim">
                   Faculty and accelerator partners author scenarios on the Myelin
-                  engine â€” same telemetry, same DI Report, your curriculum.
+                  engine — same telemetry, same DI Report, your curriculum.
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3">
                   <Action href="/#institutions">
@@ -510,7 +510,7 @@ function ScenarioCard({
       <div className="mt-auto flex items-center justify-between gap-3 px-6 py-5">
         {isLive ? (
           <Action href="/play/startup-survival" className="w-full">
-            Play â†’
+            Play →
           </Action>
         ) : (
           <Action variant="outline" disabled className="w-full opacity-45">

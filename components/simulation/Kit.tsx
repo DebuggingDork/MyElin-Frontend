@@ -323,7 +323,7 @@ export function ValuationTrendChart({ history }: { history: QuarterResultShape[]
   return (
     <Panel
       eyebrow="Valuation trajectory"
-      title={"Q1 " + cr(opening) + " â†’ " + latest.q + " " + cr(latest.valuation)}
+      title={"Q1 " + cr(opening) + " → " + latest.q + " " + cr(latest.valuation)}
     >
       <div className="h-56">
         <ResponsiveContainer width="100%" height="100%">

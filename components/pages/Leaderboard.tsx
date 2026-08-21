@@ -125,7 +125,7 @@ export function Leaderboard() {
             </Panel>
           )}
 
-          {user && loading && <p className="text-[14px] text-dim">Loading standingsâ€¦</p>}
+          {user && loading && <p className="text-[14px] text-dim">Loading standings…</p>}
 
           {user && error && (
             <p className="rounded-xl border border-rose/30 bg-rose/[0.07] px-4 py-3 text-[13px] text-rose">
@@ -171,7 +171,7 @@ function StorylineBoard({ storyline, index }: { storyline: Storyline; index: num
         <p className="num text-[12px] text-faint">
           {storyline.runs.length} run{storyline.runs.length === 1 ? "" : "s"}
           {best?.latest_ceo_score != null && (
-            <> Â· best {asNumber(best.latest_ceo_score).toFixed(1)}</>
+            <> · best {asNumber(best.latest_ceo_score).toFixed(1)}</>
           )}
         </p>
       </div>
@@ -253,7 +253,7 @@ function RunRow({ run, rank }: { run: CompanyListItem; rank: number }) {
         </span>
 
         <span className="num text-right text-[15px] font-semibold text-ink">
-          {run.latest_ceo_score != null ? asNumber(run.latest_ceo_score).toFixed(1) : "â€”"}
+          {run.latest_ceo_score != null ? asNumber(run.latest_ceo_score).toFixed(1) : "—"}
         </span>
       </button>
 
@@ -261,7 +261,7 @@ function RunRow({ run, rank }: { run: CompanyListItem; rank: number }) {
         <div className="border-t border-line bg-[var(--panel)] px-4 py-3 sm:px-5">
           {qError && <p className="text-[12px] text-rose">{qError}</p>}
           {!qError && quarters === null && (
-            <p className="text-[12px] text-faint">Loading quartersâ€¦</p>
+            <p className="text-[12px] text-faint">Loading quarters…</p>
           )}
           {quarters?.length === 0 && (
             <p className="text-[12px] text-faint">No quarters locked on this run yet.</p>
@@ -275,9 +275,9 @@ function RunRow({ run, rank }: { run: CompanyListItem; rank: number }) {
                 >
                   <span className="text-faint">Q{q.quarter_number}</span>{" "}
                   <span className="num font-semibold text-ink">
-                    {q.ceo_score != null ? asNumber(q.ceo_score).toFixed(1) : "â€”"}
+                    {q.ceo_score != null ? asNumber(q.ceo_score).toFixed(1) : "—"}
                   </span>
-                  {q.band && <span className="text-faint"> Â· {q.band}</span>}
+                  {q.band && <span className="text-faint"> · {q.band}</span>}
                 </span>
               ))}
             </div>

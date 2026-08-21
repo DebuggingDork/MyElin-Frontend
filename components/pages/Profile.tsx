@@ -157,7 +157,7 @@ export function Profile() {
             </Panel>
           )}
 
-          {user && loading && <p className="text-[14px] text-dim">Loading your profileâ€¦</p>}
+          {user && loading && <p className="text-[14px] text-dim">Loading your profile…</p>}
 
           {user && !loading && loadError && (
             <p className="rounded-xl border border-rose/30 bg-rose/[0.07] px-4 py-3 text-[13px] text-rose">
@@ -176,8 +176,8 @@ export function Profile() {
                     <div className="min-w-0">
                       <p className="truncate text-[14px] font-medium text-ink">{user.email}</p>
                       <p className="text-[12px] text-faint">
-                        {profile?.role ? humanizeId(profile.role) : "Student"} Â· member since{" "}
-                        {profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : "â€”"}
+                        {profile?.role ? humanizeId(profile.role) : "Student"} · member since{" "}
+                        {profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : "—"}
                       </p>
                     </div>
                   </div>
@@ -246,7 +246,7 @@ export function Profile() {
                       <div className="flex flex-wrap items-baseline justify-between gap-2">
                         <legend className="eyebrow text-faint">What do you want to get better at?</legend>
                         <span className="text-[12.5px] text-faint">
-                          Choose up to {MAX_GOALS} Â· {goals.length}/{MAX_GOALS}
+                          Choose up to {MAX_GOALS} · {goals.length}/{MAX_GOALS}
                         </span>
                       </div>
                       <div className="mt-4 flex flex-wrap gap-2">
@@ -285,7 +285,7 @@ export function Profile() {
                     <div className="flex items-center gap-4">
                       <Action type="submit" disabled={saving}>
                         <Save className="h-4 w-4" />
-                        {saving ? "Savingâ€¦" : "Save changes"}
+                        {saving ? "Saving…" : "Save changes"}
                       </Action>
                       {saved && <span className="text-[12.5px] text-teal">Saved.</span>}
                     </div>
@@ -314,7 +314,7 @@ export function Profile() {
                     </p>
                   )}
 
-                  {!runsError && runs === null && <p className="text-[13px] text-dim">Loadingâ€¦</p>}
+                  {!runsError && runs === null && <p className="text-[13px] text-dim">Loading…</p>}
 
                   {!runsError && runs && runs.length === 0 && (
                     <Panel className="p-6 text-center">
@@ -348,7 +348,7 @@ export function Profile() {
                           {run.latest_ceo_score != null && (
                             <span>
                               score {formatDecimal(run.latest_ceo_score, 1)}
-                              {run.latest_band ? ` Â· ${humanizeId(run.latest_band)}` : ""}
+                              {run.latest_band ? ` · ${humanizeId(run.latest_band)}` : ""}
                             </span>
                           )}
                         </div>
