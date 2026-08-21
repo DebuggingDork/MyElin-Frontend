@@ -3,7 +3,8 @@
 import { motion } from "framer-motion";
 import { ArrowRight, Clock, Play } from "lucide-react";
 import { easeOut } from "@/lib/media";
-import { Action, Container, Eyebrow, Panel, Pill } from "@/components/ui/Kit";
+import { Masthead } from "@/components/layout/PageChrome";
+import { Action, Container, Panel, Pill } from "@/components/ui/Kit";
 import { useSimulationHref } from "@/components/play/entry";
 
 /** Placeholder for `/pricing`. The plan tables were pulled before launch — the route stays
@@ -13,21 +14,14 @@ export function PricingComingSoon() {
   const simulationHref = useSimulationHref();
 
   return (
-    <section className="relative flex min-h-[calc(100svh-68px)] items-center overflow-hidden bg-void pt-[68px]">
-      <div className="aurora" />
+    <section className="relative flex min-h-[calc(100svh-68px)] flex-col pt-[68px]">
       <div className="grid-lines absolute inset-0" />
+      <Masthead section="Pricing" status="Plans in progress" />
 
-      <Container className="relative z-10 py-20 sm:py-28">
-        <Eyebrow accent="teal">MYELIN — PRICING</Eyebrow>
-
-        <motion.h1
-          initial={{ opacity: 0, y: 22 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: easeOut }}
-          className="display mt-7 max-w-3xl text-[clamp(2.4rem,6vw,4.4rem)] leading-[1.02] text-ink"
-        >
-          Pricing is <span className="text-grad">coming soon.</span>
-        </motion.h1>
+      <Container wide className="relative z-10 flex flex-1 flex-col justify-center py-[clamp(3rem,8vh,6rem)]">
+        <h1 className="ledger-display rise max-w-3xl text-balance text-[clamp(2.4rem,5.4vw,4.2rem)] text-ink">
+          Pricing is <span className="italic text-teal">coming soon.</span>
+        </h1>
 
         <motion.p
           initial={{ opacity: 0, y: 14 }}

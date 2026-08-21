@@ -25,7 +25,8 @@ import { easeOut } from "@/lib/media";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { api, getToken } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/types";
-import { Action, Container, Eyebrow, Panel } from "@/components/ui/Kit";
+import { Masthead } from "@/components/layout/PageChrome";
+import { Action, Container, Panel } from "@/components/ui/Kit";
 import { ButtonSpinner } from "@/components/ui/Loading";
 
 /**
@@ -159,15 +160,14 @@ export function AccountSecurity() {
 
   return (
     <>
-      <section className="relative overflow-hidden border-b border-line bg-void pb-14 pt-[68px]">
-        <div className="aurora" />
+      <section className="relative border-b border-line pt-[68px]">
         <div className="grid-lines absolute inset-0" />
-        <Container wide className="relative z-10 pt-16 sm:pt-24">
-          <Eyebrow accent="teal">Account &amp; security</Eyebrow>
-          <h1 className="display mt-5 max-w-3xl text-[clamp(2rem,5vw,3.4rem)] text-ink">
-            Your password and session.
+        <Masthead section="Account &amp; security" status={user ? "Signed in" : "Signed out"} />
+        <Container wide className="relative z-10 py-[clamp(2.5rem,6vh,4.5rem)]">
+          <h1 className="ledger-display rise max-w-3xl text-balance text-[clamp(2.2rem,4.8vw,3.6rem)] text-ink">
+            Your password <span className="italic text-teal">and session.</span>
           </h1>
-          <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-dim">
+          <p className="rise rise-1 mt-7 max-w-[52ch] border-t border-line pt-6 text-[16px] leading-[1.7] text-dim">
             Change your password here, or have a reset link sent to your inbox if you would rather
             finish on another device.
           </p>

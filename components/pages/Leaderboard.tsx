@@ -11,7 +11,8 @@ import { asNumber } from "@/lib/api/catalog";
 import type { CompanyListItem, LeaderboardEntry } from "@/lib/api/types";
 import { runHref } from "@/lib/run/ref";
 import { ApiError } from "@/lib/api/types";
-import { Action, Container, Eyebrow, Panel, Pill, type Accent } from "@/components/ui/Kit";
+import { Masthead } from "@/components/layout/PageChrome";
+import { Action, Container, Panel, Pill, type Accent } from "@/components/ui/Kit";
 import { cn } from "@/lib/utils";
 import { useSimulationHref } from "@/components/play/entry";
 import { InlineLoading } from "@/components/ui/Loading";
@@ -97,15 +98,14 @@ export function Leaderboard() {
 
   return (
     <>
-      <section className="relative overflow-hidden border-b border-line bg-void pb-14 pt-[68px]">
-        <div className="aurora" />
+      <section className="relative border-b border-line pt-[68px]">
         <div className="grid-lines absolute inset-0" />
-        <Container wide className="relative z-10 pt-16 sm:pt-24">
-          <Eyebrow accent="amber">Standings</Eyebrow>
-          <h1 className="display mt-5 max-w-3xl text-[clamp(2rem,5vw,3.4rem)] text-ink">
-            Your runs, by storyline.
+        <Masthead section="Standings" status={`${totalRuns} run${totalRuns === 1 ? "" : "s"} on record`} />
+        <Container wide className="relative z-10 py-[clamp(2.5rem,6vh,4.5rem)]">
+          <h1 className="ledger-display rise max-w-3xl text-balance text-[clamp(2.2rem,4.8vw,3.6rem)] text-ink">
+            Your runs, <span className="italic text-teal">by storyline.</span>
           </h1>
-          <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-dim">
+          <p className="rise rise-1 mt-7 max-w-[52ch] border-t border-line pt-6 text-[16px] leading-[1.7] text-dim">
             Each storyline keeps its own board. A score only means something against the same
             seed, profile and crisis quarter, so runs are ranked inside their storyline and never
             across them.

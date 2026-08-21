@@ -25,7 +25,8 @@ import { runHref } from "@/lib/run/ref";
 import type { CompanyListItem, RunStatus } from "@/lib/api/types";
 import { ApiError } from "@/lib/api/types";
 import { formatDecimal, humanizeId } from "@/lib/format/display";
-import { Action, Container, Eyebrow, Meter, Panel, Pill, type Accent } from "@/components/ui/Kit";
+import { Masthead } from "@/components/layout/PageChrome";
+import { Action, Container, Meter, Panel, Pill, type Accent } from "@/components/ui/Kit";
 import { cn } from "@/lib/utils";
 import { useSimulationHref } from "@/components/play/entry";
 import { InlineLoading } from "@/components/ui/Loading";
@@ -116,19 +117,18 @@ export function MyRuns() {
 
   return (
     <>
-      <section className="relative overflow-hidden border-b border-line bg-void pb-14 pt-[68px]">
-        <div className="aurora" />
+      <section className="relative border-b border-line pt-[68px]">
         <div className="grid-lines absolute inset-0" />
-        <Container wide className="relative z-10 pt-16 sm:pt-24">
-          <Eyebrow accent="teal">Your record</Eyebrow>
-          <h1 className="display mt-5 max-w-3xl text-[clamp(2rem,5vw,3.4rem)] text-ink">
-            My simulations.
+        <Masthead section="Your record" />
+        <Container wide className="relative z-10 py-[clamp(2.5rem,6vh,4.5rem)]">
+          <h1 className="ledger-display rise max-w-3xl text-balance text-[clamp(2.2rem,4.8vw,3.6rem)] text-ink">
+            My <span className="italic text-teal">simulations.</span>
           </h1>
-          <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-dim">
+          <p className="rise rise-1 mt-7 max-w-[52ch] border-t border-line pt-6 text-[16px] leading-[1.7] text-dim">
             Every company you have run, newest first. Pick one up where you left it, or start a
             new one.
           </p>
-          <div className="mt-8">
+          <div className="rise rise-2 mt-8">
             <Action href={simulationHref}>
               <Plus className="h-4 w-4" />
               New simulation
