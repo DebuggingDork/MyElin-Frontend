@@ -660,6 +660,22 @@ body {
   }
 }
 
+/* The header's departments trigger arriving as the panel it opens goes away. It is mounted
+   and unmounted rather than hidden -- a hidden button still takes its share of the header's
+   `gap` -- so there is nothing on screen to transition and the fade has to be an entry
+   animation on the new element instead. 180ms against the panel's 300ms: the button is
+   there before the rail has finished sliding out from under it, which is the order that
+   reads as one movement rather than two. */
+.dept-trigger {
+  animation: dept-trigger-in 180ms ease-out both;
+}
+@keyframes dept-trigger-in {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+}
+
 .spin-slow {
   animation: spin 18s linear infinite;
 }
@@ -700,6 +716,11 @@ body {
   .spin-slow,
   .caret {
     animation: none;
+  }
+  /* Same treatment as `.rise` below: the slide goes, the fade stays, so the button still
+     reads as having arrived rather than as having always been there. */
+  .dept-trigger {
+    animation: rise-fade 180ms ease both;
   }
   /* Not `animation: none` -- that would leave `.rise` at its unanimated default, which is
      already the visible state, but keeping a short fade preserves the sense of arrival
