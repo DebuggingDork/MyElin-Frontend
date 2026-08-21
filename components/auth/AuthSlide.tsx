@@ -10,6 +10,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { OnboardingProfile } from "@/components/auth/OnboardingProfile";
 import { easeOut, photos } from "@/lib/media";
+import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/types";
 import { Action, Eyebrow } from "@/components/ui/Kit";
 import { ButtonSpinner } from "@/components/ui/Loading";
@@ -73,6 +74,15 @@ export function AuthSlide({ initialMode }: { initialMode: Mode }) {
         router.replace(next);
       } else {
         await register({ email, password });
+        // Save the name against the account *now*, not on the next screen. Screen 2 is
+        // designed to be abandonable, and it used to be the only thing that ever persisted
+        // the name -- so anyone who closed it ended up with an account the app could only
+        // greet by the local part of their email address.
+        try {
+          await api.updateProfile({ first_name: firstName.trim() || null });
+        } catch {
+          /* The account exists and the next screen sends it again; never block on this. */
+        }
         setStep(2);
       }
     } catch (err) {
