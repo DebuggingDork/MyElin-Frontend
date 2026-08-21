@@ -20,7 +20,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { LogOut, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
+import { LogOut, PanelLeftOpen, X } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/types";
 import { useRun } from "@/components/run/RunProvider";
@@ -275,7 +275,11 @@ export function SimulationApp() {
   const navOpen = useSyncExternalStore(subscribeNav, readNavOpen, () => true);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
-  const toggleNav = useCallback(() => writeNavOpen(!readNavOpen()), []);
+  /* The rail's own state is the only thing that decides whether the header's trigger is on
+     screen, so the two directions are separate calls rather than one toggle: the trigger
+     exists only while the rail is shut and can only ever open it, and the control that
+     closes it lives on the rail itself. */
+  const openNav = useCallback(() => writeNavOpen(true), []);
   const closeNav = useCallback(() => writeNavOpen(false), []);
 
   /**
@@ -672,8 +676,9 @@ export function SimulationApp() {
    *  drawer are two separate pieces of state, and each panel closes only itself. */
   const navBody = (onClose: () => void) => (
     <>
-      {/* Each panel carries its own close control. It is no longer `lg:hidden`: the rail
-          needs it just as much as the drawer does, and it is the same gesture in both. */}
+      {/* The panel carries the only control that shuts it, because the header trigger is not
+          on screen while it is open. It is no longer `lg:hidden`: the rail needs it just as
+          much as the drawer does, and it is the same gesture in both. */}
       {/* pl-3 against the rail's px-5 puts this label on the same 32px left rule as the
           nav labels below it. */}
       <div className="flex items-center justify-between gap-2 pb-2 pl-3">
@@ -817,44 +822,43 @@ export function SimulationApp() {
                 rather than push the title off the left edge. Nothing here is `nowrap`. */}
             <div className={COLUMN + " py-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2"}>
               <div className="flex min-w-0 items-center gap-3">
-                {/* The department toggle, in the workspace it belongs to.
+                {/* The department trigger, in the workspace it belongs to.
 
-                    Two controls rather than one because they do different things: below `lg`
-                    the departments are a drawer over the document, at `lg` and up they are a
-                    rail beside it. Splitting them on a breakpoint class keeps both correct
-                    without reading the viewport width during render, which the server cannot
-                    do. */}
-                {showNav && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={toggleNav}
-                      aria-expanded={navOpen}
-                      aria-label={navOpen ? "Collapse departments" : "Expand departments"}
-                      className={
-                        "hidden shrink-0 items-center gap-1.5 border px-2 py-1 text-xs uppercase tracking-widest transition-colors lg:inline-flex " +
-                        (navOpen
-                          ? "border-teal text-teal-bright hover:bg-white/5"
-                          : "border-line-2 text-dim hover:text-white")
-                      }
-                    >
-                      {navOpen ? (
-                        <PanelLeftClose className="h-3.5 w-3.5" />
-                      ) : (
-                        <PanelLeftOpen className="h-3.5 w-3.5" />
-                      )}
-                      <span className="hidden sm:inline">Departments</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setMobileNavOpen(true)}
-                      aria-label="Open departments"
-                      className="inline-flex shrink-0 items-center gap-1.5 border border-line-2 px-2 py-1 text-xs uppercase tracking-widest text-dim transition-colors hover:text-white lg:hidden"
-                    >
-                      <PanelLeftOpen className="h-3.5 w-3.5" />
-                      <span className="hidden sm:inline">Departments</span>
-                    </button>
-                  </>
+                    It is only here while the panel is shut. An open panel already names
+                    itself and carries its own close control, so a second control up here
+                    would be pointing at something the CEO is looking at.
+
+                    Two of them rather than one because they open different things: below
+                    `lg` the departments are a drawer over the document, at `lg` and up they
+                    are a rail beside it, and each reads the state of the panel it opens.
+                    Splitting them on a breakpoint class keeps both correct without reading
+                    the viewport width during render, which the server cannot do.
+
+                    Both unmount rather than hide, so the row's `gap-3` closes up behind them
+                    and nothing is holding space for a button that is not there. */}
+                {showNav && !navOpen && (
+                  <button
+                    type="button"
+                    onClick={openNav}
+                    aria-expanded={false}
+                    aria-label="Open departments"
+                    className="hidden shrink-0 items-center gap-1.5 border border-line-2 px-2 py-1 text-xs uppercase tracking-widest text-dim transition-colors hover:text-white lg:inline-flex"
+                  >
+                    <PanelLeftOpen className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Departments</span>
+                  </button>
+                )}
+                {showNav && !mobileNavOpen && (
+                  <button
+                    type="button"
+                    onClick={() => setMobileNavOpen(true)}
+                    aria-expanded={false}
+                    aria-label="Open departments"
+                    className="inline-flex shrink-0 items-center gap-1.5 border border-line-2 px-2 py-1 text-xs uppercase tracking-widest text-dim transition-colors hover:text-white lg:hidden"
+                  >
+                    <PanelLeftOpen className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Departments</span>
+                  </button>
                 )}
                 <span className="truncate font-serif text-xl">Nadi Wear</span>
                 <span className="hidden text-xs uppercase tracking-widest text-dim md:inline">
