@@ -20,10 +20,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Loader2, LogOut, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
+import { LogOut, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/types";
 import { useRun } from "@/components/run/RunProvider";
+import { forgetRunIndex, runHref } from "@/lib/run/ref";
 import {
   ARCHETYPES,
   DECISION_GROUPS,
@@ -51,6 +52,7 @@ import type {
   QuarterScore,
 } from "@/lib/simulation/remote";
 import { Ticker, TeachingContext } from "@/components/simulation/Kit";
+import { InlineLoading, PageLoading, ProcessingOverlay } from "@/components/ui/Loading";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { ProfileMenu } from "@/components/layout/ProfileMenu";
 import { Logo } from "@/components/brand/Logo";
@@ -89,6 +91,14 @@ import type {
 } from "@/lib/simulation/types";
 
 type Phase = "intro" | "briefing" | "play" | "closed" | "termsheet" | "final";
+
+/**
+ * A named, multi-second wait the CEO is shown by name.
+ *
+ * `dismiss` is the label on the way out of the *failed* version of this wait -- it says where
+ * the reader lands if the engine refuses, which is always the screen they submitted from.
+ */
+type Working = { title: string; message: string; dismiss: string };
 
 /** Screen ids the sidebar can deep-link to. Anything else falls back to the dashboard. */
 export const SIMULATION_TABS = [
@@ -241,6 +251,23 @@ export function SimulationApp() {
   const [booting, setBooting] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  /**
+   * The named wait, when there is one.
+   *
+   * `busy` says a request is open, which is enough to disable a button. It is not enough for
+   * closing a quarter: that is a multi-second scoring run whose result is a whole new screen,
+   * so it gets an overlay that says which quarter is being processed and stays put -- switching
+   * to its own error state -- if the engine refuses. Nothing else on the surface changes while
+   * it is up, so a failure returns the CEO to exactly the review they submitted.
+   */
+  const [working, setWorking] = useState<Working | null>(null);
+
+  /* `busy` is state, so two clicks landing in the same tick would both read `false`. The
+     buttons are disabled on `busy` and that is what normally prevents it, but a lock is the one
+     request that must never be sent twice -- a duplicate would score the quarter again -- so it
+     is also guarded by a ref, which updates synchronously. */
+  const inFlight = useRef(false);
 
   /* Nav visibility. Desktop and mobile are tracked separately on purpose: the rail is
      open by default on a wide screen and its state is worth remembering, while the
@@ -512,8 +539,15 @@ export function SimulationApp() {
   }, [setTab]);
 
   const closeQuarter = useCallback(async () => {
+    if (inFlight.current) return;
+    inFlight.current = true;
     setBusy(true);
     setError(null);
+    setWorking({
+      title: "Processing quarter " + state.quarter,
+      message: "Evaluating decisions and generating your quarter report…",
+      dismiss: "Back to the review",
+    });
     try {
       const locked = await simulationApi.lock(companyId, plan);
       // Committed to the server, so the local draft has done its job.
@@ -530,6 +564,7 @@ export function SimulationApp() {
       if (locked.settlement) setEndgameOutcome(locked.settlement as unknown as Record<string, unknown>);
       if (locked.quarter >= 4) setRunStatus("completed");
       setPhase("closed");
+      setWorking(null);
     } catch (err) {
       setError(
         err instanceof ApiError
@@ -537,9 +572,10 @@ export function SimulationApp() {
           : "Could not close the quarter.",
       );
     } finally {
+      inFlight.current = false;
       setBusy(false);
     }
-  }, [companyId, plan, priority]);
+  }, [companyId, plan, priority, state.quarter]);
 
   const afterClosed = useCallback(async () => {
     const justClosed = closed?.result.q as number;
@@ -548,32 +584,50 @@ export function SimulationApp() {
       return;
     }
 
+    if (inFlight.current) return;
+    inFlight.current = true;
     setBusy(true);
     setError(null);
+    setWorking({
+      title: "Opening quarter " + (justClosed + 1),
+      message: "Carrying the closing balance sheet into the next briefing…",
+      dismiss: "Back to the report",
+    });
     try {
       // `loadRun` fetches the term sheet whenever one is outstanding, so Q3 needs no special
       // case here beyond sending the CEO to it.
       const run = await loadRun();
       resetPlan(run.state);
       setPhase(justClosed === 3 && !run.endgamePath ? "termsheet" : "briefing");
+      setWorking(null);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not open the next quarter.");
     } finally {
+      inFlight.current = false;
       setBusy(false);
     }
   }, [closed, loadRun, resetPlan]);
 
   const acceptDeal = useCallback(
     async (path: "A" | "B" | "C", termSheetName: string, reasoning: string) => {
+      if (inFlight.current) return;
+      inFlight.current = true;
       setBusy(true);
       setError(null);
+      setWorking({
+        title: "Recording the board's decision",
+        message: "Signing the term sheet and reopening the company for quarter 4…",
+        dismiss: "Back to the term sheet",
+      });
       try {
         await simulationApi.signTermSheet(companyId, path, termSheetName, reasoning);
         setPhase("briefing");
         setTab("dashboard");
+        setWorking(null);
       } catch (err) {
         setError(err instanceof ApiError ? err.message : "Could not record that decision.");
       } finally {
+        inFlight.current = false;
         setBusy(false);
       }
     },
@@ -581,13 +635,23 @@ export function SimulationApp() {
   );
 
   const restart = useCallback(async () => {
+    if (inFlight.current) return;
+    inFlight.current = true;
     setBusy(true);
     setError(null);
+    setWorking({
+      title: "Starting a new run",
+      message: "Creating a fresh company and opening quarter 1…",
+      dismiss: "Back to the year end",
+    });
     try {
       const created = await api.createCompany({ name: (company?.name ?? "Nadi Wear") + " (rerun)" });
-      window.location.href = `/run/${created.id}/simulation`;
+      // The cached run list is what `/run/<n>` resolves against; the new run is not in it yet.
+      forgetRunIndex();
+      window.location.href = runHref(created.seq, "/simulation");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not start a new run.");
+      inFlight.current = false;
       setBusy(false);
     }
   }, [company]);
@@ -611,19 +675,11 @@ export function SimulationApp() {
           A second control on the panel could only ever close it, which is the half of the job
           that was already easy. */}
       {/* pl-3 against the rail's px-5 puts this label on the same 32px left rule as the
-          toolbar's logo above it and the nav labels below it. */}
+          nav labels below it. */}
       <div className="flex items-center justify-between gap-2 pb-2 pl-3">
         <p className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-sim-faint">
           Nadi Wear · 4 quarters
         </p>
-        <button
-          type="button"
-          onClick={toggleNav}
-          aria-label="Collapse navigation"
-          className="hidden h-7 w-7 shrink-0 items-center justify-center rounded-md text-sim-faint transition-colors hover:bg-sim-surface-hover hover:text-sim-ink lg:flex"
-        >
-          <PanelLeftClose className="h-4 w-4" />
-        </button>
         <button
           type="button"
           onClick={() => setMobileNavOpen(false)}
@@ -695,7 +751,19 @@ export function SimulationApp() {
           </div>
         </div>
 
-        <div className="simulation min-h-0 flex-1 overflow-hidden bg-base text-ink">
+        <div className="simulation relative min-h-0 flex-1 overflow-hidden bg-base text-ink">
+          {/* Anchored to the simulation surface rather than the viewport: the account bar
+              above stays live and legible, so a quarter being scored reads as this workspace
+              being busy rather than the whole app having locked up. */}
+          {working && (
+            <ProcessingOverlay
+              title={working.title}
+              message={working.message}
+              error={error}
+              onRetry={() => setWorking(null)}
+              retryLabel={working.dismiss}
+            />
+          )}
           <div className={SHELL + " flex h-full"}>
           {/* Always mounted while there is a rail to show, and collapsed by animating its
               width to zero rather than by unmounting.
@@ -714,7 +782,15 @@ export function SimulationApp() {
               )}
               style={{ width: navOpen ? RAIL_W : 0 }}
             >
-              {navBody}
+              <div
+                className={cn(
+                  "flex h-full flex-col px-5 py-4 transition-opacity duration-200 ease-out motion-reduce:transition-none",
+                  navOpen ? "opacity-100" : "opacity-0",
+                )}
+                style={{ width: RAIL_W }}
+              >
+                {navBody}
+              </div>
             </aside>
           )}
 
@@ -812,7 +888,7 @@ export function SimulationApp() {
                   <button
                     onClick={() => setNotesOn(!notesOn)}
                     className={
-                      "px-2 py-0.5 text-xs uppercase tracking-widest border " +
+                      "px-2 py-1 text-xs uppercase tracking-widest border transition-colors " +
                       (notesOn ? "border-teal text-teal-bright" : "border-line-2 text-dim")
                     }
                   >
@@ -845,9 +921,8 @@ export function SimulationApp() {
 
   if (booting) {
     return (
-      <div className="simulation flex min-h-[60vh] items-center justify-center bg-base text-dim">
-        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-        Loading your company…
+      <div className="simulation flex min-h-full items-center justify-center bg-base text-ink">
+        <PageLoading label="Loading your company…" sub="Reading the run's closed quarters." />
       </div>
     );
   }
@@ -1043,10 +1118,15 @@ export function SimulationApp() {
   return chrome(
     <div className="space-y-5">
       {errorBanner}
+      {/* The preview is debounced and re-runs on every edit, so this is the one wait the CEO
+          sees repeatedly -- it stays a single quiet line rather than anything that redraws the
+          screen under the form they are filling in. */}
       {!projection && (
-        <div className="border-l-4 border-line-2 bg-raise px-4 py-3 text-sm text-dim">
-          Running the plan…
-        </div>
+        <InlineLoading
+          label="Running the plan…"
+          sub="The engine is costing what you have entered so far."
+          className="border-l-4 border-line-2 bg-raise px-4 py-3"
+        />
       )}
       {body}
     </div>,

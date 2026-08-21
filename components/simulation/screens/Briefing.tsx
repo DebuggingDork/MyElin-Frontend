@@ -26,6 +26,7 @@ import type {
   QuarterResultShape,
   Tone,
 } from "@/lib/simulation/types";
+import { Spinner } from "@/components/ui/Loading";
 
 const v = (r: QuarterResultShape, k: string) => r[k] as number;
 
@@ -276,10 +277,11 @@ export function BriefingScreen({
         onClick={onStart}
         disabled={!priority || busy}
         className={
-          "w-full py-4 font-serif text-xl " +
+          "flex w-full items-center justify-center gap-3 py-4 font-serif text-xl transition-colors " +
           (priority && !busy ? "bg-danger-deep text-white hover:bg-danger-deep" : "bg-raise-2 text-faint")
         }
       >
+        {busy && <Spinner size="md" />}
         {busy ? "Opening the quarter…" : priority ? "Start the quarter" : "Choose a priority to begin"}
       </button>
     </div>

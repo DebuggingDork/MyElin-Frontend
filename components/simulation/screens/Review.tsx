@@ -19,6 +19,7 @@ import type {
   Readiness,
   Reflection,
 } from "@/lib/simulation/types";
+import { Spinner } from "@/components/ui/Loading";
 
 export function ReviewScreen({
   quarter,
@@ -99,11 +100,17 @@ export function ReviewScreen({
 
       {error && <div className="border-l-4 border-danger bg-danger/10 px-4 py-3 text-sm text-tone-bad">{error}</div>}
 
+      {/* Disabled on `busy` through `blocked`, so the quarter cannot be submitted twice from
+          here. The engine-side guard is in `SimulationApp.closeQuarter`. */}
       <button
         onClick={onClose}
         disabled={blocked}
-        className={"w-full py-4 font-serif text-xl " + (blocked ? "bg-raise-2 text-faint" : "bg-chrome text-white hover:bg-danger-deep")}
+        className={
+          "flex w-full items-center justify-center gap-3 py-4 font-serif text-xl transition-colors " +
+          (blocked ? "bg-raise-2 text-faint" : "bg-chrome text-white hover:bg-danger-deep")
+        }
       >
+        {busy && <Spinner size="md" />}
         {busy
           ? "Closing the quarter…"
           : ready
