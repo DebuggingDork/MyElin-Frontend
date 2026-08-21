@@ -126,7 +126,7 @@ export function Stat({
   tone?: string;
 }) {
   return (
-    <div className="h-full border border-line border-l-2 border-l-line-2 bg-raise p-3 flex flex-col justify-start">
+    <div className="h-full overflow-hidden border border-line border-l-2 border-l-line-2 bg-raise p-3 flex flex-col justify-start">
       <Eyebrow>{label}</Eyebrow>
       <div className={"font-mono text-xl leading-tight mt-1 " + tone}>{value}</div>
       {sub && <div className="text-xs text-dim mt-1">{sub}</div>}
@@ -326,14 +326,18 @@ export function TrendStat({
   const better = delta === null ? null : invert ? delta < 0 : delta > 0;
 
   return (
-    <div className="h-full border border-line border-l-2 border-l-line-2 bg-raise p-3 flex flex-col justify-start">
+    // `overflow-hidden`, and a row that wraps: a figure like ₹15,69,677 has no space to break
+    // at, so at six columns its min-content width alone fills the card and the sparkline --
+    // 64px and `shrink-0` -- was drawn straight through the right border and into the next
+    // card. Wrapping drops the trend under the figure instead, and the clip is the backstop.
+    <div className="h-full overflow-hidden border border-line border-l-2 border-l-line-2 bg-raise p-3 flex flex-col justify-start">
       <Eyebrow>{label}</Eyebrow>
-      <div className="mt-1 flex flex-1 items-end justify-between gap-2">
-        <div>
+      <div className="mt-1 flex flex-1 flex-wrap items-end justify-between gap-x-2 gap-y-1">
+        <div className="min-w-0">
           <div className={"font-mono text-xl leading-tight " + TONE_TEXT[tone]}>{value}</div>
           {sub && <div className="text-xs text-dim mt-0.5">{sub}</div>}
         </div>
-        <div className="text-right shrink-0">
+        <div className="ml-auto text-right shrink-0">
           <Sparkline values={pts} tone={invert ? "invert" : "normal"} />
           {delta !== null && (
             <div className={"text-xs font-mono " + (better ? "text-tone-good" : "text-tone-bad")}>
