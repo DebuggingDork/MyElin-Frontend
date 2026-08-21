@@ -8,6 +8,7 @@ import { NewspaperStory } from "@/components/play/NewspaperStory";
 import { NewspaperKpi } from "@/components/play/NewspaperKpi";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { api, setActiveCompanyId } from "@/lib/api/client";
+import { forgetRunIndex, runHref } from "@/lib/run/ref";
 import { asNumber } from "@/lib/api/catalog";
 import { ApiError, type CompanyListItem } from "@/lib/api/types";
 import type { Scenario } from "@/lib/play/types";
@@ -17,7 +18,7 @@ type Phase = "rules" | "picker" | "story" | "kpi";
 
 /**
  * Entry sequence: rules + timer (EntryGate) -> pick up an existing run or start fresh -> for a
- * fresh start, the newspaper story -> the newspaper KPI page -> /run/{companyId}.
+ * fresh start, the newspaper story -> the newspaper KPI page -> /run/{runNumber}.
  *
  * Which runs exist comes from `GET /companies`, not from localStorage. The previous version
  * trusted a single stored `myelin_active_company` id, so clearing site data (or opening the app
@@ -92,10 +93,13 @@ export function PlayExperience({ scenario }: { scenario: Scenario }) {
     setError(null);
     try {
       const company = await api.createCompany({
-        name: `${scenario.company.name} · ${user?.email?.split("@")[0] ?? "run"}`,
+        name: `${scenario.company.name} Â· ${user?.email?.split("@")[0] ?? "run"}`,
       });
       setActiveCompanyId(company.id);
-      router.replace(`/run/${company.id}`);
+      // The new run changes this owner's run list, and the cached copy is what the numbered
+      // URL resolves against -- drop it so `/run/<n>` finds the run that was just created.
+      forgetRunIndex();
+      router.replace(runHref(company.seq));
     } catch (err) {
       setError(
         err instanceof ApiError
@@ -106,9 +110,9 @@ export function PlayExperience({ scenario }: { scenario: Scenario }) {
     }
   }
 
-  function resume(companyId: string) {
-    setActiveCompanyId(companyId);
-    router.replace(`/run/${companyId}`);
+  function resume(run: CompanyListItem) {
+    setActiveCompanyId(run.id);
+    router.replace(runHref(run.seq));
   }
 
   if (phase === "rules") {
@@ -119,7 +123,7 @@ export function PlayExperience({ scenario }: { scenario: Scenario }) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-void text-dim">
         <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-        {!ready || !user ? "Checking session…" : "Loading your runs…"}
+        {!ready || !user ? "Checking sessionâ€¦" : "Loading your runsâ€¦"}
       </div>
     );
   }
@@ -154,7 +158,7 @@ export function PlayExperience({ scenario }: { scenario: Scenario }) {
 
       <div className="w-full max-w-xl space-y-3">
         {[...resumable, ...finished].map((run) => (
-          <RunCard key={run.id} run={run} onResume={() => resume(run.id)} />
+          <RunCard key={run.id} run={run} onResume={() => resume(run)} />
         ))}
       </div>
 
@@ -197,12 +201,12 @@ function RunCard({
       <div className="min-w-0">
         <p className="truncate text-[14.5px] font-medium text-ink">{run.name}</p>
         <p className="num mt-1 text-[12px] text-faint">
-          Q{run.current_quarter_number ?? 0}/{run.total_quarters} ·{" "}
+          Q{run.current_quarter_number ?? 0}/{run.total_quarters} Â·{" "}
           {run.quarters_locked} locked
           {run.latest_ceo_score != null && (
             <>
               {" "}
-              · last score {asNumber(run.latest_ceo_score).toFixed(1)}
+              Â· last score {asNumber(run.latest_ceo_score).toFixed(1)}
               {run.latest_band ? ` (${run.latest_band})` : ""}
             </>
           )}

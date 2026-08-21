@@ -9,6 +9,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { api } from "@/lib/api/client";
 import { asNumber } from "@/lib/api/catalog";
 import type { CompanyListItem, LeaderboardEntry } from "@/lib/api/types";
+import { runHref } from "@/lib/run/ref";
 import { ApiError } from "@/lib/api/types";
 import { Action, Container, Eyebrow, Panel, Pill, type Accent } from "@/components/ui/Kit";
 import { cn } from "@/lib/utils";
@@ -124,7 +125,7 @@ export function Leaderboard() {
             </Panel>
           )}
 
-          {user && loading && <p className="text-[14px] text-dim">Loading standings…</p>}
+          {user && loading && <p className="text-[14px] text-dim">Loading standingsâ€¦</p>}
 
           {user && error && (
             <p className="rounded-xl border border-rose/30 bg-rose/[0.07] px-4 py-3 text-[13px] text-rose">
@@ -170,7 +171,7 @@ function StorylineBoard({ storyline, index }: { storyline: Storyline; index: num
         <p className="num text-[12px] text-faint">
           {storyline.runs.length} run{storyline.runs.length === 1 ? "" : "s"}
           {best?.latest_ceo_score != null && (
-            <> · best {asNumber(best.latest_ceo_score).toFixed(1)}</>
+            <> Â· best {asNumber(best.latest_ceo_score).toFixed(1)}</>
           )}
         </p>
       </div>
@@ -252,7 +253,7 @@ function RunRow({ run, rank }: { run: CompanyListItem; rank: number }) {
         </span>
 
         <span className="num text-right text-[15px] font-semibold text-ink">
-          {run.latest_ceo_score != null ? asNumber(run.latest_ceo_score).toFixed(1) : "—"}
+          {run.latest_ceo_score != null ? asNumber(run.latest_ceo_score).toFixed(1) : "â€”"}
         </span>
       </button>
 
@@ -260,7 +261,7 @@ function RunRow({ run, rank }: { run: CompanyListItem; rank: number }) {
         <div className="border-t border-line bg-[var(--panel)] px-4 py-3 sm:px-5">
           {qError && <p className="text-[12px] text-rose">{qError}</p>}
           {!qError && quarters === null && (
-            <p className="text-[12px] text-faint">Loading quarters…</p>
+            <p className="text-[12px] text-faint">Loading quartersâ€¦</p>
           )}
           {quarters?.length === 0 && (
             <p className="text-[12px] text-faint">No quarters locked on this run yet.</p>
@@ -274,15 +275,15 @@ function RunRow({ run, rank }: { run: CompanyListItem; rank: number }) {
                 >
                   <span className="text-faint">Q{q.quarter_number}</span>{" "}
                   <span className="num font-semibold text-ink">
-                    {q.ceo_score != null ? asNumber(q.ceo_score).toFixed(1) : "—"}
+                    {q.ceo_score != null ? asNumber(q.ceo_score).toFixed(1) : "â€”"}
                   </span>
-                  {q.band && <span className="text-faint"> · {q.band}</span>}
+                  {q.band && <span className="text-faint"> Â· {q.band}</span>}
                 </span>
               ))}
             </div>
           )}
           <Link
-            href={`/run/${run.id}`}
+            href={runHref(run.seq)}
             className="mt-3 inline-flex items-center gap-1 text-[12px] text-teal hover:underline"
           >
             Open this run <ArrowRight className="h-3 w-3" />
