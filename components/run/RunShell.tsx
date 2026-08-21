@@ -15,7 +15,7 @@ export function RunShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, ready } = useAuth();
-  const { loading, error } = useRun();
+  const { loading, error, companyId } = useRun();
 
   useEffect(() => {
     if (ready && !user) {
@@ -49,6 +49,21 @@ export function RunShell({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-void text-dim">
         Redirecting to login…
+      </div>
+    );
+  }
+
+  /**
+   * The run reference in the URL is not one this account owns.
+   *
+   * Rendering the screens anyway would fire every request against a company that does not
+   * exist and bury the real reason under a stack of 404s, so stop here and state it. This is
+   * the case a mistyped `/run/<n>` lands in, which the uuid URLs could not produce.
+   */
+  if (!companyId) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-void px-6 text-center text-dim">
+        <p className="text-[15px] text-ink">{error ?? "That run could not be found."}</p>
       </div>
     );
   }
