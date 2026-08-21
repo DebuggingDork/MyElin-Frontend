@@ -5,13 +5,15 @@
  * this user has started. `GET /companies` is already owner-scoped, so "previous simulations"
  * reads the same list `ProfileMenu`'s mini-summary and the leaderboard already read -- there is
  * no separate history endpoint to keep in sync with it.
+ *
+ * Set in the same ledger vocabulary as the rest of the site: masthead under the nav, hairline
+ * rules instead of stacked cards, monospace for anything that is a figure. Both themes come
+ * from the shared tokens, so nothing here hard-codes a colour.
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, Save, User as UserIcon } from "lucide-react";
-import { easeOut } from "@/lib/media";
+import { ArrowRight, Save } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { InstitutionSelect } from "@/components/auth/InstitutionSelect";
 import { SelectField } from "@/components/auth/OnboardingProfile";
@@ -22,7 +24,8 @@ import { ApiError } from "@/lib/api/types";
 import { formatDecimal, humanizeId } from "@/lib/format/display";
 import type { InstitutionRef } from "@/lib/institutions";
 import { MAX_GOALS, degreeOptions, goalOptions, yearOptions } from "@/lib/profile";
-import { Action, Container, Eyebrow, Panel, Pill, type Accent } from "@/components/ui/Kit";
+import { Masthead } from "@/components/layout/PageChrome";
+import { Action, Container } from "@/components/ui/Kit";
 import { cn } from "@/lib/utils";
 import { ButtonSpinner, InlineLoading } from "@/components/ui/Loading";
 
@@ -33,12 +36,31 @@ const RUN_STATUS_LABEL: Record<RunStatus, string> = {
   completed: "Completed",
 };
 
-const RUN_STATUS_ACCENT: Record<RunStatus, Accent> = {
-  active: "teal",
-  distressed: "amber",
-  failed: "rose",
-  completed: "emerald",
+/** Teal is the live system, vermilion is what it costs you -- the same rule the run screens use. */
+const RUN_STATUS_TONE: Record<RunStatus, string> = {
+  active: "text-teal",
+  distressed: "text-ember-soft",
+  failed: "text-ember",
+  completed: "text-dim",
 };
+
+/** One label-over-value row. The whole page is built from these plus the rules between them. */
+function Field({
+  label,
+  children,
+  className,
+}: {
+  label: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={className}>
+      <p className="tick-label">{label}</p>
+      <div className="mt-3">{children}</div>
+    </div>
+  );
+}
 
 export function Profile() {
   const { user, ready } = useAuth();
@@ -131,232 +153,268 @@ export function Profile() {
     [firstName, institution, degree, year, goals],
   );
 
+  const completed = runs?.filter((r) => r.run_status === "completed").length ?? 0;
+
   return (
     <>
-      <section className="relative overflow-hidden border-b border-line bg-void pb-14 pt-[68px]">
-        <div className="aurora" />
+      {/* ── the opening band ──────────────────────────────────────── */}
+      <section className="relative border-b border-line pt-[68px]">
         <div className="grid-lines absolute inset-0" />
-        <Container wide className="relative z-10 pt-16 sm:pt-24">
-          <Eyebrow accent="teal">Account</Eyebrow>
-          <h1 className="display mt-5 max-w-3xl text-[clamp(2rem,5vw,3.4rem)] text-ink">
-            {profile?.first_name ? `${profile.first_name}, this is you.` : "Your profile."}
-          </h1>
-          <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-dim">
-            What we collected at signup, editable any time, and every run you have started.
-          </p>
+        <Masthead section="Account" status={user ? "Signed in" : "Signed out"} />
+
+        <Container
+          wide
+          className="relative z-10 grid gap-x-16 gap-y-8 py-[clamp(2.5rem,6vh,4.5rem)] lg:grid-cols-[1.15fr_1fr] lg:items-end"
+        >
+          <div>
+            <h1 className="ledger-display rise text-balance text-[clamp(2.2rem,4.8vw,3.8rem)] text-ink">
+              {profile?.first_name ? (
+                <>
+                  {profile.first_name}, <span className="italic text-teal">this is you.</span>
+                </>
+              ) : (
+                <>
+                  Your <span className="italic text-teal">profile.</span>
+                </>
+              )}
+            </h1>
+            <div className="rise rise-1 mt-7 max-w-[48ch] border-t border-line pt-6">
+              <p className="text-pretty text-[16px] leading-[1.7] text-dim">
+                What we collected at signup, editable any time, and every run you
+                have started.
+              </p>
+            </div>
+          </div>
+
+          {/* The identity readout. Facts you cannot edit, so they are set as a ledger rather
+              than as fields you might mistake for one. */}
+          {user && (
+            <dl className="rise rise-2 border border-line bg-[var(--panel)]">
+              <div className="flex items-baseline justify-between gap-4 border-b border-line px-5 py-3.5">
+                <dt className="tick-label">Signed in as</dt>
+                <dd className="min-w-0 truncate text-[13.5px] text-ink">{user.email}</dd>
+              </div>
+              <div className="flex items-baseline justify-between gap-4 border-b border-line px-5 py-3.5">
+                <dt className="tick-label">Role</dt>
+                <dd className="text-[13.5px] text-ink">
+                  {profile?.role ? humanizeId(profile.role) : "Student"}
+                </dd>
+              </div>
+              <div className="flex items-baseline justify-between gap-4 border-b border-line px-5 py-3.5">
+                <dt className="tick-label">Member since</dt>
+                <dd className="num text-[13px] text-ink">
+                  {profile?.created_at
+                    ? new Date(profile.created_at).toLocaleDateString()
+                    : "—"}
+                </dd>
+              </div>
+              <div className="flex items-baseline justify-between gap-4 px-5 py-3.5">
+                <dt className="tick-label">Runs</dt>
+                <dd className="num text-[13px] text-ink">
+                  {runs === null ? "—" : `${runs.length} started · ${completed} closed`}
+                </dd>
+              </div>
+            </dl>
+          )}
         </Container>
       </section>
 
-      <section className="border-b border-line bg-base py-16">
-        <Container wide>
+      {/* ── the sheet ─────────────────────────────────────────────── */}
+      <section className="relative">
+        <Container wide className="relative z-10 py-[clamp(3rem,6vw,5rem)]">
           {!user && (
-            <Panel className="p-8 text-center">
+            <div className="border border-line px-6 py-12 text-center">
               <p className="text-[15px] text-dim">Log in to see your profile.</p>
-              <div className="mt-5 flex justify-center">
+              <div className="mt-6 flex justify-center">
                 <Action href="/login?next=/profile">Log in</Action>
               </div>
-            </Panel>
+            </div>
           )}
 
           {user && loading && <InlineLoading label="Loading your profile…" />}
 
           {user && !loading && loadError && (
-            <p className="rounded-xl border border-rose/30 bg-rose/[0.07] px-4 py-3 text-[13px] text-rose">
+            <p className="border border-ember/40 bg-ember/[0.08] px-4 py-3 text-[13px] text-ember">
               {loadError}
             </p>
           )}
 
           {user && !loading && !loadError && (
-            <div className="grid gap-10 lg:grid-cols-[1fr_360px]">
-              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: easeOut }}>
-                <Panel className="p-6 sm:p-8">
-                  <div className="flex items-center gap-3 border-b border-line pb-5">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal/[0.14]">
-                      <UserIcon className="h-4.5 w-4.5 text-teal" />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="truncate text-[14px] font-medium text-ink">{user.email}</p>
-                      <p className="text-[12px] text-faint">
-                        {profile?.role ? humanizeId(profile.role) : "Student"} · member since{" "}
-                        {profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : "—"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <form onSubmit={onSave} className="mt-7 space-y-7">
-                    <div>
-                      <label className="eyebrow text-faint" htmlFor="profile-first-name">
-                        First name
-                      </label>
-                      <input
-                        id="profile-first-name"
-                        type="text"
-                        maxLength={120}
-                        value={firstName}
-                        onChange={(e) => {
-                          setSaved(false);
-                          setFirstName(e.target.value);
-                        }}
-                        placeholder="What should we call you?"
-                        className="mt-3 w-full rounded-2xl border border-line bg-[var(--field)] px-4 py-3.5 text-[14px] text-ink placeholder:text-faint focus:border-teal/60 focus:outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="eyebrow text-faint" htmlFor="profile-institution">
-                        College / University
-                      </label>
-                      <div className="mt-3">
-                        <InstitutionSelect
-                          id="profile-institution"
-                          value={institution}
-                          onChange={(value) => {
-                            setSaved(false);
-                            setInstitution(value);
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid gap-5 sm:grid-cols-2">
-                      <SelectField
-                        id="profile-degree"
-                        label="Degree / Program"
-                        placeholder="Select your degree"
-                        value={degree}
-                        options={degreeOptions}
-                        onChange={(v) => {
-                          setSaved(false);
-                          setDegree(v);
-                        }}
-                      />
-                      <SelectField
-                        id="profile-year"
-                        label="Current year"
-                        placeholder="Select your year"
-                        value={year}
-                        options={yearOptions}
-                        onChange={(v) => {
-                          setSaved(false);
-                          setYear(v);
-                        }}
-                      />
-                    </div>
-
-                    <fieldset>
-                      <div className="flex flex-wrap items-baseline justify-between gap-2">
-                        <legend className="eyebrow text-faint">What do you want to get better at?</legend>
-                        <span className="text-[12.5px] text-faint">
-                          Choose up to {MAX_GOALS} · {goals.length}/{MAX_GOALS}
-                        </span>
-                      </div>
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {goalOptions.map((goal) => {
-                          const selected = goals.includes(goal);
-                          const blocked = !selected && goals.length >= MAX_GOALS;
-                          return (
-                            <button
-                              key={goal}
-                              type="button"
-                              role="checkbox"
-                              aria-checked={selected}
-                              disabled={blocked}
-                              onClick={() => toggleGoal(goal)}
-                              className={cn(
-                                "rounded-full border px-4 py-2.5 text-[13.5px] transition-colors",
-                                selected
-                                  ? "border-teal/60 bg-teal/[0.14] text-ink"
-                                  : "border-line text-dim hover:border-line-2 hover:text-ink",
-                                blocked && "cursor-not-allowed opacity-40 hover:border-line hover:text-dim",
-                              )}
-                            >
-                              {goal}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </fieldset>
-
-                    {saveError && (
-                      <p className="rounded-xl border border-rose/30 bg-rose/[0.07] px-4 py-3 text-[13px] text-rose">
-                        {saveError}
-                      </p>
-                    )}
-
-                    <div className="flex items-center gap-4">
-                      <Action type="submit" disabled={saving}>
-                        {saving ? <ButtonSpinner /> : <Save className="h-4 w-4" />}
-                        {saving ? "Saving…" : "Save changes"}
-                      </Action>
-                      {saved && <span className="text-[12.5px] text-teal">Saved.</span>}
-                    </div>
-                  </form>
-                </Panel>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.08, ease: easeOut }}
-              >
-                <div className="flex items-baseline justify-between gap-3">
-                  <h2 className="display text-[19px] text-ink">Previous simulations</h2>
-                  {runs && runs.length > 0 && (
-                    <span className="num text-[12px] text-faint">
-                      {runs.length} run{runs.length === 1 ? "" : "s"}
-                    </span>
-                  )}
+            <div className="grid gap-x-16 gap-y-14 lg:grid-cols-[1fr_360px]">
+              {/* ── the editable half ── */}
+              <form onSubmit={onSave}>
+                <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-line pb-3">
+                  <p className="tick-label">Your details</p>
+                  <p className="tick-label">Editable</p>
                 </div>
 
-                <div className="mt-3 space-y-2.5">
-                  {runsError && (
-                    <p className="rounded-xl border border-rose/30 bg-rose/[0.07] px-4 py-3 text-[13px] text-rose">
-                      {runsError}
+                <div className="space-y-8 pt-8">
+                  <Field label="First name">
+                    <input
+                      id="profile-first-name"
+                      type="text"
+                      maxLength={120}
+                      value={firstName}
+                      onChange={(e) => {
+                        setSaved(false);
+                        setFirstName(e.target.value);
+                      }}
+                      placeholder="What should we call you?"
+                      className="w-full border border-line bg-[var(--field)] px-4 py-3.5 text-[14px] text-ink placeholder:text-faint focus:border-teal focus:outline-none"
+                    />
+                  </Field>
+
+                  <Field label="College / University">
+                    <InstitutionSelect
+                      id="profile-institution"
+                      value={institution}
+                      onChange={(value) => {
+                        setSaved(false);
+                        setInstitution(value);
+                      }}
+                    />
+                  </Field>
+
+                  <div className="grid gap-8 sm:grid-cols-2">
+                    <SelectField
+                      id="profile-degree"
+                      label="Degree / Program"
+                      placeholder="Select your degree"
+                      value={degree}
+                      options={degreeOptions}
+                      onChange={(v) => {
+                        setSaved(false);
+                        setDegree(v);
+                      }}
+                    />
+                    <SelectField
+                      id="profile-year"
+                      label="Current year"
+                      placeholder="Select your year"
+                      value={year}
+                      options={yearOptions}
+                      onChange={(v) => {
+                        setSaved(false);
+                        setYear(v);
+                      }}
+                    />
+                  </div>
+
+                  <fieldset>
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <legend className="tick-label">What do you want to get better at?</legend>
+                      <span className="num text-[11.5px] text-faint">
+                        {goals.length}/{MAX_GOALS}
+                      </span>
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {goalOptions.map((goal) => {
+                        const selected = goals.includes(goal);
+                        const blocked = !selected && goals.length >= MAX_GOALS;
+                        return (
+                          <button
+                            key={goal}
+                            type="button"
+                            role="checkbox"
+                            aria-checked={selected}
+                            disabled={blocked}
+                            onClick={() => toggleGoal(goal)}
+                            className={cn(
+                              "border px-4 py-2.5 text-[13.5px] transition-colors duration-200",
+                              selected
+                                ? "border-teal bg-teal/[0.12] text-ink"
+                                : "border-line text-dim hover:border-line-2 hover:text-ink",
+                              blocked && "cursor-not-allowed opacity-40 hover:border-line hover:text-dim",
+                            )}
+                          >
+                            {goal}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </fieldset>
+
+                  {saveError && (
+                    <p className="border border-ember/40 bg-ember/[0.08] px-4 py-3 text-[13px] text-ember">
+                      {saveError}
                     </p>
                   )}
 
-                  {!runsError && runs === null && <p className="text-[13px] text-dim">Loading…</p>}
-
-                  {!runsError && runs && runs.length === 0 && (
-                    <Panel className="p-6 text-center">
-                      <p className="text-[13.5px] text-dim">No simulations started yet.</p>
-                      <div className="mt-4 flex justify-center">
-                        <Action href="/simulations" variant="outline">
-                          Start one <ArrowRight className="h-3.5 w-3.5" />
-                        </Action>
-                      </div>
-                    </Panel>
-                  )}
-
-                  {!runsError &&
-                    runs &&
-                    runs.map((run) => (
-                      <Link
-                        key={run.id}
-                        href={runHref(run.seq)}
-                        className="block rounded-2xl border border-line bg-raise/40 px-4 py-3.5 transition-colors hover:border-line-2 hover:bg-[var(--panel-2)]"
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="truncate text-[13.5px] font-medium text-ink">{run.name}</span>
-                          <Pill accent={RUN_STATUS_ACCENT[run.run_status]}>
-                            {RUN_STATUS_LABEL[run.run_status]}
-                          </Pill>
-                        </div>
-                        <div className="mt-1.5 flex items-center justify-between text-[11.5px] text-faint">
-                          <span>
-                            Quarter {run.quarters_locked} / {run.total_quarters}
-                          </span>
-                          {run.latest_ceo_score != null && (
-                            <span>
-                              score {formatDecimal(run.latest_ceo_score, 1)}
-                              {run.latest_band ? ` · ${humanizeId(run.latest_band)}` : ""}
-                            </span>
-                          )}
-                        </div>
-                      </Link>
-                    ))}
+                  <div className="flex items-center gap-4 border-t border-line pt-7">
+                    <Action type="submit" disabled={saving}>
+                      {saving ? <ButtonSpinner /> : <Save className="h-4 w-4" />}
+                      {saving ? "Saving…" : "Save changes"}
+                    </Action>
+                    {saved && <span className="tick-label text-teal">Saved</span>}
+                  </div>
                 </div>
-              </motion.div>
+              </form>
+
+              {/* ── the record ── */}
+              <div>
+                <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-line pb-3">
+                  <p className="tick-label">Previous simulations</p>
+                  {runs && runs.length > 0 && (
+                    <p className="num text-[11.5px] text-faint">
+                      {runs.length} run{runs.length === 1 ? "" : "s"}
+                    </p>
+                  )}
+                </div>
+
+                {runsError && (
+                  <p className="mt-4 border border-ember/40 bg-ember/[0.08] px-4 py-3 text-[13px] text-ember">
+                    {runsError}
+                  </p>
+                )}
+
+                {!runsError && runs === null && (
+                  <p className="py-5 text-[13px] text-dim">Loading…</p>
+                )}
+
+                {!runsError && runs && runs.length === 0 && (
+                  <div className="border-b border-line px-1 py-8 text-center">
+                    <p className="text-[13.5px] text-dim">No simulations started yet.</p>
+                    <div className="mt-5 flex justify-center">
+                      <Action href="/simulations" variant="outline">
+                        Start one <ArrowRight className="h-3.5 w-3.5" />
+                      </Action>
+                    </div>
+                  </div>
+                )}
+
+                {!runsError &&
+                  runs &&
+                  runs.map((run) => (
+                    <Link
+                      key={run.id}
+                      href={runHref(run.seq)}
+                      className="block border-b border-line px-1 py-4 transition-colors duration-200 hover:bg-[var(--panel)]"
+                    >
+                      <div className="flex items-baseline justify-between gap-3">
+                        <span className="min-w-0 truncate text-[14px] text-ink">{run.name}</span>
+                        <span
+                          className={cn(
+                            "tick-label shrink-0",
+                            RUN_STATUS_TONE[run.run_status],
+                          )}
+                        >
+                          {RUN_STATUS_LABEL[run.run_status]}
+                        </span>
+                      </div>
+                      <div className="mt-2 flex items-baseline justify-between gap-3">
+                        <span className="num text-[11.5px] text-faint">
+                          Q{run.quarters_locked}/{run.total_quarters}
+                        </span>
+                        {run.latest_ceo_score != null && (
+                          <span className="num text-[11.5px] text-dim">
+                            {formatDecimal(run.latest_ceo_score, 1)}
+                            {run.latest_band ? ` · ${humanizeId(run.latest_band)}` : ""}
+                          </span>
+                        )}
+                      </div>
+                    </Link>
+                  ))}
+              </div>
             </div>
           )}
         </Container>

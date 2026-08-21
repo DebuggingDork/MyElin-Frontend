@@ -1039,6 +1039,20 @@ body {
   border-radius: 2px;
 }
 
+/* Form controls follow the same geometry. Signup and login are outside `.ledger` and keep
+   their rounded fields, so the shared controls are squared here rather than forked: an
+   account page built from hairline rules cannot hold 16px-radius inputs and still read as
+   one sheet. `.institution-*` are the two containers in `InstitutionSelect` that are divs
+   rather than form elements. */
+.ledger input,
+.ledger select,
+.ledger textarea,
+.ledger .institution-field,
+.ledger .institution-menu,
+.ledger .institution-menu button {
+  border-radius: 2px;
+}
+
 /* ── the page's structural vocabulary ─────────────────────────────────────
    One rule weight, used everywhere, is what makes a ruled layout read as
    designed rather than as boxes that happen to have borders. */

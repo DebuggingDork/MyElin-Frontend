@@ -94,7 +94,7 @@ export function InstitutionSelect({
 
   if (value) {
     return (
-      <div className="flex items-center gap-3 rounded-2xl border border-line bg-[var(--panel-2)] px-4 py-3.5">
+      <div className="institution-field flex items-center gap-3 rounded-2xl border border-line bg-[var(--panel-2)] px-4 py-3.5">
         <GraduationCap className="h-4 w-4 shrink-0 text-teal" />
         <span className="min-w-0 flex-1 truncate text-[14.5px] text-ink">
           {value.name}
@@ -150,7 +150,7 @@ export function InstitutionSelect({
         <ul
           id={listId}
           role="listbox"
-          className="absolute z-30 mt-2 max-h-64 w-full overflow-y-auto rounded-2xl border border-line bg-void p-1.5 shadow-[0_24px_60px_rgba(0,0,0,0.45)]"
+          className="institution-menu absolute z-30 mt-2 max-h-64 w-full overflow-y-auto rounded-2xl border border-line bg-void p-1.5 shadow-[0_24px_60px_rgba(0,0,0,0.45)]"
         >
           {results.map((institution, i) => (
             <li key={institution.id}>
