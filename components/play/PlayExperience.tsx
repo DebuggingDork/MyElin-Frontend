@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Loader2, Plus } from "lucide-react";
+import { ArrowRight, Plus } from "lucide-react";
 import { EntryGate } from "@/components/play/EntryGate";
 import { NewspaperStory } from "@/components/play/NewspaperStory";
 import { NewspaperKpi } from "@/components/play/NewspaperKpi";
@@ -13,6 +13,7 @@ import { asNumber } from "@/lib/api/catalog";
 import { ApiError, type CompanyListItem } from "@/lib/api/types";
 import type { Scenario } from "@/lib/play/types";
 import { Action, Pill } from "@/components/ui/Kit";
+import { PageLoading } from "@/components/ui/Loading";
 
 type Phase = "rules" | "picker" | "story" | "kpi";
 
@@ -35,14 +36,20 @@ export function PlayExperience({ scenario }: { scenario: Scenario }) {
   const [starting, setStarting] = useState(false);
   const [runs, setRuns] = useState<CompanyListItem[] | null>(null);
 
+  /**
+   * Authentication gates the whole sequence, not just the part that talks to the API.
+   *
+   * This used to skip the `rules` phase, so a signed-out visitor accepted all four terms,
+   * reached the picker, and only then got bounced to login -- and came back to the same four
+   * terms, because the gate is where the sequence starts. Nothing below the gate can be
+   * committed without an account anyway, so the redirect belongs before it: the cost of
+   * answering is only ever paid once, and no run is created against a session that does not
+   * exist yet.
+   */
   useEffect(() => {
-    if (phase === "rules" || !ready) return;
-    if (!user) {
-      router.replace(
-        `/login?next=${encodeURIComponent(`/play/${scenario.id}`)}`,
-      );
-    }
-  }, [phase, ready, user, router, scenario.id]);
+    if (!ready || user) return;
+    router.replace(`/login?next=${encodeURIComponent(`/play/${scenario.id}`)}`);
+  }, [ready, user, router, scenario.id]);
 
   const loadRuns = useCallback(async () => {
     try {
@@ -115,16 +122,36 @@ export function PlayExperience({ scenario }: { scenario: Scenario }) {
     router.replace(runHref(run.seq));
   }
 
+  /* Session first, and the gate is never rendered without one -- see the redirect above. The
+     signed-out branch is a hand-off, not a wait, so it says where the reader is going. */
+  if (!ready) {
+    return (
+      <Shade>
+        <PageLoading label="Checking your session…" />
+      </Shade>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Shade>
+        <PageLoading
+          label="Taking you to sign in…"
+          sub="The simulation opens straight after."
+        />
+      </Shade>
+    );
+  }
+
   if (phase === "rules") {
     return <EntryGate scenario={scenario} onEnter={() => setPhase("picker")} />;
   }
 
-  if (!ready || !user || runs === null) {
+  if (runs === null) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-void text-dim">
-        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-        {!ready || !user ? "Checking session…" : "Loading your runs…"}
-      </div>
+      <Shade>
+        <PageLoading label="Loading your runs…" sub="Checking what you already own." />
+      </Shade>
     );
   }
 
@@ -172,6 +199,13 @@ export function PlayExperience({ scenario }: { scenario: Scenario }) {
         </p>
       </div>
     </div>
+  );
+}
+
+/** The dark ground every pre-run screen sits on. */
+function Shade({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-void text-ink">{children}</div>
   );
 }
 

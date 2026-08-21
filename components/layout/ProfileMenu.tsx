@@ -39,6 +39,7 @@ import { ApiError } from "@/lib/api/types";
 import { Pill, type Accent } from "@/components/ui/Kit";
 import { humanizeId } from "@/lib/format/display";
 import { cn } from "@/lib/utils";
+import { useSimulationHref } from "@/components/play/entry";
 
 const RUN_STATUS_LABEL: Record<RunStatus, string> = {
   active: "Active",
@@ -131,6 +132,7 @@ function Row({
 }
 
 export function ProfileMenu() {
+  const simulationHref = useSimulationHref();
 
   const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
@@ -292,7 +294,7 @@ export function ProfileMenu() {
             >
               Completed
             </Row>
-            <Row href="/play/startup-survival" icon={Plus} onSelect={close}>
+            <Row href={simulationHref} icon={Plus} onSelect={close}>
               New simulation
             </Row>
           </Section>

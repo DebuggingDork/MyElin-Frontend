@@ -27,6 +27,7 @@ import { ApiError } from "@/lib/api/types";
 import { formatDecimal, humanizeId } from "@/lib/format/display";
 import { Action, Container, Eyebrow, Meter, Panel, Pill, type Accent } from "@/components/ui/Kit";
 import { cn } from "@/lib/utils";
+import { useSimulationHref } from "@/components/play/entry";
 
 const RUN_STATUS_LABEL: Record<RunStatus, string> = {
   active: "Active",
@@ -64,6 +65,7 @@ function isFilterId(value: string | null): value is FilterId {
 }
 
 export function MyRuns() {
+  const simulationHref = useSimulationHref();
 
   const { user, ready } = useAuth();
   const router = useRouter();
@@ -126,7 +128,7 @@ export function MyRuns() {
             new one.
           </p>
           <div className="mt-8">
-            <Action href="/play/startup-survival">
+            <Action href={simulationHref}>
               <Plus className="h-4 w-4" />
               New simulation
             </Action>
@@ -197,7 +199,7 @@ export function MyRuns() {
                       : "Nothing in this state yet."}
                   </p>
                   <div className="mt-5 flex justify-center">
-                    <Action href="/play/startup-survival" variant="outline">
+                    <Action href={simulationHref} variant="outline">
                       <Play className="h-3.5 w-3.5" />
                       Start one
                     </Action>

@@ -13,6 +13,7 @@ import { runHref } from "@/lib/run/ref";
 import { ApiError } from "@/lib/api/types";
 import { Action, Container, Eyebrow, Panel, Pill, type Accent } from "@/components/ui/Kit";
 import { cn } from "@/lib/utils";
+import { useSimulationHref } from "@/components/play/entry";
 
 const STATUS_ACCENT: Record<string, Accent> = {
   active: "teal",
@@ -44,6 +45,8 @@ type Storyline = { scenarioId: string; runs: CompanyListItem[] };
  * previous version did, headed "Top operators") stated something the API cannot support.
  */
 export function Leaderboard() {
+  const simulationHref = useSimulationHref();
+
   const { user, ready } = useAuth();
   const [storylines, setStorylines] = useState<Storyline[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -139,7 +142,7 @@ export function Leaderboard() {
                 No runs yet. Finish a quarter and it lands here.
               </p>
               <div className="mt-5 flex justify-center">
-                <Action href="/play/startup-survival">
+                <Action href={simulationHref}>
                   Start a run <ArrowRight className="h-4 w-4" />
                 </Action>
               </div>

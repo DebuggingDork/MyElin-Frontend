@@ -17,6 +17,7 @@ import { api, getToken } from "@/lib/api/client";
 import { runHref } from "@/lib/run/ref";
 import type { CompanyListItem } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { useSimulationHref } from "@/components/play/entry";
 import {
   Action,
   Container,
@@ -128,6 +129,8 @@ const shelfStats = [
 ];
 
 export function Simulations() {
+  const simulationHref = useSimulationHref();
+
   const [filter, setFilter] = useState<(typeof filters)[number]>("All");
 
   /**
@@ -211,7 +214,7 @@ export function Simulations() {
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                   </Action>
                 ) : (
-                  <Action href="/play/startup-survival" size="lg">
+                  <Action href={simulationHref} size="lg">
                     <Play className="h-4 w-4" />
                     Run the live case
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -426,6 +429,7 @@ function ScenarioCard({
   scenario: Scenario;
   delay: number;
 }) {
+  const simulationHref = useSimulationHref();
   const color = accentVar[scenario.accent];
   const isLive = scenario.status === "LIVE";
   const badge = statusAccent[scenario.status];
@@ -509,7 +513,7 @@ function ScenarioCard({
 
       <div className="mt-auto flex items-center justify-between gap-3 px-6 py-5">
         {isLive ? (
-          <Action href="/play/startup-survival" className="w-full">
+          <Action href={simulationHref} className="w-full">
             Play →
           </Action>
         ) : (

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Minus, Plus } from "lucide-react";
 import { easeOut } from "@/lib/media";
+import { useSimulationHref } from "@/components/play/entry";
 import {
   Action,
   Container,
@@ -58,6 +59,8 @@ const faqs: FaqItem[] = [
 ];
 
 export function Faq() {
+  const simulationHref = useSimulationHref();
+
   const [open, setOpen] = useState(0);
 
   return (
@@ -225,7 +228,7 @@ export function Faq() {
               </div>
               <div className="flex flex-wrap gap-3">
                 <Action href="/#institutions">Request access</Action>
-                <Action href="/play/startup-survival" variant="outline">
+                <Action href={simulationHref} variant="outline">
                   Play Startup Survival
                 </Action>
               </div>

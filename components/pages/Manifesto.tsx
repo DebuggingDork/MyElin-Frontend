@@ -11,6 +11,7 @@ import {
   Scale,
 } from "lucide-react";
 import { easeOut } from "@/lib/media";
+import { useSimulationHref } from "@/components/play/entry";
 import {
   Action,
   Container,
@@ -67,6 +68,8 @@ const principles: Principle[] = [
 ];
 
 export function Manifesto() {
+  const simulationHref = useSimulationHref();
+
   return (
     <>
       <section className="relative overflow-hidden border-b border-line bg-void pb-16 pt-[68px]">
@@ -247,7 +250,7 @@ export function Manifesto() {
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
-                <Action href="/play/startup-survival" size="lg">
+                <Action href={simulationHref} size="lg">
                   Run a simulation
                   <ArrowRight className="h-4 w-4" />
                 </Action>

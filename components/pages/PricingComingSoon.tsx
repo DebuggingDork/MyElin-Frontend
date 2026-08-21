@@ -4,11 +4,14 @@ import { motion } from "framer-motion";
 import { ArrowRight, Clock, Play } from "lucide-react";
 import { easeOut } from "@/lib/media";
 import { Action, Container, Eyebrow, Panel, Pill } from "@/components/ui/Kit";
+import { useSimulationHref } from "@/components/play/entry";
 
 /** Placeholder for `/pricing`. The plan tables were pulled before launch — the route stays
  *  alive so the footer, the simulations CTA and any shared links land somewhere honest
  *  instead of a 404. Restore the tiered version from git history when pricing is set. */
 export function PricingComingSoon() {
+  const simulationHref = useSimulationHref();
+
   return (
     <section className="relative flex min-h-[calc(100svh-68px)] items-center overflow-hidden bg-void pt-[68px]">
       <div className="aurora" />
@@ -47,7 +50,7 @@ export function PricingComingSoon() {
             Create your account
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </Action>
-          <Action href="/play/startup-survival" variant="outline" size="lg">
+          <Action href={simulationHref} variant="outline" size="lg">
             <Play className="h-4 w-4" />
             Run the live case
           </Action>
