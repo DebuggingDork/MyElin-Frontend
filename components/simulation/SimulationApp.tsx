@@ -835,14 +835,16 @@ export function SimulationApp() {
                     the viewport width during render, which the server cannot do.
 
                     Both unmount rather than hide, so the row's `gap-3` closes up behind them
-                    and nothing is holding space for a button that is not there. */}
+                    and nothing is holding space for a button that is not there. That is also
+                    why the fade is an entry animation and not a transition -- there is no
+                    element left to transition once it is gone. */}
                 {showNav && !navOpen && (
                   <button
                     type="button"
                     onClick={openNav}
                     aria-expanded={false}
                     aria-label="Open departments"
-                    className="hidden shrink-0 items-center gap-1.5 border border-line-2 px-2 py-1 text-xs uppercase tracking-widest text-dim transition-colors hover:text-white lg:inline-flex"
+                    className="dept-trigger hidden shrink-0 items-center gap-1.5 border border-line-2 px-2 py-1 text-xs uppercase tracking-widest text-dim transition-colors hover:text-white lg:inline-flex"
                   >
                     <PanelLeftOpen className="h-3.5 w-3.5" />
                     <span className="hidden sm:inline">Departments</span>
@@ -854,7 +856,7 @@ export function SimulationApp() {
                     onClick={() => setMobileNavOpen(true)}
                     aria-expanded={false}
                     aria-label="Open departments"
-                    className="inline-flex shrink-0 items-center gap-1.5 border border-line-2 px-2 py-1 text-xs uppercase tracking-widest text-dim transition-colors hover:text-white lg:hidden"
+                    className="dept-trigger inline-flex shrink-0 items-center gap-1.5 border border-line-2 px-2 py-1 text-xs uppercase tracking-widest text-dim transition-colors hover:text-white lg:hidden"
                   >
                     <PanelLeftOpen className="h-3.5 w-3.5" />
                     <span className="hidden sm:inline">Departments</span>
