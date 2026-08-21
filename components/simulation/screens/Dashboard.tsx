@@ -14,6 +14,10 @@ import {
 import { BUFFER, PRIORITY_BY_ID, QUARTER_BRIEFS } from "@/lib/simulation/constants";
 import { cr, inr, n0, n1, pct } from "@/lib/simulation/format";
 import {
+  CHART_AXIS,
+  CHART_GRID,
+  CHART_RISE,
+  CHART_FALL,
   Eyebrow,
   HealthPanel,
   Inbox,
@@ -66,6 +70,10 @@ export function DashboardScreen({
     units: Math.round(v(h, "unitsSold")),
     demand: Math.round(v(h, "mktDemand")),
   }));
+  // Same rule the closed-quarter charts use: the line is green when share ended the window
+  // above where it started, red when it did not.
+  const shareTone =
+    chart.length >= 2 && chart[chart.length - 1].share < chart[0].share ? CHART_FALL : CHART_RISE;
 
   return (
     <div className="space-y-5">
@@ -140,17 +148,26 @@ export function DashboardScreen({
           <div className="h-52 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chart} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                <CartesianGrid stroke="#e7e5e4" strokeDasharray="2 4" />
-                <XAxis dataKey="q" stroke="#78716c" fontSize={12} />
-                <YAxis stroke="#78716c" fontSize={11} unit="%" />
-                <Tooltip contentStyle={{ fontFamily: "monospace", fontSize: 12, borderColor: "#d6d3d1" }} />
+                <CartesianGrid stroke={CHART_GRID} strokeDasharray="2 4" />
+                <XAxis dataKey="q" stroke={CHART_AXIS} fontSize={12} tickLine={false} />
+                <YAxis stroke={CHART_AXIS} fontSize={11} width={62} tickLine={false} unit="%" />
+                <Tooltip
+                  contentStyle={{
+                    fontFamily: "monospace",
+                    fontSize: 12,
+                    borderColor: CHART_GRID,
+                    background: "var(--raise)",
+                    color: "var(--text)",
+                  }}
+                />
                 <Line
                   type="monotone"
                   dataKey="share"
                   name="Market share %"
-                  stroke="#9f1239"
+                  stroke={shareTone}
                   strokeWidth={2}
-                  dot={{ r: 3 }}
+                  dot={{ r: 3, fill: shareTone, strokeWidth: 0 }}
+                  activeDot={{ r: 5 }}
                 />
               </LineChart>
             </ResponsiveContainer>
