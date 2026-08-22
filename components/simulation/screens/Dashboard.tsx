@@ -50,7 +50,6 @@ export function DashboardScreen({
   inbox,
   priority,
   budget,
-  onGo,
 }: {
   s: CompanyState;
   history: QuarterResultShape[];
@@ -60,7 +59,6 @@ export function DashboardScreen({
   inbox: InboxMessage[];
   priority: PriorityId | null;
   budget: Budget;
-  onGo: () => void;
 }) {
   const last = history[history.length - 1];
   const runway = last && v(last, "netCF") < 0 ? s.cash / -v(last, "netCF") : 99;
@@ -190,10 +188,6 @@ export function DashboardScreen({
           <TeachingNote id="rivals" />
         </Panel>
       )}
-
-      <button onClick={onGo} className="w-full bg-chrome text-white py-4 font-serif text-xl hover:bg-danger-deep">
-        Go to review and close the quarter
-      </button>
     </div>
   );
 }
