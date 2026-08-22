@@ -11,6 +11,7 @@ import { easeOut } from "@/lib/media";
 import type { InstitutionRef } from "@/lib/institutions";
 import {
   MAX_GOALS,
+  OTHER_OPTION,
   degreeOptions,
   goalOptions,
   saveProfile,
@@ -175,9 +176,6 @@ export function OnboardingProfile({
     </AuthShell>
   );
 }
-
-/** The row every picker ends with: not an answer, a way in for the one the list is missing. */
-export const OTHER_OPTION = "Others";
 
 /**
  * A single-choice picker, drawn by us rather than by the browser.

@@ -12,6 +12,13 @@ import type { InstitutionRef } from "@/lib/institutions";
 
 const PROFILE_KEY = "myelin_profile";
 
+/**
+ * The row every picker in the signup flow ends with: not an answer in itself, the way in for
+ * the one the list is missing. Selecting it opens a text field, and what gets typed there is
+ * what the profile stores — this string is never submitted.
+ */
+export const OTHER_OPTION = "Others";
+
 export const goalOptions = [
   "Decision-making",
   "Strategic thinking",

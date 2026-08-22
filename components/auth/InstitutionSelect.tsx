@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { Check, GraduationCap, Search, X } from "lucide-react";
+import { Check, GraduationCap, Pencil, Search, X } from "lucide-react";
 import {
   customInstitution,
   searchInstitutions,
   type InstitutionRef,
 } from "@/lib/institutions";
+import { OTHER_OPTION } from "@/lib/profile";
 import { cn } from "@/lib/utils";
 
 /**
@@ -16,6 +17,11 @@ import { cn } from "@/lib/utils";
  * schools), so selection is what commits a value — typing alone never does. Someone whose
  * college genuinely isn't listed can still commit their own, but it's stored `verified: false`
  * so those rows can be reconciled later instead of silently polluting the counts.
+ *
+ * There are two ways to reach that: the "Use …" row, which turns what has already been typed
+ * into the search box into an entry, and the `OTHER_OPTION` row the list always ends with,
+ * which opens a plain text field for people who never got a match worth typing towards. The
+ * two agree on the outcome — a `customInstitution`, never the literal word "Others".
  */
 export function InstitutionSelect({
   value,
@@ -33,7 +39,11 @@ export function InstitutionSelect({
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
+  // "Others" mode: the search box is replaced by a field that asks for the name outright.
+  const [manual, setManual] = useState(false);
+  const [manualName, setManualName] = useState("");
   const wrapRef = useRef<HTMLDivElement>(null);
+  const manualRef = useRef<HTMLInputElement>(null);
 
   const results = useMemo(() => searchInstitutions(query), [query]);
   const trimmed = query.trim();
@@ -42,7 +52,9 @@ export function InstitutionSelect({
   const canAddCustom =
     trimmed.length >= 3 &&
     !results.some((r) => r.name.toLowerCase() === trimmed.toLowerCase());
-  const optionCount = results.length + (canAddCustom ? 1 : 0);
+  // The last row is always "Others", so the list is never a dead end.
+  const otherIndex = results.length + (canAddCustom ? 1 : 0);
+  const optionCount = otherIndex + 1;
 
   useEffect(() => {
     if (!open) return;
@@ -53,6 +65,11 @@ export function InstitutionSelect({
     return () => document.removeEventListener("mousedown", onPointerDown);
   }, [open]);
 
+  // Asking for the name and then leaving the caret somewhere else is asking twice.
+  useEffect(() => {
+    if (manual) manualRef.current?.focus();
+  }, [manual]);
+
   function commit(next: InstitutionRef) {
     onChange(next);
     setQuery("");
@@ -60,12 +77,25 @@ export function InstitutionSelect({
     setActive(0);
   }
 
+  /** Hand over to the text field, carrying anything already typed rather than dropping it. */
+  function startManual() {
+    setManual(true);
+    setOpen(false);
+    setQuery("");
+    setActive(0);
+    setManualName(trimmed);
+    // Commit as we go, so an abandoned form still carries what is on screen.
+    onChange(trimmed ? customInstitution(trimmed) : null);
+  }
+
   function commitIndex(index: number) {
     if (index < results.length) {
       const hit = results[index];
       commit({ id: hit.id, name: hit.name, verified: true });
-    } else if (canAddCustom) {
+    } else if (canAddCustom && index === results.length) {
       commit(customInstitution(trimmed));
+    } else {
+      startManual();
     }
   }
 
@@ -76,20 +106,68 @@ export function InstitutionSelect({
         setOpen(true);
         return;
       }
-      if (optionCount === 0) return;
       setActive((i) =>
         event.key === "ArrowDown"
           ? (i + 1) % optionCount
           : (i - 1 + optionCount) % optionCount,
       );
     } else if (event.key === "Enter") {
-      if (open && optionCount > 0) {
+      if (open) {
         event.preventDefault();
         commitIndex(active);
       }
     } else if (event.key === "Escape") {
       setOpen(false);
     }
+  }
+
+  // ── "Others": name it yourself ──────────────────────────────────────────
+  // Takes precedence over the chip below, because the value is being typed *into* this field;
+  // it is already committed on every keystroke, and Enter is only what puts the chip back.
+  if (manual) {
+    return (
+      <div className="relative">
+        <Pencil className="pointer-events-none absolute left-4 top-[1.15rem] h-4 w-4 -translate-y-1/2 text-teal" />
+        <input
+          ref={manualRef}
+          id={inputId}
+          type="text"
+          autoComplete="off"
+          maxLength={255}
+          value={manualName}
+          onChange={(e) => {
+            const next = e.target.value;
+            setManualName(next);
+            onChange(next.trim() ? customInstitution(next) : null);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && manualName.trim()) {
+              event.preventDefault();
+              setManual(false);
+            } else if (event.key === "Escape") {
+              event.preventDefault();
+              setManual(false);
+              setManualName("");
+              onChange(null);
+            }
+          }}
+          placeholder="Enter your institution name"
+          className="w-full rounded-2xl border border-line bg-[var(--panel-2)] py-3.5 pl-11 pr-11 text-[14.5px] text-ink outline-none transition-colors placeholder:text-faint focus:border-teal/60"
+        />
+        <button
+          type="button"
+          onClick={() => {
+            setManual(false);
+            setManualName("");
+            onChange(null);
+          }}
+          aria-label="Back to the institution list"
+          className="absolute right-4 top-[1.15rem] -translate-y-1/2 rounded-full p-1 text-faint transition-colors hover:text-ink"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+    );
   }
 
   if (value) {
@@ -127,9 +205,7 @@ export function InstitutionSelect({
         aria-expanded={open}
         aria-controls={listId}
         aria-autocomplete="list"
-        aria-activedescendant={
-          open && optionCount > 0 ? `${inputId}-option-${active}` : undefined
-        }
+        aria-activedescendant={open ? `${inputId}-option-${active}` : undefined}
         autoComplete="off"
         maxLength={255}
         value={query}
@@ -201,11 +277,31 @@ export function InstitutionSelect({
             </li>
           )}
 
-          {optionCount === 0 && (
+          {results.length === 0 && !canAddCustom && (
             <li className="px-3 py-3 text-[13.5px] text-faint">
               No match — keep typing your institution&apos;s full name.
             </li>
           )}
+
+          <li>
+            <button
+              type="button"
+              id={`${inputId}-option-${otherIndex}`}
+              role="option"
+              aria-selected={otherIndex === active}
+              onMouseEnter={() => setActive(otherIndex)}
+              onClick={() => commitIndex(otherIndex)}
+              className={cn(
+                "flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[14px] transition-colors",
+                otherIndex === active ? "bg-[var(--panel-2)] text-ink" : "text-dim",
+              )}
+            >
+              <Pencil className="h-3.5 w-3.5 shrink-0 text-teal" />
+              <span className="min-w-0 flex-1 truncate">
+                {OTHER_OPTION} — type my institution
+              </span>
+            </button>
+          </li>
         </ul>
       )}
     </div>
