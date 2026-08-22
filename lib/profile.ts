@@ -46,9 +46,15 @@ export const degreeOptions = [
   "MCA",
   "MA",
   "PhD",
-  "Other",
 ] as const;
 
+/**
+ * The trailing "Other" row is gone from the list above on purpose: it was a dead end that
+ * stored the literal string "Other" and told the directory nothing. Every picker now appends
+ * its own `OTHER_OPTION` row, which opens a text field and stores what the student types.
+ * A profile saved with the old literal still loads — the picker reads any value outside the
+ * list as a custom one and drops it into that field, ready to be corrected.
+ */
 export const yearOptions = [
   "1st Year",
   "2nd Year",

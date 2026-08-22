@@ -176,6 +176,9 @@ export function OnboardingProfile({
   );
 }
 
+/** The row every picker ends with: not an answer, a way in for the one the list is missing. */
+export const OTHER_OPTION = "Others";
+
 /**
  * A single-choice picker, drawn by us rather than by the browser.
  *
@@ -187,6 +190,10 @@ export function OnboardingProfile({
  * So the menu is ours: same hairline geometry as `InstitutionSelect` next to it in the same
  * form, same keyboard contract (arrows, Enter, Escape, click-outside), and it flips above the
  * field when there is more room up there than down.
+ *
+ * Every list ends with `OTHER_OPTION`, which opens a text field underneath rather than
+ * answering anything itself: what gets typed there *is* the value the form submits, and the
+ * literal string "Others" is never stored.
  */
 export function SelectField({
   id,
@@ -195,6 +202,7 @@ export function SelectField({
   value,
   options,
   onChange,
+  customNoun,
 }: {
   id: string;
   label: string;
@@ -202,20 +210,40 @@ export function SelectField({
   value: string;
   options: readonly string[];
   onChange: (value: string) => void;
+  /**
+   * What the manual field asks for — lowercase, singular, no article ("degree", "year").
+   * It writes both the placeholder and the error, so the field reads "Enter your degree"
+   * rather than a generic "Enter value". Falls back to the label when a caller omits it.
+   */
+  customNoun?: string;
 }) {
   const generatedId = useId();
   const fieldId = id ?? generatedId;
   const listId = `${fieldId}-listbox`;
+  const noun = (customNoun ?? label).toLowerCase();
 
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const [dropUp, setDropUp] = useState(false);
+  const [otherPicked, setOtherPicked] = useState(false);
+  const [touched, setTouched] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
+  const customRef = useRef<HTMLInputElement>(null);
+
+  // Anything held that the list does not offer is a custom answer — including one loaded from
+  // a saved profile, which is what reopens the text field with the value already in it. It is
+  // held alongside `otherPicked` so the field survives someone typing an answer that happens
+  // to match a row, and so it is on screen before a single character is typed.
+  const isCustomValue = value !== "" && !options.includes(value);
+  const other = otherPicked || isCustomValue;
+  // Every field here is optional, so an empty custom box is only wrong once it has been left.
+  const missingCustom = other && touched && value.trim() === "";
 
   // The placeholder is a row like any other, so the choice can be taken back without
-  // reaching for a separate clear control.
-  const rows = useMemo(() => ["", ...options], [options]);
+  // reaching for a separate clear control; `OTHER_OPTION` closes the list at the far end.
+  const rows = useMemo(() => ["", ...options, OTHER_OPTION], [options]);
+  const otherRow = rows.length - 1;
 
   useEffect(() => {
     if (!open) return;
@@ -235,6 +263,13 @@ export function SelectField({
       ?.scrollIntoView({ block: "nearest" });
   }, [open, active, fieldId]);
 
+  // Choosing "Others" is only half an answer, so put the caret where the other half goes.
+  // Keyed off the deliberate pick and never off a value restored from a saved profile —
+  // that one would steal focus on load.
+  useEffect(() => {
+    if (otherPicked) customRef.current?.focus();
+  }, [otherPicked]);
+
   function show() {
     const box = wrapRef.current?.getBoundingClientRect();
     if (box) {
@@ -242,13 +277,23 @@ export function SelectField({
       // 264px is the menu at its tallest. Open upward only when down is genuinely tighter.
       setDropUp(below < 264 && box.top > below);
     }
-    setActive(Math.max(0, rows.indexOf(value)));
+    setActive(other ? otherRow : Math.max(0, rows.indexOf(value)));
     setOpen(true);
   }
 
   function commit(index: number) {
-    onChange(rows[index] ?? "");
     setOpen(false);
+    if (index === otherRow) {
+      setOtherPicked(true);
+      // Whatever listed answer was there is dropped: "Others" is not itself an answer, and
+      // keeping the old one would submit a value the control no longer shows.
+      if (!isCustomValue) onChange("");
+      return;
+    }
+    // Back to a listed answer — the typed one goes with the field that held it.
+    setOtherPicked(false);
+    setTouched(false);
+    onChange(rows[index] ?? "");
   }
 
   function onKeyDown(event: React.KeyboardEvent<HTMLButtonElement>) {
@@ -297,10 +342,12 @@ export function SelectField({
             "border border-line py-3.5 pl-4 pr-4 text-left text-[14.5px] outline-none",
             "transition-colors hover:border-line-2 focus-visible:border-teal",
             open && "border-teal",
-            value ? "text-ink" : "text-faint",
+            value || other ? "text-ink" : "text-faint",
           )}
         >
-          <span className="min-w-0 truncate">{value || placeholder}</span>
+          <span className="min-w-0 truncate">
+            {other ? OTHER_OPTION : value || placeholder}
+          </span>
           <ChevronDown
             className={cn(
               "h-4 w-4 shrink-0 text-faint transition-transform duration-200",
@@ -324,9 +371,10 @@ export function SelectField({
             )}
           >
             {rows.map((option, i) => {
-              const selected = option === value;
+              const isOtherRow = i === otherRow;
+              const selected = isOtherRow ? other : !other && option === value;
               return (
-                <li key={option || "__placeholder"}>
+                <li key={isOtherRow ? "__other" : option || "__placeholder"}>
                   <button
                     type="button"
                     id={`${fieldId}-option-${i}`}
@@ -354,6 +402,40 @@ export function SelectField({
           </ul>
         )}
       </div>
+
+      {/* The other half of an "Others" answer. Same surface, radius and focus colour as the
+          fields above it, so it reads as part of the form rather than as a thing that
+          appeared; `.ledger` squares it off with the rest on the account page. */}
+      {other && (
+        <div className="mt-3">
+          <label className="sr-only" htmlFor={`${fieldId}-custom`}>
+            Enter your {noun}
+          </label>
+          <input
+            ref={customRef}
+            id={`${fieldId}-custom`}
+            type="text"
+            maxLength={80}
+            autoComplete="off"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            onBlur={() => setTouched(true)}
+            aria-invalid={missingCustom || undefined}
+            aria-describedby={missingCustom ? `${fieldId}-custom-error` : undefined}
+            placeholder={`Enter your ${noun}`}
+            className={cn(
+              "w-full rounded-2xl border bg-[var(--panel-2)] px-4 py-3.5 text-[14.5px] text-ink",
+              "outline-none transition-colors placeholder:text-faint",
+              missingCustom ? "border-ember/70" : "border-line focus:border-teal/60",
+            )}
+          />
+          {missingCustom && (
+            <p id={`${fieldId}-custom-error`} className="mt-2 text-[12.5px] text-ember">
+              Add your {noun}, or choose one from the list.
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
