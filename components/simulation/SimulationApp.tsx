@@ -83,6 +83,7 @@ import { TermSheetScreen } from "@/components/simulation/screens/TermSheet";
 import { FinalScreen } from "@/components/simulation/screens/Final";
 import { PrinciplesScreen } from "@/components/simulation/screens/Principles";
 import { BalanceSheetScreen } from "@/components/simulation/screens/BalanceSheetScreen";
+import { SectionNav } from "@/components/simulation/SectionNav";
 import type {
   Alloc,
   ArchetypeId,
@@ -107,6 +108,9 @@ type Phase = "intro" | "briefing" | "play" | "closed" | "termsheet" | "final";
  * the reader lands if the engine refuses, which is always the screen they submitted from.
  */
 type Working = { title: string; message: string; dismiss: string };
+
+/** The section the quarter is actually committed from -- the last one in the rail. */
+const CLOSURE_TAB = "review";
 
 /** Screen ids the sidebar can deep-link to. Anything else falls back to the dashboard. */
 export const SIMULATION_TABS = [
@@ -1079,6 +1083,15 @@ export function SimulationApp() {
     );
   }
 
+  /* The section the footer's "Move to next section" advances to.
+     `tabs` is the rail's list, so this is the rail's order by construction. It is null on the
+     last section before the closure, and on a section the rail is not currently showing (the
+     market event, once it has passed) -- in both cases the closure is the only step left, and
+     `SectionNav` promotes it. */
+  const sectionIndex = tabs.findIndex((t) => t.id === tab);
+  const after = sectionIndex >= 0 ? tabs[sectionIndex + 1] : undefined;
+  const nextSection = after && after.id !== CLOSURE_TAB ? { id: after.id, label: after.label } : null;
+
   let body: React.ReactNode;
 
   if (tab === "learning") {
@@ -1096,7 +1109,6 @@ export function SimulationApp() {
         inbox={messages}
         priority={priority}
         budget={budget}
-        onGo={() => setTab("review")}
       />
     );
   } else if (tab === "crisis" && archId) {
@@ -1199,6 +1211,21 @@ export function SimulationApp() {
         />
       )}
       {body}
+      {/* Rendered here rather than inside each section, so every section ends the same way and
+          a new one inherits it for free. `tabs` is the rail's own list, so the order these
+          walk is the order the rail shows -- including the market event, which is only in
+          both when it is live.
+
+          Left off the closure section itself: that screen already ends with the button that
+          commits the quarter, and a second one beside it would be either a duplicate or a way
+          past the reflection gate. */}
+      {tab !== CLOSURE_TAB && (
+        <SectionNav
+          next={nextSection}
+          onNext={() => nextSection && setTab(nextSection.id)}
+          onClosure={() => setTab(CLOSURE_TAB)}
+        />
+      )}
     </div>,
     true,
   );
