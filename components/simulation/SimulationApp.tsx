@@ -1109,7 +1109,6 @@ export function SimulationApp() {
         inbox={messages}
         priority={priority}
         budget={budget}
-        onGo={() => setTab("review")}
       />
     );
   } else if (tab === "crisis" && archId) {
