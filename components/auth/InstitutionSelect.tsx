@@ -94,9 +94,12 @@ export function InstitutionSelect({
       commit({ id: hit.id, name: hit.name, verified: true });
     } else if (canAddCustom && index === results.length) {
       commit(customInstitution(trimmed));
-    } else {
+    } else if (index === otherIndex) {
       startManual();
     }
+    // Anything else is an index the list no longer has -- results shrink as the query grows,
+    // and an Enter against a stale row must do nothing rather than pick the row that moved
+    // into its place.
   }
 
   function onKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
