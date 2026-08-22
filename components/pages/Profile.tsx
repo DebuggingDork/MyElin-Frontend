@@ -138,10 +138,13 @@ export function Profile() {
       setSaved(false);
       try {
         const res = await api.updateProfile({
+          // Degree and year can now be typed rather than picked, so they arrive exactly as
+          // they were keyed -- and an "Others" row opened but never filled in leaves an
+          // empty string. Both save as `null` rather than as a blank row.
           first_name: firstName || null,
           institution,
-          degree: degree || null,
-          current_year: year || null,
+          degree: degree.trim() || null,
+          current_year: year.trim() || null,
           goals,
         });
         setProfile(res);
@@ -298,6 +301,7 @@ export function Profile() {
                         setSaved(false);
                         setDegree(v);
                       }}
+                      customNoun="degree"
                     />
                     <SelectField
                       id="profile-year"
@@ -309,6 +313,7 @@ export function Profile() {
                         setSaved(false);
                         setYear(v);
                       }}
+                      customNoun="year"
                     />
                   </div>
 
