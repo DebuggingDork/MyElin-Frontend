@@ -53,13 +53,19 @@ export function OnboardingProfile({
 
   function onSubmit(event: React.FormEvent) {
     event.preventDefault();
+    // A typed-in answer arrives exactly as it was keyed, spaces and all, and an "Others" row
+    // picked but never filled in leaves an empty string -- both have to land as `null` rather
+    // than as a blank row in the directory.
+    const degreeAnswer = degree.trim() || null;
+    const yearAnswer = year.trim() || null;
+
     saveProfile({
       user_id: user?.user_id ?? null,
       email: user?.email ?? null,
       first_name: firstName,
       institution,
-      degree: degree || null,
-      current_year: year || null,
+      degree: degreeAnswer,
+      current_year: yearAnswer,
       goals,
       captured_at: new Date().toISOString(),
     });
@@ -69,8 +75,8 @@ export function OnboardingProfile({
     void api.updateProfile({
       first_name: firstName || null,
       institution,
-      degree: degree || null,
-      current_year: year || null,
+      degree: degreeAnswer,
+      current_year: yearAnswer,
       goals,
     });
     onFinish();
@@ -119,6 +125,7 @@ export function OnboardingProfile({
               value={degree}
               options={degreeOptions}
               onChange={setDegree}
+              customNoun="degree"
             />
 
             <SelectField
@@ -128,6 +135,7 @@ export function OnboardingProfile({
               value={year}
               options={yearOptions}
               onChange={setYear}
+              customNoun="year"
             />
           </div>
 
