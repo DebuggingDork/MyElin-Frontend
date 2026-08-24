@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, Edit2 } from "lucide-react";
 import { Action, Container } from "@/components/ui/Kit";
 import { TimerDial } from "@/components/play/TimerDial";
 import { DEPARTMENTS } from "@/lib/api/catalog";
@@ -50,9 +50,10 @@ export function EntryGate({
   onEnter,
 }: {
   scenario: Scenario;
-  onEnter: () => void;
+  onEnter: (name: string) => void;
 }) {
   const [accepted, setAccepted] = useState<Record<string, boolean>>({});
+  const [companyName, setCompanyName] = useState(scenario.company.name);
   const count = TERMS.filter((term) => accepted[term.id]).length;
   const ready = count === TERMS.length;
 
@@ -85,10 +86,28 @@ export function EntryGate({
         <div className="grid items-end gap-x-16 gap-y-8 lg:grid-cols-[1.35fr_auto]">
           <div>
             <p className="tick-label rise">The desk is yours in a moment</p>
-            <h1 className="ledger-display rise rise-1 mt-4 text-balance text-[clamp(2.6rem,6vw,4.6rem)] text-ink">
-              {scenario.company.name}
-              <span className="text-dim">.</span>
-            </h1>
+            <div className="group relative mt-4 inline-block rise rise-1">
+              <div className="flex items-center gap-4 border-b border-dashed border-teal/0 hover:border-teal/60 focus-within:border-teal/60 pb-1 transition-colors">
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    maxLength={32}
+                    title="Click to rename"
+                    className="ledger-display w-full bg-transparent text-balance text-[clamp(2.6rem,6vw,4.6rem)] text-ink outline-none placeholder:text-dim hover:text-teal focus:text-teal transition-colors"
+                  />
+                  <span
+                    className="pointer-events-none absolute ledger-display text-[clamp(2.6rem,6vw,4.6rem)] text-ink transition-colors group-hover:text-teal group-focus-within:text-teal"
+                    style={{ left: `${Math.max(companyName.length, 1)}ch` }}
+                  >
+                    .
+                  </span>
+                </div>
+                <Edit2 className="h-[clamp(1.5rem,3vw,2.5rem)] w-[clamp(1.5rem,3vw,2.5rem)] text-faint group-hover:text-teal transition-colors flex-shrink-0" />
+              </div>
+              <p className="text-[10px] text-faint mt-1 tracking-wide uppercase opacity-0 group-hover:opacity-100 transition-opacity">Click to rename company</p>
+            </div>
             <p className="rise rise-2 mt-5 max-w-[58ch] border-t border-line pt-5 text-[15.5px] leading-[1.65] text-dim">
               {scenario.company.stage}-stage {scenario.company.sector}, taken over mid-flight.
               Four quarters, {DEPARTMENTS.length} departments, one sitting — and a report at the
@@ -177,7 +196,7 @@ export function EntryGate({
             <p className="num text-[11.5px] text-faint">
               {count}/{TERMS.length} accepted
             </p>
-            <Action onClick={onEnter} disabled={!ready} size="lg">
+            <Action onClick={() => onEnter(companyName || scenario.company.name)} disabled={!ready} size="lg">
               Take the desk
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Action>

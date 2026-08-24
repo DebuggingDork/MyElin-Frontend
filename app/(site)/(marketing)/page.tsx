@@ -3,14 +3,16 @@ import { Hero } from "@/components/home/Hero";
 import { How } from "@/components/home/How";
 import { Institutions } from "@/components/home/Institutions";
 import { Why } from "@/components/home/Why";
+import { AxonGaps } from "@/components/home/AxonGaps";
+import { DecisionUrgency } from "@/components/home/DecisionUrgency";
 
-/** The surface these sections were designed against now belongs to the whole site --
- *  `app/(site)/layout.tsx` carries the `ledger` palette and the shared chrome. */
 export default function Home() {
   return (
     <>
       <Hero />
+      <AxonGaps />
       <Why />
+      <DecisionUrgency />
       <Dimensions />
       <How />
       <Institutions />

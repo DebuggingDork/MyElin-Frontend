@@ -33,6 +33,16 @@ export function PlayExperience({ scenario }: { scenario: Scenario }) {
   const [error, setError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
   const [runs, setRuns] = useState<CompanyListItem[] | null>(null);
+  const [customName, setCustomName] = useState(scenario.company.name);
+
+  // Wrap the active scenario so that children like NewspaperStory and NewspaperKpi feature the customized name
+  const activeScenario = useMemo(
+    () => ({
+      ...scenario,
+      company: { ...scenario.company, name: customName },
+    }),
+    [scenario, customName]
+  );
 
   /**
    * Authentication gates the whole sequence, not just the part that talks to the API.
@@ -98,7 +108,7 @@ export function PlayExperience({ scenario }: { scenario: Scenario }) {
     setError(null);
     try {
       const company = await api.createCompany({
-        name: `${scenario.company.name} · ${user?.email?.split("@")[0] ?? "run"}`,
+        name: `${customName} · ${user?.email?.split("@")[0] ?? "run"}`,
       });
       setActiveCompanyId(company.id);
       // The new run changes this owner's run list, and the cached copy is what the numbered
@@ -142,7 +152,15 @@ export function PlayExperience({ scenario }: { scenario: Scenario }) {
   }
 
   if (phase === "rules") {
-    return <EntryGate scenario={scenario} onEnter={() => setPhase("picker")} />;
+    return (
+      <EntryGate 
+        scenario={activeScenario} 
+        onEnter={(name) => {
+          setCustomName(name);
+          setPhase("picker");
+        }} 
+      />
+    );
   }
 
   if (runs === null) {
@@ -154,13 +172,13 @@ export function PlayExperience({ scenario }: { scenario: Scenario }) {
   }
 
   if (phase === "story") {
-    return <NewspaperStory scenario={scenario} onContinue={() => setPhase("kpi")} />;
+    return <NewspaperStory scenario={activeScenario} onContinue={() => setPhase("kpi")} />;
   }
 
   if (phase === "kpi") {
     return (
       <NewspaperKpi
-        scenario={scenario}
+        scenario={activeScenario}
         starting={starting}
         error={error}
         onEnter={startRun}
@@ -170,7 +188,7 @@ export function PlayExperience({ scenario }: { scenario: Scenario }) {
 
   return (
     <RunPicker
-      scenario={scenario}
+      scenario={activeScenario}
       runs={[...resumable, ...finished]}
       error={error}
       onResume={resume}

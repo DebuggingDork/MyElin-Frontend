@@ -1,9 +1,9 @@
 "use client";
 
 /**
- * The Nadi Wear component vocabulary, ported from the shipped `NadiWear.html` bundle:
- * ruled panels on white, a monospace column for every number, and a serif for anything
- * that is a heading. Markup and Tailwind classes are the originals.
+ * The Myelin simulation component vocabulary — premium redesign.
+ * Ruled panels, a monospace column for every number, serif for headings.
+ * Tonal left-border accents, glassmorphic panel headers, glowing bars.
  */
 
 import { createContext, useContext, useState } from "react";
@@ -21,16 +21,28 @@ import { clamp, inr, n0, n1 } from "@/lib/simulation/format";
 import type { Budget, HealthBar, InboxMessage, Readiness, Tone } from "@/lib/simulation/types";
 
 /* ── chart colours ────────────────────────────────────────────────────
-   SVG and recharts take paint values rather than Tailwind classes, so these
-   are written as `var()` references instead of class names. CSS variables
-   resolve in SVG presentation attributes, which means the charts follow the
-   theme the same way everything else in `.simulation` does -- a literal hex
-   here would go stale against the dark theme. */
+   SVG and recharts take paint values rather than Tailwind classes. */
 
 export const CHART_RISE = "var(--tone-good)";
 export const CHART_FALL = "var(--tone-bad)";
 export const CHART_GRID = "var(--sim-line)";
 export const CHART_AXIS = "var(--faint)";
+
+/* ── tone → accent border colour map ─────────────────────────────── */
+
+const TONE_BORDER: Record<Tone, string> = {
+  good: "border-l-teal",
+  watch: "border-l-ember",
+  bad: "border-l-danger",
+  flat: "border-l-line-2",
+};
+
+const TONE_GLOW: Record<Tone, string> = {
+  good: "shadow-[0_0_12px_-3px_var(--teal)]",
+  watch: "shadow-[0_0_12px_-3px_var(--ember)]",
+  bad: "shadow-[0_0_12px_-3px_var(--danger)]",
+  flat: "",
+};
 
 /* ── type and rules ───────────────────────────────────────────────── */
 
@@ -41,36 +53,27 @@ export function Eyebrow({
   children: React.ReactNode;
   tone?: string;
 }) {
-  return <div className={"text-xs uppercase tracking-widest font-semibold " + tone}>{children}</div>;
+  return (
+    <div className={"text-[10.5px] uppercase tracking-[0.22em] font-semibold " + tone}>
+      {children}
+    </div>
+  );
 }
 
-/* ── selectable option cards ──────────────────────────────────────────
-   Every "pick one of these" control in the simulation -- payment terms,
-   warranty, priorities, crisis strategies, innovation cards -- is the same
-   card in two states, so the classes live here once rather than being
-   retyped at each call site.
-
-   Each part names its own colour instead of inheriting one. Selected cards
-   sit on the always-dark `bg-chrome`, unselected on the themed `bg-raise`, so
-   a child that leaves `color` unset inherits whichever surface it happens to
-   land on -- which is what left unselected card titles rendering near-white
-   on cream. Stating the colour per state removes that coupling. */
+/* ── selectable option cards ────────────────────────────────────────
+   Every "pick one" control: payment terms, warranty, priority etc. */
 
 export const optionCard = (on: boolean, pad = "p-3") =>
-  `text-left border ${pad} transition-colors duration-150 ease-out ` +
+  `text-left border ${pad} transition-all duration-150 ease-out ` +
   (on
-    ? "border-teal-deep bg-chrome text-white"
+    ? "border-teal-deep bg-chrome text-white shadow-[0_0_16px_-4px_var(--teal)]"
     : "border-line bg-raise text-ink hover:border-teal/50 hover:bg-raise-2");
 
-/** The card's name. Carries the weight, so it takes the strongest ink either way. */
 export const optionTitle = (on: boolean) => (on ? "text-white" : "text-ink");
-
-/** The teal consequence line ("cost -3.0% · reliability +3"). Not state-dependent:
- *  `tone-good` already resolves light on the selected card's dark surface. */
 export const optionMeta = "text-tone-good";
-
-/** Supporting prose under the title. One step quieter than the name, never faint enough to lose. */
 export const optionNote = (on: boolean) => (on ? "text-faint" : "text-dim");
+
+/* ── panel ────────────────────────────────────────────────────────── */
 
 export function Panel({
   eyebrow,
@@ -86,33 +89,39 @@ export function Panel({
   right?: React.ReactNode;
   children?: React.ReactNode;
   className?: string;
-  /** For panels laid out side by side: a shared min-height here keeps two headers of
-   *  different title lengths from pushing their bodies onto different baselines. */
   headerClassName?: string;
-  /** Lets a panel in a stretched grid cell grow its body to fill the cell (`flex-1`), which is
-   *  what makes a row of charts end on one line rather than three ragged ones. */
   bodyClassName?: string;
 }) {
   return (
-    <section className={"bg-raise border border-line " + className}>
+    <section
+      className={
+        "border border-line overflow-hidden transition-shadow duration-200 hover:shadow-[0_0_24px_-8px_rgba(36,177,177,0.18)] " +
+        className
+      }
+    >
       {(eyebrow || title) && (
         <header
           className={
-            "border-b border-line px-4 py-3 flex flex-wrap items-end justify-between gap-2 " +
+            "border-b border-line px-4 py-3.5 flex flex-wrap items-end justify-between gap-2 " +
+            "bg-gradient-to-r from-panel to-transparent " +
             headerClassName
           }
         >
           <div>
             {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
-            {title && <h3 className="font-serif text-lg text-ink leading-snug">{title}</h3>}
+            {title && (
+              <h3 className="font-serif text-lg text-ink leading-snug mt-0.5">{title}</h3>
+            )}
           </div>
           {right}
         </header>
       )}
-      <div className={"p-4 " + bodyClassName}>{children}</div>
+      <div className={"p-4 bg-raise " + bodyClassName}>{children}</div>
     </section>
   );
 }
+
+/* ── stat card ────────────────────────────────────────────────────── */
 
 export function Stat({
   label,
@@ -126,23 +135,42 @@ export function Stat({
   tone?: string;
 }) {
   return (
-    <div className="h-full overflow-hidden border border-line border-l-2 border-l-line-2 bg-raise p-3 flex flex-col justify-start">
+    <div className="h-full overflow-hidden border border-line border-l-4 border-l-teal-deep bg-raise p-3.5 flex flex-col justify-start transition-all duration-200 hover:border-l-teal hover:shadow-[0_0_16px_-4px_rgba(36,177,177,0.22)]">
       <Eyebrow>{label}</Eyebrow>
-      <div className={"font-mono text-xl leading-tight mt-1 " + tone}>{value}</div>
-      {sub && <div className="text-xs text-dim mt-1">{sub}</div>}
+      <div className={"font-mono text-2xl leading-tight mt-2 " + tone}>{value}</div>
+      {sub && <div className="text-xs text-dim mt-1 font-mono">{sub}</div>}
     </div>
   );
 }
 
-export function Bar({ value, max, tone = "bg-chrome" }: { value: number; max: number; tone?: string }) {
+/* ── bar ──────────────────────────────────────────────────────────── */
+
+export function Bar({
+  value,
+  max,
+  tone = "bg-chrome",
+  glow,
+}: {
+  value: number;
+  max: number;
+  tone?: string;
+  glow?: string;
+}) {
   return (
-    <div className="h-1.5 w-full bg-raise-2">
-      <div className={"h-1.5 " + tone} style={{ width: clamp((value / (max || 1)) * 100, 0, 100) + "%" }} />
+    <div className="h-1.5 w-full bg-raise-2 overflow-hidden rounded-full">
+      <div
+        className={"h-1.5 rounded-full transition-all duration-500 ease-out " + tone}
+        style={{
+          width: clamp((value / (max || 1)) * 100, 0, 100) + "%",
+          boxShadow: glow,
+        }}
+      />
     </div>
   );
 }
 
-/** One line of a statement: what it is, how it was worked out, and the number. */
+/* ── ledger row ───────────────────────────────────────────────────── */
+
 export function LedgerRow({
   label,
   working,
@@ -163,7 +191,8 @@ export function LedgerRow({
   return (
     <div
       className={
-        "grid grid-cols-12 gap-2 items-baseline py-1.5 border-b border-line " + (flag ? "bg-danger/10" : "")
+        "grid grid-cols-12 gap-2 items-baseline py-1.5 border-b border-line " +
+        (flag ? "bg-danger/10" : "")
       }
     >
       <div
@@ -178,7 +207,13 @@ export function LedgerRow({
       <div className="col-span-6 sm:col-span-5 text-xs text-dim font-mono break-words order-3 sm:order-none">
         {working}
       </div>
-      <div className={"col-span-6 sm:col-span-3 text-right font-mono text-sm " + tone + (strong ? " font-semibold" : "")}>
+      <div
+        className={
+          "col-span-6 sm:col-span-3 text-right font-mono text-sm " +
+          tone +
+          (strong ? " font-semibold" : "")
+        }
+      >
         {value}
       </div>
     </div>
@@ -189,7 +224,6 @@ export function LedgerRow({
 
 export const TeachingContext = createContext(true);
 
-/** "Why this works this way" — collapsible, and switchable off from the header. */
 export function TeachingNote({ id, inline }: { id?: string; inline?: boolean }) {
   const enabled = useContext(TeachingContext);
   const [open, setOpen] = useState(false);
@@ -205,7 +239,7 @@ export function TeachingNote({ id, inline }: { id?: string; inline?: boolean }) 
         {open ? "Hide note" : "Why this works this way"}
       </button>
       {open && (
-        <div className="mt-2 border-l-2 border-line-2 bg-raise px-3 py-2">
+        <div className="mt-2 border-l-2 border-teal bg-panel px-3 py-2 rounded-r">
           <div className="text-xs uppercase tracking-widest text-tone-bad font-semibold">{note.cat}</div>
           <div className="font-serif text-base text-ink mt-0.5">{note.title}</div>
           <p className="text-sm text-ink mt-1 leading-snug">{note.body}</p>
@@ -215,7 +249,7 @@ export function TeachingNote({ id, inline }: { id?: string; inline?: boolean }) 
   );
 }
 
-/* ── the inbox ────────────────────────────────────────────────────── */
+/* ── inbox ────────────────────────────────────────────────────────── */
 
 export function Inbox({
   messages,
@@ -232,38 +266,56 @@ export function Inbox({
   if (!shown.length) {
     return (
       <Panel eyebrow={eyebrow} title={title}>
-        <p className="text-sm text-dim">Nothing from your team. Quiet quarters are rarer than they look.</p>
+        <p className="text-sm text-dim">
+          Nothing from your team. Quiet quarters are rarer than they look.
+        </p>
       </Panel>
     );
   }
 
+  const toneAccent: Record<string, string> = {
+    critical: "border-l-danger bg-danger/5",
+    warning: "border-l-ember bg-ember/5",
+    info: "border-l-teal bg-teal/5",
+    good: "border-l-teal-bright bg-teal/5",
+  };
+
   return (
     <div>
-      <div className="flex flex-wrap items-baseline justify-between gap-2 mb-2">
+      <div className="flex flex-wrap items-baseline justify-between gap-2 mb-3">
         <div>
           <Eyebrow tone="text-tone-bad">{eyebrow}</Eyebrow>
-          <h3 className="font-serif text-xl text-ink">{title}</h3>
+          <h3 className="font-serif text-xl text-ink mt-0.5">{title}</h3>
         </div>
         {limit && messages.length > limit && (
-          <span className="text-xs font-mono text-dim">{messages.length - limit} more on the dashboard</span>
+          <span className="text-xs font-mono text-dim px-2 py-1 border border-line rounded-full">
+            +{messages.length - limit} more on the dashboard
+          </span>
         )}
       </div>
       <div className="space-y-2">
         {shown.map((m, i) => (
-          <div key={i} className={"bg-raise border-l-4 border border-line px-4 py-3 " + MESSAGE_TONE[m.tone].border}>
+          <div
+            key={i}
+            className={
+              "border border-line border-l-4 px-4 py-3.5 transition-all duration-150 hover:border-l-[5px] " +
+              (toneAccent[m.tone] ?? "border-l-line-2 bg-raise")
+            }
+          >
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <span className="font-serif text-base text-ink">{m.name}</span>
               <span className="text-xs uppercase tracking-widest text-dim">{m.role}</span>
               <span
                 className={
-                  "px-1.5 py-0.5 text-xs uppercase tracking-widest font-semibold ml-auto " + MESSAGE_TONE[m.tone].tag
+                  "px-2 py-0.5 text-[10px] uppercase tracking-widest font-semibold ml-auto rounded-sm " +
+                  (MESSAGE_TONE[m.tone]?.tag ?? "bg-chrome text-white")
                 }
               >
-                {MESSAGE_TONE[m.tone].label}
+                {MESSAGE_TONE[m.tone]?.label ?? m.tone}
               </span>
             </div>
-            <div className="font-semibold text-ink text-sm mt-1">{m.subject}</div>
-            <p className="text-sm text-ink mt-1 leading-snug">{m.body}</p>
+            <div className="font-semibold text-ink text-sm mt-1.5">{m.subject}</div>
+            <p className="text-sm text-dim mt-1 leading-snug">{m.body}</p>
           </div>
         ))}
       </div>
@@ -271,13 +323,13 @@ export function Inbox({
   );
 }
 
-/* ── trends ───────────────────────────────────────────────────────── */
+/* ── sparkline ────────────────────────────────────────────────────── */
 
 export function Sparkline({
   values,
   tone,
-  w = 64,
-  h = 20,
+  w = 72,
+  h = 24,
 }: {
   values: number[];
   tone?: "invert" | "normal";
@@ -290,7 +342,10 @@ export function Sparkline({
   const lo = Math.min(...pts);
   const hi = Math.max(...pts);
   const span = hi - lo || 1;
-  const coords = pts.map((v, i) => [(i / (pts.length - 1)) * (w - 2) + 1, h - 1 - ((v - lo) / span) * (h - 2)]);
+  const coords = pts.map((v, i) => [
+    (i / (pts.length - 1)) * (w - 2) + 1,
+    h - 1 - ((v - lo) / span) * (h - 2),
+  ]);
   const points = coords.map((c) => c[0].toFixed(1) + "," + c[1].toFixed(1)).join(" ");
   const rising = pts[pts.length - 1] >= pts[0];
   const colour =
@@ -299,13 +354,22 @@ export function Sparkline({
 
   return (
     <svg width={w} height={h} className="inline-block align-middle" role="img" aria-label="trend">
-      <polyline points={points} fill="none" stroke={colour} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
-      <circle cx={last[0]} cy={last[1]} r="1.9" fill={colour} />
+      <polyline
+        points={points}
+        fill="none"
+        stroke={colour}
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+        opacity="0.7"
+      />
+      <circle cx={last[0]} cy={last[1]} r="2.5" fill={colour} />
     </svg>
   );
 }
 
-/** A figure with its own history behind it. `invert` marks metrics where down is good. */
+/* ── trend stat card ──────────────────────────────────────────────── */
+
 export function TrendStat({
   label,
   value,
@@ -326,22 +390,32 @@ export function TrendStat({
   const better = delta === null ? null : invert ? delta < 0 : delta > 0;
 
   return (
-    // `overflow-hidden`, and a row that wraps: a figure like ₹15,69,677 has no space to break
-    // at, so at six columns its min-content width alone fills the card and the sparkline --
-    // 64px and `shrink-0` -- was drawn straight through the right border and into the next
-    // card. Wrapping drops the trend under the figure instead, and the clip is the backstop.
-    <div className="h-full overflow-hidden border border-line border-l-2 border-l-line-2 bg-raise p-3 flex flex-col justify-start">
+    <div
+      className={
+        "h-full overflow-hidden border border-line border-l-4 bg-raise p-3.5 flex flex-col justify-start " +
+        "transition-all duration-200 hover:shadow-[0_0_20px_-6px_rgba(36,177,177,0.2)] " +
+        TONE_BORDER[tone]
+      }
+    >
       <Eyebrow>{label}</Eyebrow>
-      <div className="mt-1 flex flex-1 flex-wrap items-end justify-between gap-x-2 gap-y-1">
+      <div className="mt-2 flex flex-1 flex-wrap items-end justify-between gap-x-2 gap-y-1">
         <div className="min-w-0">
-          <div className={"font-mono text-xl leading-tight " + TONE_TEXT[tone]}>{value}</div>
-          {sub && <div className="text-xs text-dim mt-0.5">{sub}</div>}
+          <div className={"font-mono text-2xl leading-tight " + TONE_TEXT[tone]}>{value}</div>
+          {sub && <div className="text-xs text-dim mt-0.5 font-mono">{sub}</div>}
         </div>
-        <div className="ml-auto text-right shrink-0">
+        <div className="ml-auto text-right shrink-0 flex flex-col items-end gap-0.5">
           <Sparkline values={pts} tone={invert ? "invert" : "normal"} />
           {delta !== null && (
-            <div className={"text-xs font-mono " + (better ? "text-tone-good" : "text-tone-bad")}>
-              {better ? "▲" : "▼"} {Math.abs(delta) >= 1000 ? n0(Math.abs(delta)) : n1(Math.abs(delta))}
+            <div
+              className={
+                "text-xs font-mono font-semibold px-1.5 py-0.5 rounded-sm " +
+                (better
+                  ? "text-teal-bright bg-teal/10"
+                  : "text-tone-bad bg-danger/10")
+              }
+            >
+              {better ? "▲" : "▼"}{" "}
+              {Math.abs(delta) >= 1000 ? n0(Math.abs(delta)) : n1(Math.abs(delta))}
             </div>
           )}
         </div>
@@ -350,9 +424,13 @@ export function TrendStat({
   );
 }
 
-/* ── the ticker ───────────────────────────────────────────────────── */
+/* ── ticker ───────────────────────────────────────────────────────── */
 
-export function Ticker({ items }: { items: { label: string; value: string; tone: Tone; dir: "up" | "down" | null }[] }) {
+export function Ticker({
+  items,
+}: {
+  items: { label: string; value: string; tone: Tone; dir: "up" | "down" | null }[];
+}) {
   if (!items.length) return null;
 
   const run = (key: string) => (
@@ -386,21 +464,23 @@ export function Ticker({ items }: { items: { label: string; value: string; tone:
   );
 }
 
-/* ── readiness, health and the budget ─────────────────────────────── */
+/* ── readiness grid ───────────────────────────────────────────────── */
+
+const LEVEL_ICON: Record<string, string> = {
+  STRONG: "●",
+  ADEQUATE: "●",
+  TIGHT: "◆",
+  CONSTRAINED: "◆",
+  EXCESS: "◆",
+  OVERBUILT: "▲",
+  CRITICAL: "▲",
+  NONE: "—",
+};
 
 export function ReadinessGrid({ dirs, only }: { dirs: Readiness[]; only?: string[] }) {
   const shown = only ? dirs.filter((d) => only.indexOf(d.id) >= 0) : dirs;
   if (!shown.length) return null;
 
-  /* The column count is chosen from how many cards there are, not from the viewport alone.
-
-     `lg:grid-cols-4` was wrong for both cases it had to serve. The full set is nine, and four
-     columns left the last row three-quarters empty on every screen; a department screen passes
-     two or three through `only`, and four columns left those stranded at a quarter width each.
-
-     So: nine cards get 1/3/5, the counts that divide nine with at most one cell to spare and
-     never the 4 or 6 that strand three. Anything smaller gets auto-fit, which collapses the
-     tracks it does not need so a subset always fills its row exactly. */
   const cols =
     shown.length > 6
       ? "grid-cols-1 min-[560px]:grid-cols-3 xl:grid-cols-5"
@@ -410,11 +490,25 @@ export function ReadinessGrid({ dirs, only }: { dirs: Readiness[]; only?: string
     <div className={"grid gap-2 " + cols}>
       {shown.map((d) => {
         const tone: Tone = LEVEL_TONE[d.level] ?? "watch";
+        const icon = LEVEL_ICON[d.level] ?? "◆";
         return (
-          <div key={d.id} className={"border p-3 " + TONE_CARD[tone]}>
+          <div
+            key={d.id}
+            className={
+              "border p-3.5 transition-all duration-200 hover:shadow-[0_0_16px_-4px_rgba(36,177,177,0.15)] " +
+              TONE_CARD[tone]
+            }
+          >
             <Eyebrow>{d.label}</Eyebrow>
-            <div className={"font-mono text-base font-semibold mt-0.5 " + TONE_TEXT[tone]}>{d.level}</div>
-            <div className="text-xs text-dim mt-1 leading-snug">{d.note}</div>
+            <div
+              className={
+                "font-mono text-sm font-bold mt-1 flex items-center gap-1.5 " + TONE_TEXT[tone]
+              }
+            >
+              <span className="text-[8px]">{icon}</span>
+              {d.level}
+            </div>
+            <div className="text-xs text-dim mt-1.5 leading-snug">{d.note}</div>
           </div>
         );
       })}
@@ -422,20 +516,29 @@ export function ReadinessGrid({ dirs, only }: { dirs: Readiness[]; only?: string
   );
 }
 
+/* ── health panel ─────────────────────────────────────────────────── */
+
+const BAR_GLOW: Record<Tone, string> = {
+  good: "0 0 8px 0 var(--teal)",
+  watch: "0 0 8px 0 var(--ember)",
+  bad: "0 0 8px 0 var(--danger)",
+  flat: "none",
+};
+
 export function HealthPanel({ health, compact }: { health: HealthBar[]; compact?: boolean }) {
   return (
     <Panel eyebrow="Orientation" title="Company health">
-      <div className={"grid gap-x-6 gap-y-3 " + (compact ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-4")}>
+      <div className={"grid gap-x-6 gap-y-4 " + (compact ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-4")}>
         {health.map((h) => (
           <div key={h.key}>
-            <div className="flex items-baseline justify-between">
-              <span className="text-sm text-ink">{h.label}</span>
-              <span className={"text-xs font-mono " + TONE_TEXT[h.tone]}>{n0(h.value)}</span>
+            <div className="flex items-baseline justify-between mb-1.5">
+              <span className="text-sm text-ink font-medium">{h.label}</span>
+              <span className={"text-sm font-mono font-bold " + TONE_TEXT[h.tone]}>
+                {n0(h.value)}
+              </span>
             </div>
-            <div className="mt-1">
-              <Bar value={h.value} max={100} tone={TONE_BAR[h.tone]} />
-            </div>
-            <div className="text-xs text-dim mt-1">{h.note}</div>
+            <Bar value={h.value} max={100} tone={TONE_BAR[h.tone]} glow={BAR_GLOW[h.tone]} />
+            <div className="text-xs text-dim mt-1.5 leading-snug">{h.note}</div>
           </div>
         ))}
       </div>
@@ -444,35 +547,46 @@ export function HealthPanel({ health, compact }: { health: HealthBar[]; compact?
   );
 }
 
-/** Cash left to commit this quarter, and what the ceiling is made of. */
+/* ── budget meter ─────────────────────────────────────────────────── */
+
 export function BudgetMeter({ budget }: { budget: Budget }) {
   const left = budget.ceiling - budget.committed;
   const over = left < 0;
 
   return (
-    <div className={"border px-4 py-3 " + (over ? "border-danger bg-danger/10" : "border-line bg-raise")}>
-      <div className="flex flex-wrap items-baseline justify-between gap-2 mb-2">
+    <div
+      className={
+        "border px-4 py-3.5 transition-all duration-200 " +
+        (over
+          ? "border-danger bg-danger/10 shadow-[0_0_20px_-6px_var(--danger)]"
+          : "border-line bg-raise")
+      }
+    >
+      <div className="flex flex-wrap items-baseline justify-between gap-2 mb-2.5">
         <Eyebrow tone={over ? "text-tone-bad" : "text-dim"}>
           {over ? "Over the quarter's ceiling" : "Cash left to commit"}
         </Eyebrow>
-        <div className={"font-mono text-lg " + (over ? "text-tone-bad" : "text-ink")}>
-          {inr(left)} <span className="text-faint text-xs">of {inr(budget.ceiling)}</span>
+        <div className={"font-mono text-lg font-bold " + (over ? "text-tone-bad" : "text-ink")}>
+          {inr(left)}{" "}
+          <span className="text-faint text-xs font-normal">of {inr(budget.ceiling)}</span>
         </div>
       </div>
       <Bar
         value={budget.committed}
         max={budget.ceiling}
-        tone={over ? "bg-danger" : budget.committed > budget.ceiling * 0.85 ? "bg-ember" : "bg-chrome"}
+        tone={over ? "bg-danger" : budget.committed > budget.ceiling * 0.85 ? "bg-ember" : "bg-teal-deep"}
+        glow={over ? BAR_GLOW.bad : budget.committed > budget.ceiling * 0.85 ? BAR_GLOW.watch : "none"}
       />
-      <div className="text-xs text-dim mt-2 font-mono">
-        {inr(budget.opex)} operating + {inr(budget.capex)} plant + {inr(budget.inno)} innovation + {inr(budget.people)}{" "}
-        people. Ceiling = cash{budget.investment > 0 ? " + the signed investment" : ""} + credit drawn, less fixed costs
-        and the {inr(BUFFER)} buffer.
+      <div className="text-xs text-dim mt-2.5 font-mono leading-relaxed">
+        {inr(budget.opex)} operating · {inr(budget.capex)} plant · {inr(budget.inno)} innovation ·{" "}
+        {inr(budget.people)} people.{" "}
+        <span className="text-faint">
+          Ceiling = cash{budget.investment > 0 ? " + signed investment" : ""} + credit, less fixed costs
+          and the {inr(BUFFER)} buffer.
+        </span>
       </div>
       {budget.investment > 0 && (
-        // The cheque is in the ceiling before it is in the bank -- say so, or a CEO who has
-        // just signed for it reads a cash line that has not moved and assumes it never landed.
-        <div className="mt-1 font-mono text-xs text-teal-bright">
+        <div className="mt-1.5 font-mono text-xs text-teal-bright">
           Includes {inr(budget.investment)} of signed investment, banked when this quarter closes.
         </div>
       )}

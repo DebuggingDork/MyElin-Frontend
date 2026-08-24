@@ -257,6 +257,7 @@ export function SimulationApp() {
   const [phase, setPhase] = useState<Phase>("intro");
   const [advanced, setAdvanced] = useState(false);
   const [notesOn, setNotesOn] = useState(true);
+  const [companyName, setCompanyName] = useState<string>("Nadi Wear");
   // `localStorage` is the store here, not component state: reading it during render would
   // differ between server and client and trip hydration, and mirroring it into `useState`
   // would mean a second render for a value that was already known.
@@ -711,7 +712,7 @@ export function SimulationApp() {
           nav labels below it. */}
       <div className="flex items-center justify-between gap-2 pb-2 pl-3">
         <p className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-sim-faint">
-          Nadi Wear · 4 quarters
+          {companyName} · 4 quarters
         </p>
         <button
           type="button"
@@ -910,7 +911,7 @@ export function SimulationApp() {
                     <span className="hidden sm:inline">Departments</span>
                   </button>
                 )}
-                <span className="truncate font-serif text-xl">Nadi Wear</span>
+                <span className="truncate font-serif text-xl">{companyName}</span>
                 <span className="hidden text-xs uppercase tracking-widest text-dim md:inline">
                   Chief Executive
                 </span>
@@ -1002,7 +1003,13 @@ export function SimulationApp() {
     return chrome(
       <div className="space-y-5">
         {errorBanner}
-        <IntroScreen onStart={() => setPhase("briefing")} busy={busy} />
+        <IntroScreen
+          onStart={(name) => {
+            setCompanyName(name || company?.name || "Nadi Wear");
+            setPhase("briefing");
+          }}
+          busy={busy}
+        />
       </div>,
       false,
     );

@@ -4,15 +4,9 @@ import { useEffect, useState } from "react";
 import { useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-/** The scenario's decision window, in seconds. The depleting rule under the header is a
- *  CSS animation of exactly this length, so the bar and the digits stay aligned without
- *  the two having to talk to each other. */
 const WINDOW = 180;
 const ROTATE_MS = 3400;
 
-/** Drawn from the shipped Startup Survival brief: three defensible moves, each with a real
- *  price. The trade-off column is the point of the panel, not the options -- "no option is
- *  correct" is the product's entire thesis and this is the shortest way to show it. */
 const options = [
   {
     key: "1",
@@ -42,8 +36,6 @@ export function DecisionPanel() {
   const [left, setLeft] = useState(WINDOW);
   const [active, setActive] = useState(0);
 
-  // One tick a second, and only while the tab is in front. A marketing hero has no
-  // business burning a timer in a background tab.
   useEffect(() => {
     let id: number | undefined;
 
@@ -78,55 +70,89 @@ export function DecisionPanel() {
   }, [reduceMotion]);
 
   const urgent = left <= 45;
+  const pct = (left / WINDOW) * 100;
 
   return (
-    <div className="ticked w-full border border-line bg-base lg:w-[27.5rem]">
-      <div className="flex items-center justify-between gap-4 border-b border-line px-5 py-3">
-        <p className="tick-label">Startup Survival · Q3</p>
+    <div className="w-full lg:w-[28rem] border border-line overflow-hidden shadow-[0_0_40px_-12px_rgba(36,177,177,0.25)]">
+      {/* ── Scenario context header ─────────────────────────────── */}
+      <div className="border-b border-line px-5 py-3 bg-gradient-to-r from-panel to-transparent flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2.5">
+          {/* Live indicator dot */}
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal opacity-60" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-teal" />
+          </span>
+          <div>
+            <p className="text-[10.5px] uppercase tracking-[0.2em] text-dim font-semibold">
+              Startup Survival
+            </p>
+            <p className="text-[10px] text-faint font-mono">Q3 of 4 · Seed stage</p>
+          </div>
+        </div>
+        {/* Urgency badge */}
         <p
           className={cn(
-            "num text-[13px] tabular-nums transition-colors duration-300",
-            urgent ? "text-ember" : "text-teal",
+            "text-xs font-mono font-semibold px-2.5 py-1 rounded-sm transition-colors duration-300",
+            urgent
+              ? "bg-danger/15 text-tone-bad border border-danger/30"
+              : "bg-teal/10 text-teal-bright border border-teal/20",
           )}
         >
           {clock(left)}
         </p>
       </div>
 
-      {/* The decision window running out, as one hairline. Constant motion, so: linear,
-          and left to CSS -- it never needs to interrupt or retarget, and this keeps it
-          off the main thread while the rest of the page is still hydrating. */}
-      <div className="relative h-px w-full bg-line">
+      {/* ── Progress bar ────────────────────────────────────────── */}
+      <div className="relative h-0.5 w-full bg-raise-2">
         <span
           aria-hidden
-          className="absolute inset-y-0 left-0 w-full origin-left bg-teal motion-safe:animate-[deplete_180s_linear_infinite]"
-          style={{ transform: reduceMotion ? "scaleX(0.62)" : undefined }}
+          className={cn(
+            "absolute inset-y-0 left-0 origin-left transition-colors duration-300",
+            urgent ? "bg-danger" : "bg-teal",
+            "motion-safe:animate-[deplete_180s_linear_infinite]",
+          )}
+          style={{
+            width: "100%",
+            transform: reduceMotion ? `scaleX(${pct / 100})` : undefined,
+            boxShadow: urgent
+              ? "2px 0 8px 0 var(--danger)"
+              : "2px 0 8px 0 var(--teal)",
+          }}
         />
       </div>
 
-      <div className="px-5 py-5">
-        <p className="ledger-display text-[19px] leading-[1.3] text-ink">
+      {/* ── Scenario body ───────────────────────────────────────── */}
+      <div className="px-5 pt-5 pb-2 bg-raise">
+        {/* Cash urgency chip */}
+        {urgent && (
+          <div className="mb-3 inline-flex items-center gap-1.5 bg-danger/10 border border-danger/25 px-2.5 py-1 rounded-sm">
+            <span className="text-tone-bad text-[10px]">▲</span>
+            <span className="text-tone-bad text-xs font-mono font-semibold">5.8 months runway</span>
+          </div>
+        )}
+
+        <p className="text-[15px] leading-[1.65] text-ink">
           Runway is 5.8 months. Your lead engineer resigned on Monday and a
           competitor undercut you by 40% on Tuesday.
         </p>
 
-        <ul className="mt-6 border-t border-line">
+        <ul className="mt-5 border-t border-line divide-y divide-line">
           {options.map((option, i) => {
             const on = i === active;
             return (
               <li
                 key={option.key}
                 className={cn(
-                  "flex items-center gap-3 border-b border-line px-1 py-3",
-                  "transition-colors duration-300 ease-out",
-                  on ? "bg-teal/[0.08]" : "bg-transparent",
+                  "flex items-start gap-3 px-1 py-3 transition-all duration-300 ease-out cursor-pointer",
+                  on ? "bg-teal/[0.07] border-l-2 border-teal pl-2" : "border-l-2 border-transparent pl-2 hover:bg-panel",
                 )}
               >
                 <span
                   className={cn(
-                    "num w-4 shrink-0 text-center text-[11px]",
-                    "transition-colors duration-300 ease-out",
-                    on ? "text-teal" : "text-faint",
+                    "shrink-0 w-5 h-5 rounded-full border flex items-center justify-center text-[10px] font-mono mt-0.5 transition-all duration-300",
+                    on
+                      ? "border-teal bg-teal text-chrome font-bold"
+                      : "border-line-2 text-faint",
                   )}
                 >
                   {option.key}
@@ -143,30 +169,30 @@ export function DecisionPanel() {
             );
           })}
         </ul>
+      </div>
 
-        {/* Fixed height so the swap never reflows the panel, and a blur on the outgoing
-            text so the crossfade reads as one line changing rather than two lines
-            overlapping. */}
-        <div className="mt-4 flex h-6 items-center gap-3">
-          <span className="tick-label shrink-0 text-ember">Costs you</span>
-          <span className="relative min-w-0 flex-1">
-            {options.map((option, i) => (
-              <span
-                key={option.key}
-                aria-hidden={i !== active}
-                className={cn(
-                  "block truncate text-[12.5px] text-ember",
-                  "transition-[opacity,filter] duration-300 ease-out",
-                  i === active
-                    ? "opacity-100 blur-0"
-                    : "absolute inset-0 opacity-0 blur-[3px]",
-                )}
-              >
-                {option.cost}
-              </span>
-            ))}
-          </span>
-        </div>
+      {/* ── Crossfading cost line ────────────────────────────────── */}
+      <div className="px-5 py-3 bg-raise border-t border-line flex items-center gap-3 h-10">
+        <span className="text-[10.5px] uppercase tracking-[0.18em] font-semibold text-ember shrink-0">
+          Costs you
+        </span>
+        <span className="relative min-w-0 flex-1">
+          {options.map((option, i) => (
+            <span
+              key={option.key}
+              aria-hidden={i !== active}
+              className={cn(
+                "block truncate text-[12.5px] text-ember font-mono",
+                "transition-[opacity,filter] duration-300 ease-out",
+                i === active
+                  ? "opacity-100 blur-0"
+                  : "absolute inset-0 opacity-0 blur-[3px]",
+              )}
+            >
+              {option.cost}
+            </span>
+          ))}
+        </span>
       </div>
     </div>
   );
