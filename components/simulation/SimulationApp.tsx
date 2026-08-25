@@ -18,6 +18,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { Pause, Play, Clock, AlertTriangle } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { LogOut, PanelLeftOpen, X } from "lucide-react";
@@ -64,6 +65,7 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { ProfileMenu } from "@/components/layout/ProfileMenu";
 import { Logo } from "@/components/brand/Logo";
 import { cn } from "@/lib/utils";
+import { useSimulationTimer } from "@/lib/simulation/timer";
 import { DepartmentScreen } from "@/components/simulation/Decisions";
 import {
   FinancePanel,
@@ -269,6 +271,23 @@ export function SimulationApp() {
   const [booting, setBooting] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  /* ── timer ──────────────────────────────────────────────────────── */
+
+  const timer = useSimulationTimer(companyId, state.quarter);
+  const readOnly = timer.paused || timer.expired;
+  const timerActive = (phase === "briefing" || phase === "play") && !runStatus;
+
+  /* Read-only wrappers: when the simulation is paused or expired, every setter becomes a no-op
+     so no value can be changed through any code path. */
+  const guardAlloc = useCallback((a: Alloc) => { if (!readOnly) setAlloc(a); }, [readOnly]);
+  const guardSetWarranty = useCallback((w: WarrantyId) => { if (!readOnly) setWarranty(w); }, [readOnly]);
+  const guardSetPayTerms = useCallback((p: PayTermsId) => { if (!readOnly) setPayTerms(p); }, [readOnly]);
+  const guardSetStartInno = useCallback((s: string[]) => { if (!readOnly) setStartInno(s); }, [readOnly]);
+  const guardSetProducts = useCallback((p: Record<ProductId, ProductState>) => { if (!readOnly) setProducts(p); }, [readOnly]);
+  const guardSetPriority = useCallback((p: PriorityId | null) => { if (!readOnly) setPriority(p); }, [readOnly]);
+  const guardSetReflection = useCallback((r: Reflection) => { if (!readOnly) setReflection(r); }, [readOnly]);
+  const guardSetCrisis = useCallback((c: CrisisInput) => { if (!readOnly) setCrisis(c); }, [readOnly]);
 
   /**
    * The named wait, when there is one.
@@ -559,7 +578,8 @@ export function SimulationApp() {
   const startQuarter = useCallback(() => {
     setPhase("play");
     setTab("dashboard");
-  }, [setTab]);
+    timer.startTimer();
+  }, [setTab, timer]);
 
   const closeQuarter = useCallback(async () => {
     if (inFlight.current) return;
@@ -626,6 +646,7 @@ export function SimulationApp() {
       const run = await loadRun();
       resetPlan(run.state);
       setPhase(justClosed === 3 && !run.endgamePath ? "termsheet" : "briefing");
+      timer.reset();
       setWorking(null);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not open the next quarter.");
@@ -656,6 +677,7 @@ export function SimulationApp() {
         resetPlan(run.state);
         setPhase("briefing");
         setTab("dashboard");
+        timer.reset();
         setWorking(null);
       } catch (err) {
         setError(err instanceof ApiError ? err.message : "Could not record that decision.");
@@ -818,6 +840,35 @@ export function SimulationApp() {
               retryLabel={working.dismiss}
             />
           )}
+          {timerActive && timer.paused && !working && (
+            <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/20 backdrop-blur-[1px]">
+              <div className="flex items-center gap-3 rounded-lg border border-amber/40 bg-amber/10 px-6 py-4 backdrop-blur-sm">
+                <Pause className="h-5 w-5 text-amber" />
+                <div>
+                  <div className="font-serif text-lg text-ink">Simulation paused</div>
+                  <div className="text-sm text-dim">Timer frozen at {timer.formatTime()}. All inputs are read-only.</div>
+                </div>
+                <button
+                  onClick={timer.unpause}
+                  className="ml-4 flex items-center gap-1.5 border border-amber/60 px-3 py-1.5 text-xs uppercase tracking-widest text-amber hover:bg-amber/10 transition-colors"
+                >
+                  <Play className="h-3 w-3" />
+                  Resume
+                </button>
+              </div>
+            </div>
+          )}
+          {timerActive && timer.expired && !working && (
+            <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/20 backdrop-blur-[1px]">
+              <div className="flex items-center gap-3 rounded-lg border border-danger/40 bg-danger/10 px-6 py-4 backdrop-blur-sm">
+                <AlertTriangle className="h-5 w-5 text-danger-soft" />
+                <div>
+                  <div className="font-serif text-lg text-ink">Time expired</div>
+                  <div className="text-sm text-dim">The 50-minute timer has ended. All inputs are now read-only.</div>
+                </div>
+              </div>
+            </div>
+          )}
           <div className={SHELL + " flex h-full"}>
           {/* Always mounted while there is a rail to show, and collapsed by animating its
               width to zero rather than by unmounting.
@@ -919,6 +970,45 @@ export function SimulationApp() {
 
               {showNav && (
                 <div className="flex min-w-0 flex-wrap items-center gap-x-5 gap-y-1 font-mono text-sm">
+                  {timerActive && (
+                    <span className={cn(
+                      "flex items-center gap-2 border px-3 py-1.5 text-sm font-mono",
+                      timer.expired
+                        ? "border-danger/60 bg-danger/10 text-danger-soft"
+                        : timer.paused
+                          ? "border-amber/60 bg-amber/10 text-amber"
+                          : timer.remaining <= 300
+                            ? "border-danger/60 bg-danger/10 text-danger-soft"
+                            : "border-line-2 bg-transparent text-white",
+                    )}>
+                      <Clock className="h-3.5 w-3.5" />
+                      {timer.formatTime()}
+                    </span>
+                  )}
+                  {timerActive && (
+                    <button
+                      onClick={() => timer.paused ? timer.unpause() : timer.pause()}
+                      className={cn(
+                        "flex items-center gap-1.5 border px-2 py-1 text-xs uppercase tracking-widest transition-colors",
+                        timer.paused
+                          ? "border-amber/60 text-amber hover:bg-amber/10"
+                          : "border-line-2 text-dim hover:text-white",
+                      )}
+                      title={timer.paused ? "Resume simulation" : "Pause simulation"}
+                    >
+                      {timer.paused ? (
+                        <>
+                          <Play className="h-3 w-3" />
+                          <span className="hidden sm:inline">Resume</span>
+                        </>
+                      ) : (
+                        <>
+                          <Pause className="h-3 w-3" />
+                          <span className="hidden sm:inline">Pause</span>
+                        </>
+                      )}
+                    </button>
+                  )}
                   <span>
                     <span className="text-dim text-xs uppercase tracking-widest mr-2">Quarter</span>
                     {state.quarter}/4
@@ -1125,11 +1215,12 @@ export function SimulationApp() {
 
         archId={archId}
         crisis={crisis}
-        setCrisis={setCrisis}
+        setCrisis={guardSetCrisis}
         locked={false}
         budget={budget}
         briefing={briefing}
         commitReading={commitReading}
+        readOnly={readOnly}
       />
     );
   } else if (tab === "crisis") {
@@ -1147,7 +1238,7 @@ export function SimulationApp() {
         inbox={messages}
         constraint={liveConstraint}
         reflection={reflection}
-        setReflection={setReflection}
+        setReflection={guardSetReflection}
         priority={priority}
         alloc={alloc}
         budget={budget}
@@ -1156,6 +1247,7 @@ export function SimulationApp() {
         onClose={closeQuarter}
         busy={busy}
         error={error}
+        readOnly={readOnly}
       />
     );
   } else if (DECISION_GROUPS[tab]) {
@@ -1164,37 +1256,39 @@ export function SimulationApp() {
         id={tab}
         s={state}
         alloc={alloc}
-        setAlloc={setAlloc}
+        setAlloc={guardAlloc}
         ctx={ctx}
         budget={budget}
         dirs={dirs}
         inbox={messages}
         advanced={advanced}
-        setAdvanced={setAdvanced}
+        setAdvanced={readOnly ? () => {} : setAdvanced}
+        readOnly={readOnly}
         extraTop={
           tab === "rnd" ? (
             <>
               <ProductFocus s={state} p={projection} last={last} startInno={startInno} alloc={alloc} />
-              <ProductPortfolio s={state} products={products} setProducts={setProducts} p={projection} />
+              <ProductPortfolio s={state} products={products} setProducts={guardSetProducts} p={projection} readOnly={readOnly} />
             </>
           ) : tab === "hr" ? (
-            <PeoplePanel s={state} alloc={alloc} setAlloc={setAlloc} p={projection} />
+            <PeoplePanel s={state} alloc={alloc} setAlloc={guardAlloc} p={projection} readOnly={readOnly} />
           ) : null
         }
         extra={
           tab === "rnd" ? (
             <>
-              <InnovationBoard s={state} startInno={startInno} setStartInno={setStartInno} p={projection} />
-              <WarrantyPanel warranty={warranty} setWarranty={setWarranty} p={projection} />
+              <InnovationBoard s={state} startInno={startInno} setStartInno={guardSetStartInno} p={projection} readOnly={readOnly} />
+              <WarrantyPanel warranty={warranty} setWarranty={guardSetWarranty} p={projection} readOnly={readOnly} />
             </>
           ) : tab === "finance" ? (
             <FinancePanel
               s={state}
               alloc={alloc}
-              setAlloc={setAlloc}
+              setAlloc={guardAlloc}
               payTerms={payTerms}
-              setPayTerms={setPayTerms}
+              setPayTerms={guardSetPayTerms}
               p={projection}
+              readOnly={readOnly}
             />
           ) : null
         }
