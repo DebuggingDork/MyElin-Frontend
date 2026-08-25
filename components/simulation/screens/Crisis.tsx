@@ -41,6 +41,7 @@ export function CrisisScreen({
   budget,
   briefing,
   commitReading,
+  readOnly,
 }: {
   s: CompanyState;
   archId: ArchetypeId;
@@ -49,8 +50,8 @@ export function CrisisScreen({
   locked: boolean;
   budget: Budget;
   briefing: CrisisBriefing | null;
-  /** The server's read on the amount committed. Absent until a preview has run. */
   commitReading: { band: string; strain: string; line: string; trade: string } | null;
+  readOnly?: boolean;
 }) {
   const [step, setStep] = useState(crisis.strategy ? 4 : 0);
   const arch = ARCHETYPES[archId];
@@ -145,7 +146,7 @@ export function CrisisScreen({
             {(briefing?.diagnoses ?? arch.diagnoses.map((id: DiagnosisId) => ({ id, label: DIAGNOSIS_LABELS[id] }))).map((d) => (
               <button
                 key={d.id}
-                disabled={locked}
+                disabled={locked || readOnly}
                 onClick={() => set("diagnosis", d.id)}
                 className={choiceClass(crisis.diagnosis === d.id)}
               >
@@ -159,7 +160,7 @@ export function CrisisScreen({
               value={crisis.reasoning || ""}
               onChange={(e) => set("reasoning", e.target.value)}
               rows={2}
-              disabled={locked}
+              disabled={locked || readOnly}
               placeholder="A sentence on what in the evidence points you there."
               className="w-full border border-line-2 p-3 text-sm bg-raise mt-2 focus:outline-none focus:ring-2 focus:ring-ink"
             />
@@ -182,7 +183,7 @@ export function CrisisScreen({
               return (
                 <button
                   key={c.id}
-                  disabled={locked}
+                  disabled={locked || readOnly}
                   onClick={() => set("strategy", c.id as StrategyId)}
                   className={
                     "text-left border p-4 text-ink transition-colors duration-150 ease-out " +
@@ -235,6 +236,7 @@ export function CrisisScreen({
                     step="1"
                     value={crisis.commit}
                     placeholder="0"
+                    readOnly={readOnly}
                     onChange={(e) => set("commit", e.target.value.replace(/^-/, ""))}
                     className="w-32 border border-line-2 px-2 py-1 text-right font-mono text-lg focus:outline-none focus:ring-2 focus:ring-ink"
                   />
