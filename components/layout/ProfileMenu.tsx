@@ -1,24 +1,27 @@
 "use client";
 
 /**
- * The account menu.
+ * Profile menu — minimal 4-item main dropdown with a "More" submenu.
  *
- * Grouped into the five things an account actually has here -- who you are, what you have run,
- * your password, how the app looks, and where to get help -- with a rule between each group so
- * the list can be scanned rather than read.
+ * Main dropdown:
+ *   1. Name (identity header, not a nav link)
+ *   2. Edit Profile  → /profile
+ *   3. My Simulations → /runs
+ *   4. More           → opens submenu with remaining items
  *
- * Every row goes somewhere real. There is deliberately no "notification preferences" entry:
- * the backend stores no notification settings, so the row would be a switch wired to nothing.
- * The same test was applied to each of the others -- "My simulations" and "Completed" are
- * filters over `GET /companies`, "Security & password" is the Supabase password surface the
- * backend already proxies, "Appearance" is the theme the whole app already reads, and
- * "Help" / "Contact" are pages that exist.
+ * "More" submenu contains:
+ *   - Recent runs, Completed, New simulation
+ *   - Security & password, Send a password reset
+ *   - Appearance toggle
+ *   - Help & FAQ, Contact us
+ *   - Log out
  */
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import {
   ChevronDown,
+  ChevronRight,
   CircleCheck,
   LifeBuoy,
   LogOut,
@@ -63,8 +66,6 @@ const RUN_STATUS_ACCENT: Record<RunStatus, Accent> = {
   completed: "emerald",
 };
 
-/** How many runs the menu lists inline before deferring to `/runs`. Three keeps the panel
- *  scannable at a glance; the full history is one click away and always was. */
 const RECENT_LIMIT = 3;
 
 function Avatar({
@@ -91,7 +92,6 @@ function Avatar({
   );
 }
 
-/** A group heading plus its rule. The dividers are what make the menu readable at a glance. */
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="border-t border-line px-2 py-2">
@@ -104,7 +104,7 @@ function Section({ label, children }: { label: string; children: React.ReactNode
 }
 
 const rowClass =
-  "flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-[13px] text-dim transition-colors hover:bg-[var(--panel-2)] hover:text-ink";
+  "flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-[13px] text-dim transition-all duration-150 ease-out hover:bg-[var(--panel-2)] hover:text-ink hover:translate-x-0.5";
 
 function Row({
   href,
@@ -134,10 +134,8 @@ export function ProfileMenu() {
   const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
+  const [showMore, setShowMore] = useState(false);
   const [runs, setRuns] = useState<CompanyListItem[] | null>(null);
-  // The chip is on screen at all times, so the profile behind it is loaded on mount rather
-  // than on first open -- it is one small request, and deferring it meant the nav could only
-  // ever show an email address.
   const profile = useSyncExternalStore(subscribeIdentity, identitySnapshot, identityServerSnapshot);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -147,8 +145,6 @@ export function ProfileMenu() {
     if (user) primeIdentity();
   }, [user]);
 
-  // The run list stays deferred to first open: it is the expensive half, and a closed menu has
-  // nothing to show for it.
   useEffect(() => {
     if (!open || !user || runs !== null) return;
     let cancelled = false;
@@ -175,10 +171,14 @@ export function ProfileMenu() {
     function onPointerDown(e: MouseEvent) {
       if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
         setOpen(false);
+        setShowMore(false);
       }
     }
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        setOpen(false);
+        setShowMore(false);
+      }
     }
     document.addEventListener("mousedown", onPointerDown);
     document.addEventListener("keydown", onKey);
@@ -190,18 +190,24 @@ export function ProfileMenu() {
 
   if (!user) return null;
 
-  const close = () => setOpen(false);
+  const close = () => {
+    setOpen(false);
+    setShowMore(false);
+  };
+  const displayName = nameFor(profile, user.email);
   const recent = (runs ?? []).slice(0, RECENT_LIMIT);
   const completed = (runs ?? []).filter(
     (r) => r.run_status === "completed" || r.run_status === "failed",
   ).length;
-  const displayName = nameFor(profile, user.email);
 
   return (
     <div className="relative" ref={rootRef}>
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          setOpen((v) => !v);
+          setShowMore(false);
+        }}
         aria-expanded={open}
         aria-haspopup="true"
         aria-label="Account menu"
@@ -217,158 +223,192 @@ export function ProfileMenu() {
       {open && (
         <div
           aria-label="Account"
-          /* Width tracks the viewport so the panel never overflows a narrow phone, and the
-             list scrolls inside its own box rather than pushing the page taller than the
-             screen. */
           className="absolute right-0 top-[calc(100%+10px)] max-h-[min(78vh,42rem)] w-[min(20rem,calc(100vw-1.5rem))] overflow-y-auto overscroll-contain rounded-2xl border border-line bg-void/97 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.6)] backdrop-blur-xl"
         >
-          {/* ── Profile ─────────────────────────────────────────────── */}
-          <div className="flex items-center gap-3 px-4 py-4">
-            <Avatar email={user.email} firstName={profile?.first_name} size={40} />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-[13.5px] font-medium text-ink">{displayName}</p>
-              <p className="truncate text-[11.5px] text-faint">{user.email}</p>
-            </div>
-            <Pill accent="teal">{humanizeId(profile?.role ?? "student")}</Pill>
-          </div>
-          <div className="px-2 pb-2">
-            <Row href="/profile" icon={UserPen} onSelect={close}>
-              Edit profile
-            </Row>
-          </div>
-
-          {/* ── Simulations ─────────────────────────────────────────── */}
-          <Section label="Simulations">
-            {loading && <p className="px-3 py-2 text-[12.5px] text-dim">Loading your runs…</p>}
-
-            {!loading && error && <p className="px-3 py-2 text-[12.5px] text-dim">{error}</p>}
-
-            {!loading && !error && recent.length > 0 && (
-              <div className="pb-1">
-                {recent.map((run) => (
-                  <Link
-                    key={run.id}
-                    href={runHref(run.seq, "/simulation")}
-                    onClick={close}
-                    className="flex items-center gap-2.5 rounded-xl px-3 py-2 transition-colors hover:bg-[var(--panel-2)]"
-                  >
-                    <span className="num w-8 shrink-0 text-[11px] text-faint">
-                      #{run.seq}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[13px] text-ink">{run.name}</span>
-                      <span className="num block text-[11px] text-faint">
-                        Q{run.quarters_locked}/{run.total_quarters}
-                      </span>
-                    </span>
-                    <Pill accent={RUN_STATUS_ACCENT[run.run_status]}>
-                      {RUN_STATUS_LABEL[run.run_status]}
-                    </Pill>
-                  </Link>
-                ))}
+          {showMore ? (
+            /* ── More submenu ────────────────────────────── */
+            <div>
+              {/* Back header */}
+              <div className="flex items-center border-b border-line px-4 py-3">
+                <button
+                  type="button"
+                  onClick={() => setShowMore(false)}
+                  className="flex items-center gap-1.5 text-[12.5px] text-dim transition-all duration-150 ease-out hover:text-ink hover:-translate-x-0.5"
+                >
+                  <ChevronRight className="h-3.5 w-3.5 rotate-180" />
+                  Back
+                </button>
+                <span className="ml-2 text-[13px] font-medium text-ink">More</span>
               </div>
-            )}
 
-            {!loading && !error && runs !== null && runs.length === 0 && (
-              <p className="px-3 py-2 text-[12.5px] text-dim">No simulations started yet.</p>
-            )}
+              {/* Simulations */}
+              <Section label="Simulations">
+                {loading && (
+                  <p className="px-3 py-2 text-[12.5px] text-dim">Loading your runs…</p>
+                )}
+                {!loading && error && (
+                  <p className="px-3 py-2 text-[12.5px] text-dim">{error}</p>
+                )}
+                {!loading && !error && recent.length > 0 && (
+                  <div className="pb-1">
+                    {recent.map((run) => (
+                      <Link
+                        key={run.id}
+                        href={runHref(run.seq, "/simulation")}
+                        onClick={close}
+                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 transition-all duration-150 ease-out hover:bg-[var(--panel-2)] hover:translate-x-0.5"
+                      >
+                        <span className="num w-8 shrink-0 text-[11px] text-faint">
+                          #{run.seq}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-[13px] text-ink">{run.name}</span>
+                          <span className="num block text-[11px] text-faint">
+                            Q{run.quarters_locked}/{run.total_quarters}
+                          </span>
+                        </span>
+                        <Pill accent={RUN_STATUS_ACCENT[run.run_status]}>
+                          {RUN_STATUS_LABEL[run.run_status]}
+                        </Pill>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+                {!loading && !error && runs !== null && runs.length === 0 && (
+                  <p className="px-3 py-2 text-[12.5px] text-dim">No simulations started yet.</p>
+                )}
+                <Row href="/runs" icon={Play} onSelect={close} meta={
+                  runs ? <span className="num text-[11px] text-faint">{runs.length}</span> : null
+                }>
+                  My simulations
+                </Row>
+                <Row href="/runs?filter=completed" icon={CircleCheck} onSelect={close} meta={
+                  runs ? <span className="num text-[11px] text-faint">{completed}</span> : null
+                }>
+                  Completed
+                </Row>
+                <Row href={simulationHref} icon={Plus} onSelect={close}>
+                  New simulation
+                </Row>
+              </Section>
 
-            <Row
-              href="/runs"
-              icon={Play}
-              onSelect={close}
-              meta={
-                runs ? <span className="num text-[11px] text-faint">{runs.length}</span> : null
-              }
-            >
-              My simulations
-            </Row>
-            <Row
-              href="/runs?filter=completed"
-              icon={CircleCheck}
-              onSelect={close}
-              meta={
-                runs ? <span className="num text-[11px] text-faint">{completed}</span> : null
-              }
-            >
-              Completed
-            </Row>
-            <Row href={simulationHref} icon={Plus} onSelect={close}>
-              New simulation
-            </Row>
-          </Section>
+              {/* Account & security */}
+              <Section label="Account & security">
+                <Row href="/account/security" icon={ShieldCheck} onSelect={close}>
+                  Security &amp; password
+                </Row>
+                <Row href="/forgot-password" icon={Mail} onSelect={close}>
+                  Send a password reset
+                </Row>
+              </Section>
 
-          {/* ── Account & security ──────────────────────────────────── */}
-          <Section label="Account & security">
-            <Row href="/account/security" icon={ShieldCheck} onSelect={close}>
-              Security &amp; password
-            </Row>
-            <Row href="/forgot-password" icon={Mail} onSelect={close}>
-              Send a password reset
-            </Row>
-          </Section>
+              {/* Preferences */}
+              <Section label="Preferences">
+                <div className="flex items-center justify-between gap-3 rounded-xl px-3 py-2">
+                  <span className="text-[13px] text-dim">Appearance</span>
+                  <div
+                    role="radiogroup"
+                    aria-label="Appearance"
+                    className="flex items-center rounded-full border border-line p-0.5"
+                  >
+                    {(
+                      [
+                        { id: "light", label: "Light", Icon: Sun },
+                        { id: "dark", label: "Dark", Icon: Moon },
+                      ] as const
+                    ).map(({ id, label, Icon }) => (
+                      <button
+                        key={id}
+                        type="button"
+                        role="radio"
+                        aria-checked={theme === id}
+                        aria-label={label}
+                        title={label}
+                        onClick={() => setTheme(id)}
+                        className={cn(
+                          "flex h-6 w-7 items-center justify-center rounded-full transition-colors",
+                          theme === id
+                            ? "bg-[var(--panel-2)] text-ink"
+                            : "text-faint hover:text-dim",
+                        )}
+                      >
+                        <Icon className="h-3.5 w-3.5" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </Section>
 
-          {/* ── Preferences ─────────────────────────────────────────── */}
-          <Section label="Preferences">
-            <div className="flex items-center justify-between gap-3 rounded-xl px-3 py-2">
-              <span className="text-[13px] text-dim">Appearance</span>
-              <div
-                role="radiogroup"
-                aria-label="Appearance"
-                className="flex items-center rounded-full border border-line p-0.5"
+              {/* Support */}
+              <Section label="Support">
+                <Row href="/faq" icon={LifeBuoy} onSelect={close}>
+                  Help &amp; FAQ
+                </Row>
+                <Row href="/#institutions" icon={Mail} onSelect={close}>
+                  Contact us
+                </Row>
+              </Section>
+
+              {/* Session */}
+              <div className="border-t border-line p-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    logout();
+                    close();
+                  }}
+                  className={cn(rowClass, "hover:bg-rose/[0.09] hover:text-rose hover:translate-x-0.5")}
+                >
+                  <LogOut className="h-3.5 w-3.5 shrink-0" />
+                  Log out
+                </button>
+              </div>
+            </div>
+          ) : (
+            /* ── Main dropdown: 4 items ──────────────────── */
+            <div className="p-2">
+              {/* 1. Name — identity header */}
+              <Link
+                href="/profile"
+                onClick={close}
+                className="flex items-center gap-3 rounded-xl px-3 py-3 transition-all duration-150 ease-out hover:bg-[var(--panel-2)] hover:translate-x-0.5"
               >
-                {(
-                  [
-                    { id: "light", label: "Light", Icon: Sun },
-                    { id: "dark", label: "Dark", Icon: Moon },
-                  ] as const
-                ).map(({ id, label, Icon }) => (
-                  <button
-                    key={id}
-                    type="button"
-                    role="radio"
-                    aria-checked={theme === id}
-                    aria-label={label}
-                    title={label}
-                    onClick={() => setTheme(id)}
-                    className={cn(
-                      "flex h-6 w-7 items-center justify-center rounded-full transition-colors",
-                      theme === id
-                        ? "bg-[var(--panel-2)] text-ink"
-                        : "text-faint hover:text-dim",
-                    )}
-                  >
-                    <Icon className="h-3.5 w-3.5" />
-                  </button>
-                ))}
+                <Avatar email={user.email} firstName={profile?.first_name} size={36} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[13.5px] font-medium text-ink">{displayName}</p>
+                  <p className="truncate text-[11.5px] text-faint">{user.email}</p>
+                </div>
+                <Pill accent="teal">{humanizeId(profile?.role ?? "student")}</Pill>
+              </Link>
+
+              {/* 2. Edit Profile */}
+              <div className="mt-1">
+                <Row href="/profile" icon={UserPen} onSelect={close}>
+                  Edit Profile
+                </Row>
               </div>
+
+              {/* 3. My Simulations */}
+              <Row href="/runs" icon={Play} onSelect={close}>
+                My Simulations
+              </Row>
+
+              {/* 4. More */}
+              <button
+                type="button"
+                onClick={() => setShowMore(true)}
+                className={cn(rowClass, "mt-0.5")}
+              >
+                <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center">
+                  <span className="block h-1 w-1 rounded-full bg-current" />
+                  <span className="mx-0.5 block h-1 w-1 rounded-full bg-current" />
+                  <span className="block h-1 w-1 rounded-full bg-current" />
+                </span>
+                <span className="min-w-0 flex-1 truncate">More</span>
+                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-faint" />
+              </button>
             </div>
-          </Section>
-
-          {/* ── Support ─────────────────────────────────────────────── */}
-          <Section label="Support">
-            <Row href="/faq" icon={LifeBuoy} onSelect={close}>
-              Help &amp; FAQ
-            </Row>
-            <Row href="/#institutions" icon={Mail} onSelect={close}>
-              Contact us
-            </Row>
-          </Section>
-
-          {/* ── Session ─────────────────────────────────────────────── */}
-          <div className="border-t border-line p-2">
-            <button
-              type="button"
-              onClick={() => {
-                logout();
-                close();
-              }}
-              className={cn(rowClass, "hover:bg-rose/[0.09] hover:text-rose")}
-            >
-              <LogOut className="h-3.5 w-3.5 shrink-0" />
-              Log out
-            </button>
-          </div>
+          )}
         </div>
       )}
     </div>
