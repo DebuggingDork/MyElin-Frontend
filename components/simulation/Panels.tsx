@@ -86,11 +86,13 @@ export function InnovationBoard({
   startInno,
   setStartInno,
   p,
+  readOnly,
 }: {
   s: CompanyState;
   startInno: string[];
   setStartInno: (ids: string[]) => void;
   p: QuarterResultShape | null;
+  readOnly?: boolean;
 }) {
   const toggle = (id: string) =>
     setStartInno(startInno.indexOf(id) >= 0 ? startInno.filter((x) => x !== id) : startInno.concat(id));
@@ -126,7 +128,7 @@ export function InnovationBoard({
               return (
                 <button
                   key={card.id}
-                  disabled={shipped || inFlight}
+                  disabled={shipped || inFlight || readOnly}
                   onClick={() => toggle(card.id)}
                   className={
                     "text-left border p-3 transition-colors duration-150 ease-out " +
@@ -202,11 +204,13 @@ export function ProductPortfolio({
   products,
   setProducts,
   p,
+  readOnly,
 }: {
   s: CompanyState;
   products: Record<ProductId, ProductState>;
   setProducts: (v: Record<ProductId, ProductState>) => void;
   p: QuarterResultShape | null;
+  readOnly?: boolean;
 }) {
   const update = (id: ProductId, patch: Partial<ProductState>) =>
     setProducts({ ...products, [id]: { ...products[id], ...patch } });
@@ -275,6 +279,7 @@ export function ProductPortfolio({
                         min="0"
                         step="100"
                         value={cur.price}
+                        readOnly={readOnly}
                         onChange={(e) => update(prod.id, { price: Math.max(0, num(e.target.value)) })}
                         className="w-32 border border-line-2 px-2 py-1 text-right font-mono focus:outline-none focus:ring-2 focus:ring-ink"
                       />
@@ -305,7 +310,7 @@ export function ProductPortfolio({
                         max="100"
                         step="5"
                         value={num(cur.share)}
-                        disabled={cur.status !== "active"}
+                        disabled={cur.status !== "active" || readOnly}
                         onChange={(e) => update(prod.id, { share: num(e.target.value) })}
                         className="flex-1"
                       />
@@ -328,6 +333,7 @@ export function ProductPortfolio({
                         <button
                           key={status}
                           onClick={() => update(prod.id, { status })}
+                          disabled={readOnly}
                           className={optionCard(on, "p-2")}
                         >
                           <div className={"font-serif capitalize " + optionTitle(on)}>
@@ -357,11 +363,13 @@ export function PeoplePanel({
   alloc,
   setAlloc,
   p,
+  readOnly,
 }: {
   s: CompanyState;
   alloc: Alloc;
   setAlloc: (a: Alloc) => void;
   p: QuarterResultShape | null;
+  readOnly?: boolean;
 }) {
   const set = (key: string, val: string) => setAlloc({ ...alloc, [key]: val.replace(/^-/, "") });
 
@@ -416,6 +424,7 @@ export function PeoplePanel({
                     step="1"
                     value={alloc["hire_" + d.id]}
                     placeholder="0"
+                    readOnly={readOnly}
                     onChange={(e) => set("hire_" + d.id, e.target.value)}
                     className="w-20 border border-line-2 px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink"
                   />
@@ -435,6 +444,7 @@ export function PeoplePanel({
                     step="1"
                     value={alloc["fire_" + d.id]}
                     placeholder="0"
+                    readOnly={readOnly}
                     onChange={(e) => set("fire_" + d.id, e.target.value)}
                     className="w-20 border border-line-2 px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink"
                   />
@@ -466,6 +476,7 @@ export function FinancePanel({
   payTerms,
   setPayTerms,
   p,
+  readOnly,
 }: {
   s: CompanyState;
   alloc: Alloc;
@@ -473,6 +484,7 @@ export function FinancePanel({
   payTerms: PayTermsId;
   setPayTerms: (v: PayTermsId) => void;
   p: QuarterResultShape | null;
+  readOnly?: boolean;
 }) {
   const limit = p ? v(p, "debtLimit") : 0;
   const drawn = p ? v(p, "drawn") : 0;
@@ -498,6 +510,7 @@ export function FinancePanel({
                 step="1"
                 value={alloc.draw}
                 placeholder="0"
+                readOnly={readOnly}
                 onChange={(e) => setAlloc({ ...alloc, draw: e.target.value.replace(/^-/, "") })}
                 className={
                   "w-28 border px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink " +
@@ -525,6 +538,7 @@ export function FinancePanel({
                 step="1"
                 value={alloc.repay}
                 placeholder="0"
+                readOnly={readOnly}
                 onChange={(e) => setAlloc({ ...alloc, repay: e.target.value.replace(/^-/, "") })}
                 className="w-28 border border-line-2 px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink"
               />
@@ -552,6 +566,7 @@ export function FinancePanel({
               <button
                 key={t.id}
                 onClick={() => setPayTerms(t.id)}
+                disabled={readOnly}
                 className={optionCard(on)}
               >
                 <div className={"font-serif text-base " + optionTitle(on)}>{t.name}</div>
@@ -575,10 +590,12 @@ export function WarrantyPanel({
   warranty,
   setWarranty,
   p,
+  readOnly,
 }: {
   warranty: WarrantyId;
   setWarranty: (v: WarrantyId) => void;
   p: QuarterResultShape | null;
+  readOnly?: boolean;
 }) {
   const defect = p ? v(p, "defectRate") : 8;
 
@@ -591,6 +608,7 @@ export function WarrantyPanel({
             <button
               key={opt.id}
               onClick={() => setWarranty(opt.id)}
+              disabled={readOnly}
               className={optionCard(on)}
             >
               <div className={"font-serif text-lg " + optionTitle(on)}>{opt.name}</div>
@@ -904,12 +922,14 @@ export function ReflectionForm({
   setReflection,
   priority,
   alloc,
+  readOnly,
 }: {
   constraint: Constraint | null;
   reflection: Reflection;
   setReflection: (r: Reflection) => void;
   priority: PriorityId | null;
   alloc: Alloc;
+  readOnly?: boolean;
 }) {
   const A = numericAlloc(alloc);
   const all = Object.entries(DECISION_GROUPS).flatMap(([dept, g]) =>
@@ -934,11 +954,11 @@ export function ReflectionForm({
           <div className="font-serif text-base text-ink">1. What was the biggest constraint you were solving?</div>
           <div className="grid gap-2 sm:grid-cols-2 mt-2">
             {(constraint ? constraint.all : []).map((c) => (
-              <button key={c.id} onClick={() => set("constraint", c.id)} className={choiceClass(reflection.constraint === c.id)}>
+              <button key={c.id} onClick={() => set("constraint", c.id)} disabled={readOnly} className={choiceClass(reflection.constraint === c.id)}>
                 {c.label}
               </button>
             ))}
-            <button onClick={() => set("constraint", "other")} className={choiceClass(reflection.constraint === "other")}>
+            <button onClick={() => set("constraint", "other")} disabled={readOnly} className={choiceClass(reflection.constraint === "other")}>
               Something else entirely
             </button>
           </div>
@@ -973,6 +993,7 @@ export function ReflectionForm({
               <button
                 key={x.it.id}
                 onClick={() => toggleSacrifice(x.it.id)}
+                disabled={readOnly}
                 className={choiceClass((reflection.sacrifice || []).indexOf(x.it.id) >= 0)}
               >
                 {x.it.name}
@@ -985,7 +1006,7 @@ export function ReflectionForm({
           <div className="font-serif text-base text-ink">4. What risk are you accepting?</div>
           <div className="grid gap-2 sm:grid-cols-2 mt-2">
             {RISK_OPTIONS.map((o) => (
-              <button key={o.id} onClick={() => set("risk", o.id)} className={choiceClass(reflection.risk === o.id)}>
+              <button key={o.id} onClick={() => set("risk", o.id)} disabled={readOnly} className={choiceClass(reflection.risk === o.id)}>
                 {o.label}
               </button>
             ))}
@@ -996,7 +1017,7 @@ export function ReflectionForm({
           <div className="font-serif text-base text-ink">5. What do you expect to happen?</div>
           <div className="grid gap-2 sm:grid-cols-4 mt-2">
             {EXPECT_OPTIONS.map((o) => (
-              <button key={o.id} onClick={() => set("expect", o.id)} className={choiceClass(reflection.expect === o.id)}>
+              <button key={o.id} onClick={() => set("expect", o.id)} disabled={readOnly} className={choiceClass(reflection.expect === o.id)}>
                 {o.label}
               </button>
             ))}
@@ -1011,6 +1032,7 @@ export function ReflectionForm({
             value={reflection.note || ""}
             onChange={(e) => set("note", e.target.value)}
             rows={2}
+            disabled={readOnly}
             placeholder="Only if there is something the four answers above do not capture."
             className="w-full border border-line-2 p-3 text-sm bg-raise mt-2 focus:outline-none focus:ring-2 focus:ring-ink"
           />
