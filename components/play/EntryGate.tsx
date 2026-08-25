@@ -13,8 +13,8 @@ import { cn } from "@/lib/utils";
 const TERMS = [
   {
     id: "time",
-    label: "I have thirty uninterrupted minutes.",
-    cost: "Pausing mid-quarter resets the run.",
+    label: "I have fifty uninterrupted minutes.",
+    cost: "You may pause the timer, but each quarter has a 50-minute limit.",
   },
   {
     id: "consequence",

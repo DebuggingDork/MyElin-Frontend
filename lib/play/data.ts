@@ -16,7 +16,7 @@ export const startupSurvival: Scenario = {
     stage: "Seed",
     sector: "D2C wearables",
   },
-  minutes: 30,
+  minutes: 50,
   metrics: [
     { key: "cash", label: "Cash in bank", value: "₹1.5 Cr", accent: "emerald" },
     { key: "price", label: "Nadi Pulse price", value: "₹9,999", accent: "cyan" },

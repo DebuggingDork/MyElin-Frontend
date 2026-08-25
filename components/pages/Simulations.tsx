@@ -34,7 +34,7 @@ const scenarios: Scenario[] = [
     status: "LIVE",
     category: "Founder",
     copy: "Run a consumer-hardware company for four quarters. Pressure: cash, a market event, the board, a competitor who does not wait.",
-    duration: "30 min",
+    duration: "50 min",
     level: "Beginner → Pro",
     intensity: 62,
   },
