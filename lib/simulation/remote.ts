@@ -303,6 +303,14 @@ export type RunResponse = {
   history: QuarterResultShape[];
   scores: QuarterScore[];
   endgamePath: string | null;
+  rewindsUsed: number;
+};
+
+export type RewindResponse = {
+  targetQuarter: number;
+  deletedQuarters: number[];
+  rewindsUsed: number;
+  rewindsRemaining: number;
 };
 
 export type EndgameResponse = {
@@ -369,5 +377,11 @@ export const simulationApi = {
     request<{ path: string; term_sheet_name: string; tier: string }>(
       `/companies/${companyId}/simulation/endgame`,
       { method: "POST", body: JSON.stringify({ path, term_sheet_name: termSheetName, reasoning }) },
+    ),
+
+  rewind: (companyId: string, targetQuarter: number): Promise<RewindResponse> =>
+    request<RewindResponse>(
+      `/companies/${companyId}/simulation/rewind`,
+      { method: "POST", body: JSON.stringify({ target_quarter: targetQuarter }) },
     ),
 };
