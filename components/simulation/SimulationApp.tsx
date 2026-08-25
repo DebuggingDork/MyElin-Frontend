@@ -18,7 +18,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { Pause, Play, Clock, AlertTriangle } from "lucide-react";
+import { Pause, Play, Clock, AlertTriangle, RotateCcw } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { LogOut, PanelLeftOpen, X } from "lucide-react";
@@ -86,6 +86,7 @@ import { FinalScreen } from "@/components/simulation/screens/Final";
 import { PrinciplesScreen } from "@/components/simulation/screens/Principles";
 import { BalanceSheetScreen } from "@/components/simulation/screens/BalanceSheetScreen";
 import { SectionNav } from "@/components/simulation/SectionNav";
+import { RewindModal } from "@/components/simulation/RewindModal";
 import type {
   Alloc,
   ArchetypeId,
@@ -235,6 +236,7 @@ export function SimulationApp() {
   const [scores, setScores] = useState<QuarterScore[]>([]);
   const [briefing, setBriefing] = useState<CrisisBriefing | null>(null);
   const [runStatus, setRunStatus] = useState<"active" | "completed">("active");
+  const [rewindsUsed, setRewindsUsed] = useState(0);
 
   /* ── the plan being built ─────────────────────────────────────── */
 
@@ -277,6 +279,12 @@ export function SimulationApp() {
   const timer = useSimulationTimer(companyId, state.quarter);
   const readOnly = timer.paused || timer.expired;
   const timerActive = (phase === "briefing" || phase === "play") && !runStatus;
+
+  /* ── rewind ────────────────────────────────────────────────────── */
+  const MAX_REWINDS = 2;
+  const rewindsRemaining = MAX_REWINDS - rewindsUsed;
+  const [rewindModalOpen, setRewindModalOpen] = useState(false);
+  const [rewindBusy, setRewindBusy] = useState(false);
 
   /* Read-only wrappers: when the simulation is paused or expired, every setter becomes a no-op
      so no value can be changed through any code path. */
@@ -404,6 +412,7 @@ export function SimulationApp() {
     setScores(run.scores);
     setBriefing(run.crisis);
     setRunStatus(run.runStatus);
+    setRewindsUsed(run.rewindsUsed);
     setPriorities(
       run.history.map((h) => ((h as Record<string, unknown>).priority as PriorityId | null) ?? null),
     );
@@ -580,6 +589,35 @@ export function SimulationApp() {
     setTab("dashboard");
     timer.startTimer();
   }, [setTab, timer]);
+
+  const handleRewind = useCallback(async (targetQuarter: number) => {
+    if (inFlight.current || rewindBusy) return;
+    inFlight.current = true;
+    setRewindBusy(true);
+    setError(null);
+    try {
+      const result = await simulationApi.rewind(companyId, targetQuarter);
+      // Clear localStorage drafts for all deleted quarters
+      for (const q of result.deletedQuarters) {
+        try {
+          window.localStorage.removeItem(draftKey(companyId, q));
+        } catch { /* nothing to recover from */ }
+      }
+      // Reload full state from server -- replay architecture handles restoration
+      await loadRun();
+      setRewindModalOpen(false);
+      setPhase("briefing");
+    } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? (err.body as { reason?: string })?.reason ?? err.message
+          : "Rewind failed",
+      );
+    } finally {
+      setRewindBusy(false);
+      inFlight.current = false;
+    }
+  }, [companyId, loadRun, rewindBusy]);
 
   const closeQuarter = useCallback(async () => {
     if (inFlight.current) return;
@@ -1009,6 +1047,18 @@ export function SimulationApp() {
                       )}
                     </button>
                   )}
+                  {rewindsRemaining > 0 && history.length > 0 && phase !== "final" && (
+                    <button
+                      onClick={() => setRewindModalOpen(true)}
+                      disabled={rewindBusy}
+                      className="flex items-center gap-1.5 border border-line-2 px-2 py-1 text-xs uppercase tracking-widest text-dim transition-colors hover:text-white disabled:opacity-50"
+                      title="Rewind to a previous quarter"
+                    >
+                      <RotateCcw className="h-3 w-3" />
+                      <span className="hidden sm:inline">Rewind</span>
+                      <span className="text-[10px] ml-0.5">({rewindsRemaining})</span>
+                    </button>
+                  )}
                   <span>
                     <span className="text-dim text-xs uppercase tracking-widest mr-2">Quarter</span>
                     {state.quarter}/4
@@ -1072,6 +1122,14 @@ export function SimulationApp() {
           </div>
         </div>
       </div>
+      <RewindModal
+        open={rewindModalOpen}
+        onClose={() => setRewindModalOpen(false)}
+        onConfirm={handleRewind}
+        completedQuarters={history.map((_, i) => i + 1)}
+        rewindsRemaining={rewindsRemaining}
+        busy={rewindBusy}
+      />
     </TeachingContext.Provider>
   );
 
