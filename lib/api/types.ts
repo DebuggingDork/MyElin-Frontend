@@ -461,6 +461,13 @@ export type QuarterReportPdfResponse = {
   expires_in: number;
 };
 
+export type SimulationReportPdfResponse = {
+  bucket: string;
+  path: string;
+  signed_url: string;
+  expires_in: number;
+};
+
 export type ApiErrorBody = {
   error?: string;
   reason?: string;

@@ -23,6 +23,7 @@ import type {
   QuarterDetailResponse,
   QuarterReportPdfResponse,
   QuarterReportResponse,
+  SimulationReportPdfResponse,
   RefreshRequest,
   RegisterRequest,
   ResetPasswordRequest,
@@ -463,5 +464,21 @@ export const api = {
     request<EndgameDecisionResponse>(
       `/companies/${companyId}/quarters/${quarterId}/endgame`,
       { method: "POST", body: JSON.stringify(body) },
+    ),
+
+  /** Store the simulation final report PDF. */
+  storeSimulationReportPdf: (companyId: string, pdf: Blob) => {
+    const form = new FormData();
+    form.append("file", pdf, "report.pdf");
+    return request<SimulationReportPdfResponse>(
+      `/companies/${companyId}/simulation/report/pdf`,
+      { method: "POST", body: form },
+    );
+  },
+
+  /** Re-sign a previously stored simulation report PDF. 404 if never generated. */
+  getSimulationReportPdf: (companyId: string) =>
+    request<SimulationReportPdfResponse>(
+      `/companies/${companyId}/simulation/report/pdf`,
     ),
 };
