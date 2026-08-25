@@ -33,6 +33,7 @@ import {
 import { Bar, Eyebrow, LedgerRow, Panel, Stat } from "@/components/simulation/Kit";
 import { QuarterCharts } from "@/components/simulation/QuarterCharts";
 import { BalanceSheetDoc } from "@/components/simulation/BalanceSheetDoc";
+import { FinalReportPdfExport } from "@/components/simulation/FinalReportPdfExport";
 import type { QuarterScore } from "@/lib/simulation/remote";
 import type {
   CompanyState,
@@ -298,7 +299,7 @@ export function FinalScreen({
       )}
 
       <div className="bg-raise border border-line">
-        <button
+      <button
           onClick={() => setOpenRecord(!openRecord)}
           className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-raise"
         >
@@ -358,6 +359,15 @@ export function FinalScreen({
           </div>
         )}
       </div>
+
+      <FinalReportPdfExport
+        scores={scores}
+        history={history}
+        priorities={priorities}
+        s={s}
+        ts={ts}
+        eg={eg}
+      />
 
       <button
         onClick={onRestart}
