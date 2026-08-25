@@ -19,6 +19,7 @@ import {
 } from "@/lib/simulation/constants";
 import { inr, lakh, num } from "@/lib/simulation/format";
 import { BudgetMeter, Eyebrow, Inbox, ReadinessGrid, TeachingNote } from "@/components/simulation/Kit";
+import { cn } from "@/lib/utils";
 import type { DecisionItem, DetailLine } from "@/lib/simulation/constants";
 import type { Alloc, Budget, CompanyState, InboxMessage, PreviewCtx, Readiness } from "@/lib/simulation/types";
 
@@ -29,11 +30,13 @@ function DecisionCard({
   alloc,
   setAlloc,
   cash,
+  readOnly,
 }: {
   item: DecisionItem;
   alloc: Alloc;
   setAlloc: (a: Alloc) => void;
   cash: number;
+  readOnly?: boolean;
 }) {
   const A = numericAlloc(alloc);
   const total = groupTotal(A, item);
@@ -68,8 +71,12 @@ function DecisionCard({
               step="1"
               value={total === 0 ? "" : total}
               placeholder="0"
+              readOnly={readOnly}
               onChange={(e) => setAlloc(spreadGroup(alloc, item, e.target.value.replace(/^-/, "")))}
-              className="w-24 border border-line-2 px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink"
+              className={cn(
+                "w-24 border border-line-2 px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink",
+                readOnly && "opacity-60 cursor-not-allowed",
+              )}
             />
             <span className="text-xs uppercase tracking-widest text-dim">lakh</span>
           </div>
@@ -98,11 +105,13 @@ function DetailLineRow({
   value,
   onChange,
   ctx,
+  readOnly,
 }: {
   line: DetailLine;
   value: string;
   onChange: (v: string) => void;
   ctx: PreviewCtx;
+  readOnly?: boolean;
 }) {
   const amount = num(value);
   const preview = (line.preview ? line.preview(amount, ctx) : []).filter(Boolean) as string[];
@@ -124,10 +133,12 @@ function DetailLineRow({
             step="0.5"
             value={value}
             placeholder="0"
+            readOnly={readOnly}
             onChange={(e) => onChange(e.target.value.replace(/^-/, ""))}
             className={
               "w-24 border px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink " +
-              (overCap ? "border-danger text-tone-bad" : "border-line-2")
+              (overCap ? "border-danger text-tone-bad" : "border-line-2") +
+              (readOnly ? " opacity-60 cursor-not-allowed" : "")
             }
           />
           <span className="text-xs uppercase tracking-widest text-dim w-10">lakh</span>
@@ -157,6 +168,7 @@ export function DepartmentScreen({
   inbox,
   advanced,
   setAdvanced,
+  readOnly,
   extraTop,
   extra,
 }: {
@@ -170,6 +182,7 @@ export function DepartmentScreen({
   inbox: InboxMessage[];
   advanced: boolean;
   setAdvanced: (v: boolean) => void;
+  readOnly?: boolean;
   extraTop?: React.ReactNode;
   extra?: React.ReactNode;
 }) {
@@ -204,7 +217,7 @@ export function DepartmentScreen({
 
       <div className="space-y-3">
         {group.items.map((item) => (
-          <DecisionCard key={item.id} item={item} alloc={alloc} setAlloc={setAlloc} cash={s.cash} />
+          <DecisionCard key={item.id} item={item} alloc={alloc} setAlloc={setAlloc} cash={s.cash} readOnly={readOnly} />
         ))}
       </div>
 
@@ -234,6 +247,7 @@ export function DepartmentScreen({
                 line={line}
                 value={alloc[line.key]}
                 ctx={ctx}
+                readOnly={readOnly}
                 onChange={(val) => setAlloc({ ...alloc, [line.key]: val })}
               />
             ))}
