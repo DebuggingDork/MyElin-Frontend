@@ -40,6 +40,7 @@ export function ReviewScreen({
   onClose,
   busy,
   error,
+  readOnly,
 }: {
   quarter: number;
   state: CompanyState;
@@ -56,10 +57,11 @@ export function ReviewScreen({
   onClose: () => void;
   busy?: boolean;
   error?: string | null;
+  readOnly?: boolean;
 }) {
   const ready = reflectionComplete(reflection);
   const crisisUnanswered = crisisLive && !crisis.strategy;
-  const blocked = crisisUnanswered || !ready || busy;
+  const blocked = crisisUnanswered || !ready || busy || readOnly;
 
   return (
     <div className="space-y-5">
@@ -86,6 +88,7 @@ export function ReviewScreen({
         setReflection={setReflection}
         priority={priority}
         alloc={alloc}
+        readOnly={readOnly}
       />
 
       <BudgetMeter budget={budget} />
