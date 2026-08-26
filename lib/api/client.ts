@@ -330,6 +330,12 @@ export const api = {
   getCompany: (companyId: string) =>
     request<CompanyDetailResponse>(`/companies/${companyId}`),
 
+  updateCompany: (companyId: string, body: { name: string }) =>
+    request<CompanyDetailResponse>(`/companies/${companyId}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }),
+
   getRun: (companyId: string) =>
     request<RunStateResponse>(`/companies/${companyId}/run`),
 
