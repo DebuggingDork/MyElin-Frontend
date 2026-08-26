@@ -43,3 +43,30 @@ export const n2 = (v: number): string =>
   num(v).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export const pct = (v: number): string => n1(v) + "%";
+
+/**
+ * Arrow-key / spinner handler for `<input type="number">` that preserves decimal precision.
+ *
+ * The browser's native spinner rounds to the nearest step multiple, so typing "2.5" into an
+ * input with step="1" and pressing Up yields 3 instead of 3.5.  This handler intercepts
+ * ArrowUp / ArrowDown, computes the next value with exact step arithmetic, clamps to min/max,
+ * and dispatches a synthetic change so React-controlled inputs update immediately.
+ */
+export function spinnerKeyDown(
+  e: React.KeyboardEvent<HTMLInputElement>,
+  { step = 1, min, max, onChange }: { step?: number; min?: number; max?: number; onChange: (v: string) => void },
+) {
+  if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+  e.preventDefault();
+  const raw = (e.target as HTMLInputElement).value;
+  const current = raw === "" ? 0 : Number(raw);
+  if (!Number.isFinite(current)) return;
+  const dir = e.key === "ArrowUp" ? 1 : -1;
+  let next = current + dir * step;
+  // Round to avoid floating-point drift (e.g. 2.6000000000000001)
+  const decimals = String(step).includes(".") ? String(step).split(".")[1].length : 0;
+  next = Number(next.toFixed(decimals));
+  if (min != null) next = Math.max(min, next);
+  if (max != null) next = Math.min(max, next);
+  onChange(String(next));
+}
