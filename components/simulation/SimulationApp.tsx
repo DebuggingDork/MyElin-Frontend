@@ -219,6 +219,71 @@ function writeNavOpen(next: boolean) {
   navListeners.forEach((fn) => fn());
 }
 
+function CompanyNameEditor({
+  name,
+  onSave,
+}: {
+  name: string;
+  onSave: (name: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(name);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editing) {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }
+  }, [editing]);
+
+  if (!editing) {
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          setDraft(name);
+          setEditing(true);
+        }}
+        className="group truncate font-serif text-xl cursor-text hover:text-white/80 transition-colors"
+        title="Click to rename"
+      >
+        {name}
+      </button>
+    );
+  }
+
+  const commit = () => {
+    setEditing(false);
+    const trimmed = draft.trim();
+    if (trimmed && trimmed !== name) {
+      onSave(trimmed);
+    } else {
+      setDraft(name);
+    }
+  };
+
+  return (
+    <input
+      ref={inputRef}
+      type="text"
+      value={draft}
+      maxLength={32}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.currentTarget.blur();
+        } else if (e.key === "Escape") {
+          setDraft(name);
+          setEditing(false);
+        }
+      }}
+      className="font-serif text-xl bg-transparent border-b border-white/40 outline-none text-white px-0 py-0 min-w-[4rem] max-w-[16rem]"
+    />
+  );
+}
+
 const EMPTY_BUDGET: RemoteBudget = {
   opex: 0, capex: 0, inno: 0, people: 0, repay: 0, drawn: 0, investment: 0, committed: 0, ceiling: 0,
 };
@@ -259,7 +324,7 @@ export function SimulationApp() {
   /* ── chrome and lifecycle ─────────────────────────────────────── */
 
   const [phase, setPhase] = useState<Phase>("intro");
-  const [advanced, setAdvanced] = useState(false);
+  const [advanced, setAdvanced] = useState(true);
   const [notesOn, setNotesOn] = useState(true);
   const [companyName, setCompanyName] = useState<string>("Nadi Wear");
   // `localStorage` is the store here, not component state: reading it during render would
@@ -389,7 +454,7 @@ export function SimulationApp() {
       setPriority(draft?.priority ?? null);
       setReflection(draft?.reflection ?? { sacrifice: [] });
       setCrisis(draft?.crisis ?? emptyCrisis());
-      setAdvanced(false);
+      setAdvanced(true);
       setProjection(null);
     },
     [companyId],
@@ -484,6 +549,11 @@ export function SimulationApp() {
       cancelled = true;
     };
   }, [companyId, loadRun, resetPlan]);
+
+  // Sync the header name with the server once the company loads.
+  useEffect(() => {
+    if (company?.name) setCompanyName(company.name); // eslint-disable-line react-hooks/set-state-in-effect
+  }, [company?.name]);
 
   /* ── the live projection, from the server ─────────────────────── */
 
@@ -879,21 +949,19 @@ export function SimulationApp() {
             />
           )}
           {timerActive && timer.paused && !working && (
-            <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/20 backdrop-blur-[1px]">
-              <div className="flex items-center gap-3 rounded-lg border border-amber/40 bg-amber/10 px-6 py-4 backdrop-blur-sm">
-                <Pause className="h-5 w-5 text-amber" />
-                <div>
-                  <div className="font-serif text-lg text-ink">Simulation paused</div>
-                  <div className="text-sm text-dim">Timer frozen at {timer.formatTime()}. All inputs are read-only.</div>
-                </div>
-                <button
-                  onClick={timer.unpause}
-                  className="ml-4 flex items-center gap-1.5 border border-amber/60 px-3 py-1.5 text-xs uppercase tracking-widest text-amber hover:bg-amber/10 transition-colors"
-                >
-                  <Play className="h-3 w-3" />
-                  Resume
-                </button>
+            <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-amber/40 bg-amber/10 px-6 py-3 backdrop-blur-sm">
+              <Pause className="h-4 w-4 shrink-0 text-amber" />
+              <div className="min-w-0 flex-1">
+                <span className="font-serif text-sm text-ink">Simulation paused</span>
+                <span className="ml-2 text-xs text-dim">Timer frozen at {timer.formatTime()}. Inputs are read-only.</span>
               </div>
+              <button
+                onClick={timer.unpause}
+                className="flex shrink-0 items-center gap-1.5 border border-amber/60 px-3 py-1.5 text-xs uppercase tracking-widest text-amber hover:bg-amber/10 transition-colors"
+              >
+                <Play className="h-3 w-3" />
+                Resume
+              </button>
             </div>
           )}
           {timerActive && timer.expired && !working && (
@@ -1000,7 +1068,17 @@ export function SimulationApp() {
                     <span className="hidden sm:inline">Departments</span>
                   </button>
                 )}
-                <span className="truncate font-serif text-xl">{companyName}</span>
+                <CompanyNameEditor
+                  name={companyName}
+                  onSave={async (newName) => {
+                    setCompanyName(newName);
+                    try {
+                      await api.updateCompany(companyId, { name: newName });
+                    } catch {
+                      /* name persists locally even if server update fails */
+                    }
+                  }}
+                />
                 <span className="hidden text-xs uppercase tracking-widest text-dim md:inline">
                   Chief Executive
                 </span>
