@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Check, Edit2 } from "lucide-react";
 import { Action, Container } from "@/components/ui/Kit";
 import { TimerDial } from "@/components/play/TimerDial";
@@ -54,8 +54,17 @@ export function EntryGate({
 }) {
   const [accepted, setAccepted] = useState<Record<string, boolean>>({});
   const [companyName, setCompanyName] = useState(scenario.company.name);
+  const [editing, setEditing] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
   const count = TERMS.filter((term) => accepted[term.id]).length;
   const ready = count === TERMS.length;
+
+  useEffect(() => {
+    if (editing) {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }
+  }, [editing]);
 
   const footing = [
     ...scenario.metrics.slice(0, 3).map((m) => ({ value: m.value, label: m.label })),
@@ -88,23 +97,42 @@ export function EntryGate({
             <p className="tick-label rise">The desk is yours in a moment</p>
             <div className="group relative mt-4 inline-block rise rise-1">
               <div className="flex items-center gap-4 border-b border-dashed border-teal/0 hover:border-teal/60 focus-within:border-teal/60 pb-1 transition-colors">
-                <div className="relative flex-1">
+                {editing ? (
                   <input
+                    ref={inputRef}
                     type="text"
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
                     maxLength={32}
-                    title="Click to rename"
+                    onBlur={() => setEditing(false)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") setEditing(false);
+                      if (e.key === "Escape") {
+                        setCompanyName(scenario.company.name);
+                        setEditing(false);
+                      }
+                    }}
                     className="ledger-display w-full bg-transparent text-balance text-[clamp(2.6rem,6vw,4.6rem)] text-ink outline-none placeholder:text-dim hover:text-teal focus:text-teal transition-colors"
                   />
-                  <span
-                    className="pointer-events-none absolute ledger-display text-[clamp(2.6rem,6vw,4.6rem)] text-ink transition-colors group-hover:text-teal group-focus-within:text-teal"
-                    style={{ left: `${Math.max(companyName.length, 1)}ch` }}
-                  >
-                    .
+                ) : (
+                  <span className="ledger-display text-[clamp(2.6rem,6vw,4.6rem)] text-ink cursor-text">
+                    {companyName || scenario.company.name}
                   </span>
-                </div>
-                <Edit2 className="h-[clamp(1.5rem,3vw,2.5rem)] w-[clamp(1.5rem,3vw,2.5rem)] text-faint group-hover:text-teal transition-colors flex-shrink-0" />
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (editing) {
+                      setEditing(false);
+                    } else {
+                      setEditing(true);
+                    }
+                  }}
+                  className="flex-shrink-0 p-1 -m-1"
+                  title={editing ? "Done editing" : "Rename company"}
+                >
+                  <Edit2 className="h-[clamp(1.5rem,3vw,2.5rem)] w-[clamp(1.5rem,3vw,2.5rem)] text-faint group-hover:text-teal transition-colors" />
+                </button>
               </div>
               <p className="text-[10px] text-faint mt-1 tracking-wide uppercase opacity-0 group-hover:opacity-100 transition-opacity">Click to rename company</p>
             </div>
