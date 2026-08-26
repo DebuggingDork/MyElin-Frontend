@@ -278,7 +278,7 @@ export function SimulationApp() {
 
   const timer = useSimulationTimer(companyId, state.quarter);
   const readOnly = timer.paused || timer.expired;
-  const timerActive = (phase === "briefing" || phase === "play") && !runStatus;
+  const timerActive = (phase === "briefing" || phase === "play") && runStatus !== "completed";
 
   /* ── rewind ────────────────────────────────────────────────────── */
   const MAX_REWINDS = 2;
