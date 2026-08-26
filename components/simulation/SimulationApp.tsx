@@ -1241,10 +1241,8 @@ export function SimulationApp() {
       <div className="space-y-5">
         {errorBanner}
         <IntroScreen
-          onStart={(name) => {
-            setCompanyName(name || company?.name || "Nadi Wear");
-            setPhase("briefing");
-          }}
+          companyName={companyName}
+          onStart={() => setPhase("briefing")}
           busy={busy}
         />
       </div>,

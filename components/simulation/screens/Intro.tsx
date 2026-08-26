@@ -1,51 +1,31 @@
 "use client";
 
-/** The opening screen — enhanced with company name customization. */
+/** The opening screen — shows the company name set during onboarding and lets the CEO begin. */
 
-import { useState } from "react";
 import { INITIAL_STATE, BASE_STAFF, OPENING_CASH, headcount, marketDemand } from "@/lib/simulation/constants";
 import { inr, n0 } from "@/lib/simulation/format";
 import { Eyebrow, Panel, Stat } from "@/components/simulation/Kit";
 
 export function IntroScreen({
+  companyName,
   onStart,
   busy,
 }: {
-  onStart: (companyName: string) => void;
+  companyName: string;
+  onStart: () => void;
   busy?: boolean;
 }) {
   const price = INITIAL_STATE.products.pulse.price;
   const team = headcount(BASE_STAFF);
-
-  const [name, setName] = useState("Nadi Wear");
-  const trimmed = name.trim();
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <div className="grid gap-8 lg:grid-cols-[1.3fr_1fr] lg:items-start">
         <div>
           <Eyebrow tone="text-tone-bad">The desk is yours in a moment</Eyebrow>
-          <div className="group relative mt-3 inline-block w-full max-w-sm">
-            <div className="flex items-center gap-4 border-b border-dashed border-teal/30 hover:border-teal/60 focus-within:border-teal/60 pb-2 transition-colors">
-              <div className="relative flex-1">
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  maxLength={32}
-                  placeholder="Nadi Wear"
-                  title="Click to rename your company"
-                  className="w-full bg-transparent font-serif text-[4rem] tracking-tight text-ink leading-[0.95] outline-none placeholder:text-faint hover:text-teal focus:text-teal transition-colors"
-                  style={{
-                    border: 'none',
-                    padding: 0,
-                    boxShadow: 'none',
-                  }}
-                />
-              </div>
-            </div>
-            <p className="text-xs text-faint mt-2 tracking-wide uppercase">Click to rename</p>
-          </div>
+          <h2 className="mt-3 font-serif text-[4rem] tracking-tight text-ink leading-[0.95]">
+            {companyName}
+          </h2>
           <p className="font-mono text-sm text-dim mt-4">Pvt. Ltd. · Bengaluru, Karnataka</p>
 
           <p className="text-lg text-ink leading-relaxed mt-5 text-pretty">
@@ -100,7 +80,7 @@ export function IntroScreen({
       {/* Removed the clunky "Before you begin" block so the design aligns with the screenshot */}
 
       <button
-        onClick={() => onStart(trimmed || "Nadi Wear")}
+        onClick={() => onStart()}
         disabled={busy}
         className={
           "w-full py-4 font-serif text-xl transition-all duration-150 " +
