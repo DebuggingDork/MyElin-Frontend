@@ -4,7 +4,6 @@
 
 import { useState } from "react";
 import { INITIAL_STATE, BASE_STAFF, OPENING_CASH, headcount, marketDemand } from "@/lib/simulation/constants";
-import { Edit2 } from "lucide-react";
 import { inr, n0 } from "@/lib/simulation/format";
 import { Eyebrow, Panel, Stat } from "@/components/simulation/Kit";
 
@@ -43,12 +42,7 @@ export function IntroScreen({
                     boxShadow: 'none',
                   }}
                 />
-                {/* The dot at the end, exactly as seen in the mockup */}
-                <span className="pointer-events-none absolute font-serif text-[4rem] text-ink leading-[0.95] tracking-tight transition-colors group-hover:text-teal group-focus-within:text-teal" style={{ left: `${Math.max(name.length || 9, 2)}ch` }}>
-                  .
-                </span>
               </div>
-              <Edit2 className="h-6 w-6 text-faint group-hover:text-teal transition-colors flex-shrink-0 mt-3" />
             </div>
             <p className="text-xs text-faint mt-2 tracking-wide uppercase">Click to rename</p>
           </div>
