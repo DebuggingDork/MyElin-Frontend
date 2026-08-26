@@ -17,7 +17,7 @@ import {
   numericAlloc,
   spreadGroup,
 } from "@/lib/simulation/constants";
-import { inr, lakh, num } from "@/lib/simulation/format";
+import { inr, lakh, num, spinnerKeyDown } from "@/lib/simulation/format";
 import { BudgetMeter, Eyebrow, Inbox, ReadinessGrid, TeachingNote } from "@/components/simulation/Kit";
 import { cn } from "@/lib/utils";
 import type { DecisionItem, DetailLine } from "@/lib/simulation/constants";
@@ -73,6 +73,7 @@ function DecisionCard({
               placeholder="0"
               readOnly={readOnly}
               onChange={(e) => setAlloc(spreadGroup(alloc, item, e.target.value.replace(/^-/, "")))}
+              onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, onChange: (v) => setAlloc(spreadGroup(alloc, item, v)) })}
               className={cn(
                 "w-24 border border-line-2 px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink",
                 readOnly && "opacity-60 cursor-not-allowed",
@@ -135,6 +136,7 @@ function DetailLineRow({
             placeholder="0"
             readOnly={readOnly}
             onChange={(e) => onChange(e.target.value.replace(/^-/, ""))}
+            onKeyDown={(e) => spinnerKeyDown(e, { step: 0.5, min: 0, onChange })}
             className={
               "w-24 border px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink " +
               (overCap ? "border-danger text-tone-bad" : "border-line-2") +
