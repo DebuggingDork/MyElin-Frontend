@@ -1,20 +1,19 @@
 "use client";
 
 /**
- * Profile menu — minimal 4-item main dropdown with a "More" submenu.
+ * Profile menu — 5-item main dropdown with a "More" submenu.
  *
  * Main dropdown:
  *   1. Name (identity header, not a nav link)
  *   2. Edit Profile  → /profile
  *   3. My Simulations → /runs
  *   4. More           → opens submenu with remaining items
+ *   5. Logout
  *
  * "More" submenu contains:
  *   - Recent runs, Completed, New simulation
  *   - Security & password, Send a password reset
- *   - Appearance toggle
  *   - Help & FAQ, Contact us
- *   - Log out
  */
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
@@ -26,15 +25,12 @@ import {
   LifeBuoy,
   LogOut,
   Mail,
-  Moon,
   Play,
   Plus,
   ShieldCheck,
-  Sun,
   UserPen,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { useTheme } from "@/components/theme/ThemeProvider";
 import { api } from "@/lib/api/client";
 import { runHref } from "@/lib/run/ref";
 import type { CompanyListItem, RunStatus } from "@/lib/api/types";
@@ -132,7 +128,6 @@ export function ProfileMenu() {
   const simulationHref = useSimulationHref();
 
   const { user, logout } = useAuth();
-  const { theme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const [runs, setRuns] = useState<CompanyListItem[] | null>(null);
@@ -302,43 +297,6 @@ export function ProfileMenu() {
                 </Row>
               </Section>
 
-              {/* Preferences */}
-              <Section label="Preferences">
-                <div className="flex items-center justify-between gap-3 rounded-xl px-3 py-2">
-                  <span className="text-[13px] text-dim">Appearance</span>
-                  <div
-                    role="radiogroup"
-                    aria-label="Appearance"
-                    className="flex items-center rounded-full border border-line p-0.5"
-                  >
-                    {(
-                      [
-                        { id: "light", label: "Light", Icon: Sun },
-                        { id: "dark", label: "Dark", Icon: Moon },
-                      ] as const
-                    ).map(({ id, label, Icon }) => (
-                      <button
-                        key={id}
-                        type="button"
-                        role="radio"
-                        aria-checked={theme === id}
-                        aria-label={label}
-                        title={label}
-                        onClick={() => setTheme(id)}
-                        className={cn(
-                          "flex h-6 w-7 items-center justify-center rounded-full transition-colors",
-                          theme === id
-                            ? "bg-[var(--panel-2)] text-ink"
-                            : "text-faint hover:text-dim",
-                        )}
-                      >
-                        <Icon className="h-3.5 w-3.5" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </Section>
-
               {/* Support */}
               <Section label="Support">
                 <Row href="/faq" icon={LifeBuoy} onSelect={close}>
@@ -349,20 +307,6 @@ export function ProfileMenu() {
                 </Row>
               </Section>
 
-              {/* Session */}
-              <div className="border-t border-line p-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    logout();
-                    close();
-                  }}
-                  className={cn(rowClass, "hover:bg-rose/[0.09] hover:text-rose hover:translate-x-0.5")}
-                >
-                  <LogOut className="h-3.5 w-3.5 shrink-0" />
-                  Log out
-                </button>
-              </div>
             </div>
           ) : (
             /* ── Main dropdown: 4 items ──────────────────── */
@@ -407,6 +351,21 @@ export function ProfileMenu() {
                 <span className="min-w-0 flex-1 truncate">More</span>
                 <ChevronRight className="h-3.5 w-3.5 shrink-0 text-faint" />
               </button>
+
+              {/* 5. Logout */}
+              <div className="mt-1 border-t border-line pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    logout();
+                    close();
+                  }}
+                  className={cn(rowClass, "hover:bg-rose/[0.09] hover:text-rose hover:translate-x-0.5")}
+                >
+                  <LogOut className="h-3.5 w-3.5 shrink-0" />
+                  Log out
+                </button>
+              </div>
             </div>
           )}
         </div>
