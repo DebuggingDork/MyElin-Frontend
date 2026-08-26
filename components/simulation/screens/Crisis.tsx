@@ -10,7 +10,7 @@
 
 import { useState } from "react";
 import { ARCHETYPES, CRISIS_STEPS, DIAGNOSIS_LABELS, STRATEGY_BY_ID } from "@/lib/simulation/constants";
-import { inr, lakh, num } from "@/lib/simulation/format";
+import { inr, lakh, num, spinnerKeyDown } from "@/lib/simulation/format";
 import { Eyebrow, LedgerRow, Panel, TeachingNote, optionCard } from "@/components/simulation/Kit";
 import type { CrisisBriefing } from "@/lib/simulation/remote";
 import type {
@@ -238,6 +238,7 @@ export function CrisisScreen({
                     placeholder="0"
                     readOnly={readOnly}
                     onChange={(e) => set("commit", e.target.value.replace(/^-/, ""))}
+                    onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, onChange: (v) => set("commit", v) })}
                     className="w-32 border border-line-2 px-2 py-1 text-right font-mono text-lg focus:outline-none focus:ring-2 focus:ring-ink"
                   />
                   <span className="text-xs uppercase tracking-widest text-dim">lakh</span>
