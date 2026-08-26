@@ -75,7 +75,11 @@ export function MyRuns() {
   const searchParams = useSearchParams();
 
   const [runs, setRuns] = useState<CompanyListItem[] | null>(null);
+  const [totalRuns, setTotalRuns] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  
+  const LIMIT = 18;
 
   const requested = searchParams.get("filter");
   const filter: FilterId = isFilterId(requested) ? requested : "all";
@@ -85,8 +89,11 @@ export function MyRuns() {
     let cancelled = false;
     void (async () => {
       try {
-        const { entries } = await api.listCompanies();
-        if (!cancelled) setRuns(entries);
+        const { entries, total } = await api.listCompanies({ limit: LIMIT, offset: 0 });
+        if (!cancelled) {
+          setRuns(entries);
+          setTotalRuns(total);
+        }
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof ApiError ? err.message : "Could not load your simulations.");
@@ -97,6 +104,20 @@ export function MyRuns() {
       cancelled = true;
     };
   }, [ready, user]);
+
+  const loadMore = async () => {
+    if (!runs) return;
+    setLoadingMore(true);
+    try {
+      const { entries, total } = await api.listCompanies({ limit: LIMIT, offset: runs.length });
+      setRuns((prev) => [...(prev || []), ...entries]);
+      setTotalRuns(total);
+    } catch (err) {
+      console.error("Failed to load more runs:", err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   const visible = useMemo(() => {
     const predicate = FILTERS.find((f) => f.id === filter)!.match;
@@ -212,6 +233,14 @@ export function MyRuns() {
                   {visible.map((run, i) => (
                     <RunCard key={run.id} run={run} delay={i * 0.05} />
                   ))}
+                </div>
+              )}
+
+              {runs && runs.length < totalRuns && (
+                <div className="mt-12 flex justify-center">
+                  <Action onClick={loadMore} disabled={loadingMore} variant="outline" className="w-full sm:w-auto">
+                    {loadingMore ? "Loading…" : `Load more (${runs.length} of ${totalRuns})`}
+                  </Action>
                 </div>
               )}
             </>

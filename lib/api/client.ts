@@ -325,7 +325,14 @@ export const api = {
     }),
 
   /** Runs this user owns. Server-side truth -- replaces trusting a localStorage company id. */
-  listCompanies: () => request<CompanyListResponse>("/companies"),
+  listCompanies: (opts?: { limit?: number; offset?: number }): Promise<CompanyListResponse> => {
+    const params = new URLSearchParams();
+    if (opts?.limit !== undefined) params.append("limit", String(opts.limit));
+    if (opts?.offset !== undefined) params.append("offset", String(opts.offset));
+
+    const qs = params.toString() ? `?${params.toString()}` : "";
+    return request<CompanyListResponse>(`/companies${qs}`);
+  },
 
   getCompany: (companyId: string) =>
     request<CompanyDetailResponse>(`/companies/${companyId}`),

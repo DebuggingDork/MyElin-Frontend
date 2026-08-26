@@ -102,7 +102,7 @@ export function ProfitAndLoss({ r }: { r: QuarterResultShape }) {
       <LedgerRow
         label="Net interest"
         working={
-          inr(v(r, "debtClose")) + " of borrowings at 3.5%, treasury at " + pct(v(r, "treasuryRate") * 100)
+          inr(v(r, "debtClose")) + " of borrowings at 3.5% per quarter (14% annual), treasury at " + pct(v(r, "treasuryRate") * 100)
         }
         value={inr(v(r, "interestIncome") - v(r, "interestExpense"))}
         indent

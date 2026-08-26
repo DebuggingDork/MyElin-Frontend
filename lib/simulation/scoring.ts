@@ -348,7 +348,7 @@ export function settleEndgame(
   }
 
   if (deal === "A") {
-    const hit = ts.tier === "DISTRESSED" ? outcome.cash > 0 : outcome.unitsSold >= (offer!.covenant as number);
+    const hit = ts.tier === "DISTRESSED" ? outcome.cash > BUFFER : outcome.unitsSold >= (offer!.covenant as number);
     result.covenantHit = hit;
     result.covenant = offer!.covenant;
     result.equity = hit ? offer!.equity : (offer!.equity as number) * (offer!.ratchet as number);
@@ -368,25 +368,25 @@ export function settleEndgame(
       mods.push(
         hit
           ? {
-              d: 5,
-              why: "Covenant hit — " + n0(outcome.unitsSold) + " units against a target of " + n0(offer!.covenant as number) + ".",
-            }
+            d: 5,
+            why: "Covenant hit — " + n0(outcome.unitsSold) + " units against a target of " + n0(offer!.covenant as number) + ".",
+          }
           : {
-              d: -8,
-              why:
-                "Covenant missed — " +
-                n0(outcome.unitsSold) +
-                " units against a target of " +
-                n0(offer!.covenant as number) +
-                ". Valuation haircut and the stake ratcheted.",
-            },
+            d: -8,
+            why:
+              "Covenant missed — " +
+              n0(outcome.unitsSold) +
+              " units against a target of " +
+              n0(offer!.covenant as number) +
+              ". Valuation haircut and the stake ratcheted.",
+          },
       );
     }
     return result;
   }
 
   result.finalValuation = outcome.valuation;
-  result.gameOver = ts.tier === "DISTRESSED" && outcome.cash <= 0;
+  result.gameOver = ts.tier === "DISTRESSED" && outcome.cash <= BUFFER;
   if (result.gameOver) {
     mods.push({ d: -8, why: "Continued unfunded from a distressed position and ran out of cash." });
   }
@@ -571,10 +571,10 @@ export function decisionTimeline(history: QuarterResultShape[], priorities: (Pri
     if ((r.cash as number) < BUFFER) consequence.push("cash closed below the buffer");
     consequence.push(
       n0(r.unitsSold as number) +
-        " units, " +
-        cr(r.revenueT as number) +
-        ", share " +
-        pct((r.marketShare as number) * 100),
+      " units, " +
+      cr(r.revenueT as number) +
+      ", share " +
+      pct((r.marketShare as number) * 100),
     );
 
     return {

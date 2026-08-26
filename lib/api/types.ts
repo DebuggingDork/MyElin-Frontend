@@ -119,7 +119,10 @@ export type CompanyListItem = {
   latest_band: string | null;
 };
 
-export type CompanyListResponse = { entries: CompanyListItem[] };
+export type CompanyListResponse = {
+  total: number;
+  entries: CompanyListItem[];
+};
 
 /* ── crisis briefing (docs/11: narrative and choices only, never constants) ── */
 
@@ -483,7 +486,7 @@ export class ApiError extends Error {
   constructor(status: number, body: ApiErrorBody) {
     super(
       body.error ??
-        (typeof body.detail === "string" ? body.detail : `HTTP ${status}`),
+      (typeof body.detail === "string" ? body.detail : `HTTP ${status}`),
     );
     this.name = "ApiError";
     this.status = status;

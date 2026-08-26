@@ -40,6 +40,8 @@ export function BriefingScreen({
   priority,
   setPriority,
   onStart,
+  onRewind,
+  rewindsRemaining,
   busy,
 }: {
   s: CompanyState;
@@ -51,6 +53,8 @@ export function BriefingScreen({
   priority: PriorityId | null;
   setPriority: (p: PriorityId) => void;
   onStart: () => void;
+  onRewind?: () => void;
+  rewindsRemaining?: number;
   busy?: boolean;
 }) {
   const brief = QUARTER_BRIEFS[s.quarter - 1];
@@ -258,6 +262,25 @@ export function BriefingScreen({
           Say it now, out loud, before you see the levers. At the end of the quarter we will compare what you said, what
           you actually funded, and what the company turned out to need.
         </p>
+
+        {s.quarter > 1 && rewindsRemaining !== undefined && rewindsRemaining > 0 && onRewind && (
+          <div className="mb-4 mt-2 flex items-center justify-between rounded-xl border border-amber/30 bg-amber/[0.04] p-4">
+            <div>
+              <div className="text-sm font-semibold text-ink">Not happy with the quarter results?</div>
+              <div className="text-xs text-dim mt-0.5">
+                You can turn back the clock. You have {rewindsRemaining} rewind{rewindsRemaining === 1 ? "" : "s"} remaining.
+              </div>
+            </div>
+            <button
+              onClick={onRewind}
+              disabled={busy}
+              className="px-4 py-2 text-sm font-medium text-amber border border-amber/40 rounded-lg hover:bg-amber/10 transition-colors disabled:opacity-50"
+            >
+              Rewind time
+            </button>
+          </div>
+        )}
+
         <TeachingNote id="priority" inline />
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 mt-3">
           {PRIORITIES.map((p) => {

@@ -449,7 +449,18 @@ export function SimulationApp() {
       setAlloc(draft?.lines ?? emptyAlloc());
       setWarranty(draft?.warranty ?? "6mo");
       setStartInno(draft?.startInno ?? []);
-      setProducts(draft?.products ?? next.products);
+      // Always honour the canonical live/status state from the server. A stale draft for the
+      // next quarter can have `pro.live = false` even after NPD cleared 100 and the backend's
+      // next_state flipped it to true -- merging live-status from next.products prevents the
+      // product development cycle from appearing to un-complete on reload.
+      const draftProducts = draft?.products ?? next.products;
+      const mergedProducts = Object.fromEntries(
+        Object.entries(draftProducts).map(([id, p]) => [
+          id,
+          { ...p, live: next.products[id as keyof typeof next.products]?.live ?? p.live },
+        ]),
+      ) as typeof draftProducts;
+      setProducts(mergedProducts);
       setPayTerms(draft?.payTerms ?? next.payTerms);
       setPriority(draft?.priority ?? null);
       setReflection(draft?.reflection ?? { sacrifice: [] });
@@ -1256,6 +1267,8 @@ export function SimulationApp() {
           setPriority={setPriority}
           onStart={startQuarter}
           busy={busy}
+          rewindsRemaining={rewindsRemaining}
+          onRewind={() => setRewindModalOpen(true)}
         />
       </div>,
       false,

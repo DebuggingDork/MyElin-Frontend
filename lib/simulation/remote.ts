@@ -200,11 +200,11 @@ const outLines = (lines: Alloc) =>
 const outProducts = (products: Record<ProductId, ProductState> | null) =>
   products
     ? Object.fromEntries(
-        Object.entries(products).map(([id, p]) => [
-          id,
-          { live: p.live, status: p.status, price: p.price, share: p.share, inv: p.inv, inv_cost: p.invCost },
-        ]),
-      )
+      Object.entries(products).map(([id, p]) => [
+        id,
+        { live: p.live, status: p.status, price: p.price, share: p.share, inv: p.inv, inv_cost: p.invCost },
+      ]),
+    )
     : null;
 
 function toPayload(plan: QuarterPlan) {
@@ -380,8 +380,8 @@ export const simulationApi = {
     ),
 
   rewind: (companyId: string, targetQuarter: number): Promise<RewindResponse> =>
-    request<RewindResponse>(
+    request<Record<string, unknown>>(
       `/companies/${companyId}/simulation/rewind`,
       { method: "POST", body: JSON.stringify({ target_quarter: targetQuarter }) },
-    ),
+    ).then((raw) => adaptKeys(raw) as unknown as RewindResponse),
 };

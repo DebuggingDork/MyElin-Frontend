@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, ChevronDown, Medal, Trophy } from "lucide-react";
@@ -50,9 +50,12 @@ export function Leaderboard() {
   const simulationHref = useSimulationHref();
 
   const { user, ready } = useAuth();
-  const [storylines, setStorylines] = useState<Storyline[]>([]);
+  const [runs, setRuns] = useState<CompanyListItem[]>([]);
+  const [totalBackendRuns, setTotalBackendRuns] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const LIMIT = 18;
 
   useEffect(() => {
     if (!ready) return;
@@ -64,24 +67,10 @@ export function Leaderboard() {
 
     void (async () => {
       try {
-        const { entries: runs } = await api.listCompanies();
+        const { entries, total } = await api.listCompanies({ limit: LIMIT, offset: 0 });
         if (cancelled) return;
-
-        const grouped = new Map<string, CompanyListItem[]>();
-        for (const run of runs) {
-          const key = run.scenario_id ?? "unknown";
-          grouped.set(key, [...(grouped.get(key) ?? []), run]);
-        }
-        setStorylines(
-          [...grouped.entries()]
-            .map(([scenarioId, group]) => ({
-              scenarioId,
-              runs: [...group].sort(
-                (a, b) => asNumber(b.latest_ceo_score) - asNumber(a.latest_ceo_score),
-              ),
-            }))
-            .sort((a, b) => a.scenarioId.localeCompare(b.scenarioId)),
-        );
+        setRuns(entries);
+        setTotalBackendRuns(total);
       } catch (err) {
         if (!cancelled) setError(err instanceof ApiError ? err.message : "Failed to load");
       } finally {
@@ -94,13 +83,42 @@ export function Leaderboard() {
     };
   }, [ready, user]);
 
-  const totalRuns = storylines.reduce((n, s) => n + s.runs.length, 0);
+  const loadMore = async () => {
+    setLoadingMore(true);
+    try {
+      const { entries, total } = await api.listCompanies({ limit: LIMIT, offset: runs.length });
+      setRuns(prev => [...prev, ...entries]);
+      setTotalBackendRuns(total);
+    } catch (err) {
+      console.error("Failed to load more runs:", err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const storylines = useMemo(() => {
+    const grouped = new Map<string, CompanyListItem[]>();
+    for (const run of runs) {
+      const key = run.scenario_id ?? "unknown";
+      grouped.set(key, [...(grouped.get(key) ?? []), run]);
+    }
+    return [...grouped.entries()]
+      .map(([scenarioId, group]) => ({
+        scenarioId,
+        runs: [...group].sort(
+          (a, b) => asNumber(b.latest_ceo_score) - asNumber(a.latest_ceo_score),
+        ),
+      }))
+      .sort((a, b) => a.scenarioId.localeCompare(b.scenarioId));
+  }, [runs]);
+
+  const totalLoadedRuns = runs.length;
 
   return (
     <>
       <section className="relative border-b border-line pt-[68px]">
         <div className="grid-lines absolute inset-0" />
-        <Masthead section="Standings" status={`${totalRuns} run${totalRuns === 1 ? "" : "s"} on record`} />
+        <Masthead section="Standings" status={`${totalBackendRuns} run${totalBackendRuns === 1 ? "" : "s"} on record`} />
         <Container wide className="relative z-10 py-[clamp(2.5rem,6vh,4.5rem)]">
           <h1 className="ledger-display rise max-w-3xl text-balance text-[clamp(2.2rem,4.8vw,3.6rem)] text-ink">
             Your runs, <span className="italic text-teal">by storyline.</span>
@@ -137,7 +155,7 @@ export function Leaderboard() {
             </p>
           )}
 
-          {user && !loading && !error && totalRuns === 0 && (
+          {user && !loading && !error && totalBackendRuns === 0 && (
             <Panel className="p-8 text-center">
               <p className="text-[15px] text-dim">
                 No runs yet. Finish a quarter and it lands here.
@@ -155,6 +173,14 @@ export function Leaderboard() {
               <StorylineBoard key={storyline.scenarioId} storyline={storyline} index={i} />
             ))}
           </div>
+
+          {runs.length < totalBackendRuns && (
+            <div className="mt-12 flex justify-center">
+              <Action onClick={loadMore} disabled={loadingMore} variant="outline">
+                {loadingMore ? "Loading…" : `Load more (${runs.length} of ${totalBackendRuns})`}
+              </Action>
+            </div>
+          )}
         </Container>
       </section>
     </>

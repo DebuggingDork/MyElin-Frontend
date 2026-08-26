@@ -145,7 +145,7 @@ export function Simulations() {
     if (!getToken()) return;
     let cancelled = false;
     api
-      .listCompanies()
+      .listCompanies({ limit: 1 })
       .then(({ entries }) => {
         if (cancelled) return;
         // Newest first from the API; the first still-running one is the one to offer.

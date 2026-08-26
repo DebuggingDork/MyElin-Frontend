@@ -46,7 +46,7 @@ let cached: Promise<CompanyListItem[]> | null = null;
 function ownedRuns(): Promise<CompanyListItem[]> {
   if (!cached) {
     cached = api
-      .listCompanies()
+      .listCompanies({ limit: 1000 })
       .then(({ entries }) => entries)
       .catch((err) => {
         // Never cache a failure: a request that failed because the token was mid-refresh must

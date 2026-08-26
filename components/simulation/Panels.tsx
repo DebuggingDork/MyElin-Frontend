@@ -237,13 +237,40 @@ export function ProductPortfolio({
             if (!cur.live) {
               return (
                 <div key={prod.id} className="border border-dashed border-line-2 p-4">
-                  <div className="font-serif text-lg text-dim">{prod.name}</div>
-                  <div className="text-sm text-dim mt-1">
-                    Not developed yet — {n0(s.npd)} of 100. Fund New Product Development to bring it to market.
+                  <div className="flex items-baseline justify-between gap-2">
+                    <div className="font-serif text-lg text-dim">{prod.name}</div>
+                    <div className="text-xs font-mono text-dim">
+                      {p?.proLaunching
+                        ? "Cleared development"
+                        : s.npd > 0
+                          ? n0(s.npd) + " / 100"
+                          : "Not started"}
+                    </div>
+                  </div>
+                  <div className="mt-2">
+                    <div className="h-1.5 w-full bg-line rounded-full overflow-hidden">
+                      <div
+                        className={
+                          "h-full transition-all duration-500 " +
+                          (p?.proLaunching
+                            ? "bg-teal-deep"
+                            : s.npd > 0
+                              ? "bg-ember"
+                              : "bg-line-2")
+                        }
+                        style={{ width: `${Math.min(100, p?.proLaunching ? 100 : s.npd)}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div className="text-sm text-dim mt-2">
+                    {p?.proLaunching
+                      ? "On sale next quarter with 35% of the production line."
+                      : "Fund New Product Development to bring it to market."}
                   </div>
                 </div>
               );
             }
+
 
             return (
               <div
@@ -525,7 +552,7 @@ export function FinancePanel({
             </div>
             <div className="text-xs font-mono text-dim mt-2 space-y-0.5">
               <div className="text-tone-good">{inr(drawn)} into cash today</div>
-              <div>{inr((s.debt + drawn) * INTEREST_RATE)} of interest this quarter</div>
+              <div>{inr((s.debt + drawn) * INTEREST_RATE)} of interest this quarter (14% annually)</div>
               {overLimit && (
                 <div className="text-tone-bad">{inr(num(alloc.draw) * 1e5 - limit)} over the limit will be refused.</div>
               )}
