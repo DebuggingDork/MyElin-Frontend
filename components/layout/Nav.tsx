@@ -60,7 +60,7 @@ export function Nav() {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "relative rounded-full px-3.5 py-1.5 text-[13px] transition-colors",
+                  "group/link relative rounded-full px-3.5 py-1.5 text-[13px] transition-colors",
                   active ? "text-ink" : "text-dim hover:text-ink",
                 )}
               >
@@ -70,6 +70,15 @@ export function Nav() {
                     style={{
                       background:
                         "linear-gradient(135deg, color-mix(in srgb, var(--teal) 28%, transparent), rgba(255,255,255,0.08))",
+                    }}
+                  />
+                )}
+                {!active && (
+                  <span
+                    className="absolute inset-0 rounded-full border border-transparent opacity-0 transition-opacity duration-200 group-hover/link:opacity-100"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, color-mix(in srgb, var(--teal) 14%, transparent), rgba(255,255,255,0.05))",
                     }}
                   />
                 )}
