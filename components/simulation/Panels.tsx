@@ -33,7 +33,7 @@ import {
   innoSum,
   numericAlloc,
 } from "@/lib/simulation/constants";
-import { inr, lakh, n0, n1, n2, num, pct, pw } from "@/lib/simulation/format";
+import { inr, lakh, n0, n1, n2, num, pct, pw, spinnerKeyDown } from "@/lib/simulation/format";
 import { pipelineBoard } from "@/lib/simulation/insights";
 import {
   Bar,
@@ -281,6 +281,7 @@ export function ProductPortfolio({
                         value={cur.price}
                         readOnly={readOnly}
                         onChange={(e) => update(prod.id, { price: Math.max(0, num(e.target.value)) })}
+                        onKeyDown={(e) => spinnerKeyDown(e, { step: 100, min: 0, onChange: (v) => update(prod.id, { price: Math.max(0, num(v)) }) })}
                         className="w-32 border border-line-2 px-2 py-1 text-right font-mono focus:outline-none focus:ring-2 focus:ring-ink"
                       />
                     </div>
@@ -426,6 +427,7 @@ export function PeoplePanel({
                     placeholder="0"
                     readOnly={readOnly}
                     onChange={(e) => set("hire_" + d.id, e.target.value)}
+                    onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, onChange: (v) => set("hire_" + d.id, v) })}
                     className="w-20 border border-line-2 px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink"
                   />
                   <span className="text-xs font-mono text-dim">
@@ -446,6 +448,7 @@ export function PeoplePanel({
                     placeholder="0"
                     readOnly={readOnly}
                     onChange={(e) => set("fire_" + d.id, e.target.value)}
+                    onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, max: Math.max(0, now - d.base), onChange: (v) => set("fire_" + d.id, v) })}
                     className="w-20 border border-line-2 px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink"
                   />
                   <span className="text-xs font-mono text-dim">
@@ -512,6 +515,7 @@ export function FinancePanel({
                 placeholder="0"
                 readOnly={readOnly}
                 onChange={(e) => setAlloc({ ...alloc, draw: e.target.value.replace(/^-/, "") })}
+                onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, onChange: (v) => setAlloc({ ...alloc, draw: v }) })}
                 className={
                   "w-28 border px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink " +
                   (overLimit ? "border-danger text-tone-bad" : "border-line-2")
@@ -540,6 +544,7 @@ export function FinancePanel({
                 placeholder="0"
                 readOnly={readOnly}
                 onChange={(e) => setAlloc({ ...alloc, repay: e.target.value.replace(/^-/, "") })}
+                onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, onChange: (v) => setAlloc({ ...alloc, repay: v }) })}
                 className="w-28 border border-line-2 px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink"
               />
               <span className="text-xs uppercase tracking-widest text-dim">lakh</span>
