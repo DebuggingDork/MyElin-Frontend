@@ -253,52 +253,78 @@ export function buildSimulationReportPdf(
   rule(c);
 
   sectionLabel(c, "Insights");
-  ledgerRow(c, "Biggest strength", humanizeId(strength.name));
+  
+  // Biggest strength
+  ensureSpace(c, 50);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(INK);
+  doc.text("Biggest strength", MARGIN, c.y);
+  c.y += 14;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(GOOD);
+  doc.text(humanizeId(strength.name), MARGIN, c.y);
+  c.y += 16;
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
+  doc.setFontSize(10);
   doc.setTextColor(INK_SOFT);
   doc.text(strength.why, MARGIN, c.y, { maxWidth: PAGE_W - 2 * MARGIN });
-  c.y +=
-    doc.getTextDimensions(strength.why, { maxWidth: PAGE_W - 2 * MARGIN }).h +
-    8;
+  c.y += doc.getTextDimensions(strength.why, { maxWidth: PAGE_W - 2 * MARGIN }).h + 16;
 
-  ledgerRow(c, "Biggest mistake", humanizeId(mistake.title));
+  // Biggest mistake
+  ensureSpace(c, 50);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(INK);
+  doc.text("Biggest mistake", MARGIN, c.y);
+  c.y += 14;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(BAD);
+  doc.text(humanizeId(mistake.title), MARGIN, c.y);
+  c.y += 16;
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
+  doc.setFontSize(10);
   doc.setTextColor(INK_SOFT);
-  doc.text(String(mistake.why), MARGIN, c.y, {
-    maxWidth: PAGE_W - 2 * MARGIN,
-  });
-  c.y +=
-    doc.getTextDimensions(String(mistake.why), {
-      maxWidth: PAGE_W - 2 * MARGIN,
-    }).h + 8;
+  doc.text(String(mistake.why), MARGIN, c.y, { maxWidth: PAGE_W - 2 * MARGIN });
+  c.y += doc.getTextDimensions(String(mistake.why), { maxWidth: PAGE_W - 2 * MARGIN }).h + 16;
 
-  ledgerRow(
-    c,
-    "Most important decision",
-    "Quarter " + decision.q + ": " + decision.label,
-  );
+  // Most important decision
+  ensureSpace(c, 50);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(INK);
+  doc.text("Most important decision", MARGIN, c.y);
+  c.y += 14;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(INK);
+  doc.text("Quarter " + decision.q + ": " + decision.label, MARGIN, c.y);
+  c.y += 16;
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
+  doc.setFontSize(10);
   doc.setTextColor(INK_SOFT);
   doc.text(decision.effect, MARGIN, c.y, { maxWidth: PAGE_W - 2 * MARGIN });
-  c.y +=
-    doc.getTextDimensions(decision.effect, {
-      maxWidth: PAGE_W - 2 * MARGIN,
-    }).h + 8;
+  c.y += doc.getTextDimensions(decision.effect, { maxWidth: PAGE_W - 2 * MARGIN }).h + 16;
 
-  ledgerRow(c, "Unexpected consequence", consequence.title);
+  // Unexpected consequence
+  ensureSpace(c, 50);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(INK);
+  doc.text("Unexpected consequence", MARGIN, c.y);
+  c.y += 14;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(INK);
+  doc.text(consequence.title, MARGIN, c.y);
+  c.y += 16;
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
+  doc.setFontSize(10);
   doc.setTextColor(INK_SOFT);
-  doc.text(consequence.body, MARGIN, c.y, {
-    maxWidth: PAGE_W - 2 * MARGIN,
-  });
-  c.y +=
-    doc.getTextDimensions(consequence.body, {
-      maxWidth: PAGE_W - 2 * MARGIN,
-    }).h + 8;
+  doc.text(consequence.body, MARGIN, c.y, { maxWidth: PAGE_W - 2 * MARGIN });
+  c.y += doc.getTextDimensions(consequence.body, { maxWidth: PAGE_W - 2 * MARGIN }).h + 8;
   rule(c);
 
   sectionLabel(c, "Decision Timeline");
