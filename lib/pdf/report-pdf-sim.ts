@@ -20,230 +20,185 @@ import type {
   TermSheet,
 } from "@/lib/simulation/types";
 
-// ─── Page geometry ────────────────────────────────────────────────────────────
-const PAGE_W = 595.28;
-const PAGE_H = 841.89;
-const MARGIN = 48;
-const MARGIN_INNER = 64; // for indented content blocks
-const COL_R = PAGE_W - MARGIN; // right-aligned column x
-const CONTENT_W = COL_R - MARGIN;
+// ─── Page geometry ─────────────────────────────────────────────────────────────
+const PAGE_W   = 595.28;
+const PAGE_H   = 841.89;
+const M        = 52;          // left/right margin
+const COL_R    = PAGE_W - M;  // right edge of text column
+const CW       = COL_R - M;   // total content width
 
-// ─── Palette ──────────────────────────────────────────────────────────────────
+// ─── Shared palette ────────────────────────────────────────────────────────────
 const INK        = "#111827";
 const INK_MED    = "#374151";
 const INK_SOFT   = "#6b7280";
 const INK_HINT   = "#9ca3af";
-const RULE_LIGHT = "#e5e7eb";
+const RULE_HAIR  = "#e5e7eb";
 const RULE_MED   = "#d1d5db";
-const ACCENT     = "#1e3a8a"; // deep navy — section headers
-const ACCENT_BG  = "#dbeafe";
+const ACCENT     = "#1e3a8a";   // deep navy
+const ACCENT_LITE= "#dbeafe";
 const GOOD       = "#065f46";
 const BAD        = "#991b1b";
 const GOOD_BG    = "#d1fae5";
 const BAD_BG     = "#fee2e2";
-const NEUTRAL_BG = "#f3f4f6";
-const PILL_BORDER = "#d1d5db";
+const MUTED_BG   = "#f3f4f6";
+const ZEBRA_BG   = "#f9fafb";
+const PILL_BORDER= "#d1d5db";
 
 type Cursor = { doc: jsPDF; y: number };
+type Tone   = "good" | "bad" | "neutral";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Primitives ────────────────────────────────────────────────────────────────
 
-function ensureSpace(c: Cursor, needed: number) {
-  if (c.y + needed > PAGE_H - MARGIN) {
-    c.doc.addPage();
-    c.y = MARGIN;
-  }
+function page(c: Cursor, needed: number) {
+  if (c.y + needed > PAGE_H - M) { c.doc.addPage(); c.y = M; }
 }
 
-/** Full-width hairline rule */
-function rule(c: Cursor, color = RULE_LIGHT, weight = 0.5) {
+function gap(c: Cursor, h: number) { c.y += h; }
+
+function hline(c: Cursor, x1 = M, x2 = COL_R, weight = 0.5, color = RULE_HAIR) {
   c.doc.setDrawColor(color);
   c.doc.setLineWidth(weight);
-  c.doc.line(MARGIN, c.y, COL_R, c.y);
-  c.y += 1;
+  c.doc.line(x1, c.y, x2, c.y);
 }
 
-/** Thick section divider */
-function divider(c: Cursor) {
-  gap(c, 6);
-  c.doc.setDrawColor(ACCENT);
-  c.doc.setLineWidth(2);
-  c.doc.line(MARGIN, c.y, MARGIN + 40, c.y);
-  c.y += 12;
+function textH(c: Cursor, text: string, maxW: number, size: number): number {
+  c.doc.setFontSize(size);
+  return c.doc.getTextDimensions(text, { maxWidth: maxW }).h;
 }
 
-/** Vertical space */
-function gap(c: Cursor, h: number) {
-  c.y += h;
-}
+// ─── Section header ────────────────────────────────────────────────────────────
 
-/**
- * Section header — bold uppercase label with a left accent bar.
- */
-function sectionHeader(c: Cursor, label: string) {
-  ensureSpace(c, 44);
-  gap(c, 12);
-  // left accent bar — taller and bolder
+function section(c: Cursor, label: string) {
+  page(c, 48);
+  gap(c, 14);
   c.doc.setFillColor(ACCENT);
-  c.doc.rect(MARGIN, c.y - 3, 4, 16, "F");
+  c.doc.rect(M, c.y - 2, 4, 14, "F");
   c.doc.setFont("helvetica", "bold");
-  c.doc.setFontSize(10);
+  c.doc.setFontSize(9.5);
   c.doc.setTextColor(ACCENT);
-  c.doc.text(label.toUpperCase(), MARGIN + 11, c.y + 10);
-  c.y += 24;
-  rule(c, RULE_MED, 0.75);
-  gap(c, 12);
+  c.doc.text(label.toUpperCase(), M + 11, c.y + 9);
+  c.y += 20;
+  hline(c, M, COL_R, 0.75, RULE_MED);
+  gap(c, 11);
+  c.doc.setTextColor(INK);
 }
 
-/**
- * Two-column ledger row.
- * Label left, value right — both baseline-aligned.
- */
+// ─── Micro-label (UPPERCASE hint above a block) ────────────────────────────────
+
+function micro(c: Cursor, text: string, x = M) {
+  c.doc.setFont("helvetica", "bold");
+  c.doc.setFontSize(7.5);
+  c.doc.setTextColor(INK_HINT);
+  c.doc.text(text.toUpperCase(), x, c.y);
+  c.doc.setTextColor(INK);
+}
+
+// ─── Two-column ledger row ─────────────────────────────────────────────────────
+
 function row(
   c: Cursor,
   label: string,
   value: string,
-  opts?: { bold?: boolean; tone?: "good" | "bad"; indent?: number },
+  opts?: { bold?: boolean; tone?: Tone; indent?: number },
 ) {
-  ensureSpace(c, 18);
-  const x = MARGIN + (opts?.indent ?? 0);
+  page(c, 18);
+  const x  = M + (opts?.indent ?? 0);
   const sz = opts?.bold ? 10.5 : 10;
+  const vc = opts?.tone === "good" ? GOOD : opts?.tone === "bad" ? BAD : INK;
   c.doc.setFont("helvetica", opts?.bold ? "bold" : "normal");
   c.doc.setFontSize(sz);
   c.doc.setTextColor(INK_MED);
   c.doc.text(label, x, c.y);
-
-  if (opts?.tone === "good") c.doc.setTextColor(GOOD);
-  else if (opts?.tone === "bad") c.doc.setTextColor(BAD);
-  else c.doc.setTextColor(INK);
   c.doc.setFont("helvetica", opts?.bold ? "bold" : "normal");
+  c.doc.setTextColor(vc);
   c.doc.text(value, COL_R, c.y, { align: "right" });
-
   c.doc.setTextColor(INK);
   c.y += 16;
 }
 
-/** Thin separator between groups inside a section */
-function innerRule(c: Cursor) {
-  gap(c, 8);
-  c.doc.setDrawColor(RULE_LIGHT);
-  c.doc.setLineWidth(0.5);
-  c.doc.line(MARGIN + 12, c.y, COL_R - 12, c.y);
-  c.y += 1;
-  gap(c, 8);
+function zebraRow(
+  c: Cursor, label: string, value: string, idx: number, opts?: { tone?: Tone },
+) {
+  page(c, 18);
+  if (idx % 2 === 1) {
+    c.doc.setFillColor(ZEBRA_BG);
+    c.doc.rect(M - 4, c.y - 11, CW + 8, 16, "F");
+  }
+  row(c, label, value, opts);
 }
 
-/**
- * Info card with subtle background and rounded corners.
- */
-function card(c: Cursor, content: () => void, bgColor = NEUTRAL_BG) {
-  const startY = c.y;
-  const pad = 14;
-  c.y += pad;
-  const contentStart = c.y;
-  content();
-  const contentEnd = c.y;
-  c.y += pad;
-  const cardH = c.y - startY;
-  
-  // Draw card background behind the content
-  c.doc.setFillColor(bgColor);
-  c.doc.roundedRect(MARGIN, startY, CONTENT_W, cardH, 4, 4, "F");
-  
-  // Redraw content on top (jsPDF draws in order)
-  // This is a limitation — we'll skip the card background for now to avoid complexity
-  // Instead, just add padding
-  gap(c, 4);
+// ─── Inner separator ──────────────────────────────────────────────────────────
+
+function sep(c: Cursor) {
+  gap(c, 8);
+  hline(c, M + 8, COL_R - 8, 0.4, RULE_HAIR);
+  gap(c, 9);
 }
 
-/**
- * Inline pill badge (colored background, rounded rect with subtle border).
- * Returns the width used so callers can continue inline.
- */
-function pill(
-  c: Cursor,
-  text: string,
-  x: number,
-  y: number,
-  tone: "good" | "bad" | "neutral" = "neutral",
-): number {
+// ─── Pill badge ───────────────────────────────────────────────────────────────
+
+function pillW(c: Cursor, text: string): number {
+  c.doc.setFont("helvetica", "bold"); c.doc.setFontSize(8.5);
+  return c.doc.getTextWidth(text) + 16;
+}
+
+function pill(c: Cursor, text: string, x: number, y: number, tone: Tone = "neutral"): number {
   const pad = 8;
-  c.doc.setFontSize(8.5);
-  c.doc.setFont("helvetica", "bold");
+  c.doc.setFont("helvetica", "bold"); c.doc.setFontSize(8.5);
   const tw = c.doc.getTextWidth(text);
   const pw = tw + pad * 2;
-  const ph = 15;
-  const bg = tone === "good" ? GOOD_BG : tone === "bad" ? BAD_BG : NEUTRAL_BG;
-  const fg = tone === "good" ? GOOD : tone === "bad" ? BAD : INK_MED;
-  
-  // Fill
+  const bg = tone === "good" ? GOOD_BG : tone === "bad" ? BAD_BG : MUTED_BG;
+  const fg = tone === "good" ? GOOD    : tone === "bad" ? BAD    : INK_MED;
   c.doc.setFillColor(bg);
-  c.doc.roundedRect(x, y - 10, pw, ph, 3, 3, "FD");
-  
-  // Border
+  c.doc.roundedRect(x, y - 10, pw, 15, 3, 3, "F");
   c.doc.setDrawColor(tone === "good" ? GOOD : tone === "bad" ? BAD : PILL_BORDER);
-  c.doc.setLineWidth(0.5);
-  c.doc.roundedRect(x, y - 10, pw, ph, 3, 3, "S");
-  
-  // Text
+  c.doc.setLineWidth(0.4);
+  c.doc.roundedRect(x, y - 10, pw, 15, 3, 3, "S");
   c.doc.setTextColor(fg);
   c.doc.text(text, x + pad, y);
   c.doc.setTextColor(INK);
-  return pw + 8;
+  return pw;
 }
 
-/**
- * Wrapped body text. Returns actual height used.
- */
-function body(
-  c: Cursor,
-  text: string,
-  opts?: { indent?: number; color?: string; size?: number },
-): number {
-  const maxW = COL_R - MARGIN - (opts?.indent ?? 0);
-  const x = MARGIN + (opts?.indent ?? 0);
+// ─── Body paragraph ──────────────────────────────────────────────────────────
+
+function para(c: Cursor, text: string, opts?: { indent?: number; color?: string; size?: number }): number {
+  const maxW = COL_R - M - (opts?.indent ?? 0);
+  const x    = M + (opts?.indent ?? 0);
+  const sz   = opts?.size ?? 9.5;
   c.doc.setFont("helvetica", "normal");
-  c.doc.setFontSize(opts?.size ?? 9.5);
+  c.doc.setFontSize(sz);
   c.doc.setTextColor(opts?.color ?? INK_SOFT);
-  const h = c.doc.getTextDimensions(text, { maxWidth: maxW }).h;
+  const h = textH(c, text, maxW, sz);
   c.doc.text(text, x, c.y, { maxWidth: maxW });
-  c.y += h + 6;
+  c.y += h + 5;
   c.doc.setTextColor(INK);
-  return h + 6;
+  return h + 5;
 }
 
-/**
- * Bold insight label + colored title on same line, then body text.
- */
-function insightBlock(
-  c: Cursor,
-  eyebrow: string,
-  title: string,
-  bodyText: string,
-  tone: "good" | "bad" | "neutral" = "neutral",
-) {
-  ensureSpace(c, 60);
-  // eyebrow
-  c.doc.setFont("helvetica", "bold");
-  c.doc.setFontSize(8);
-  c.doc.setTextColor(INK_SOFT);
-  c.doc.text(eyebrow.toUpperCase(), MARGIN, c.y);
+// ─── Insight block (eyebrow + title + body) ──────────────────────────────────
+
+function insight(c: Cursor, eyebrow: string, title: string, body: string, tone: Tone = "neutral") {
+  page(c, 64);
+  const tc = tone === "good" ? GOOD : tone === "bad" ? BAD : INK_MED;
+  c.doc.setFillColor(tc);
+  c.doc.circle(M + 3, c.y - 2, 2.5, "F");
+  micro(c, eyebrow, M + 11);
   c.y += 13;
-  // title
   c.doc.setFont("helvetica", "bold");
   c.doc.setFontSize(11);
-  c.doc.setTextColor(tone === "good" ? GOOD : tone === "bad" ? BAD : INK);
-  c.doc.text(title, MARGIN, c.y, { maxWidth: COL_R - MARGIN });
-  const titleH = c.doc.getTextDimensions(title, { maxWidth: COL_R - MARGIN }).h;
-  c.y += titleH + 5;
-  // body
-  body(c, bodyText, { size: 9.5 });
-  gap(c, 6);
+  c.doc.setTextColor(tc);
+  const th = textH(c, title, CW, 11);
+  c.doc.text(title, M, c.y, { maxWidth: CW });
+  c.y += th + 5;
+  para(c, body, { size: 9.5 });
+  gap(c, 4);
 }
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
 const v = (r: QuarterResultShape, k: string) => r[k] as number;
-const traitTone = (p: number): "good" | "bad" | undefined =>
-  p >= 70 ? "good" : p < 45 ? "bad" : undefined;
+const traitTone = (p: number): Tone | undefined => p >= 70 ? "good" : p < 45 ? "bad" : undefined;
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 
@@ -258,365 +213,268 @@ export function buildSimulationReportPdf(
   ceoName: string,
 ): Blob {
   const doc = new jsPDF({ unit: "pt", format: "a4" });
-  const c: Cursor = { doc, y: MARGIN };
+  const c: Cursor = { doc, y: M };
 
-  const last = history[history.length - 1];
-  const finals = scores.map((sc) => Number(sc.final));
-  const composite = finals.length
-    ? finals.reduce((a, b) => a + b, 0) / finals.length
-    : 0;
-  const compositeBand =
-    composite >= 90
-      ? "Exceptional"
-      : composite >= 75
-        ? "Strong"
-        : composite >= 60
-          ? "Competent"
-          : composite >= 40
-            ? "Weak"
-            : "Poor";
+  const last      = history[history.length - 1];
+  const finals    = scores.map((sc) => Number(sc.final));
+  const composite = finals.length ? finals.reduce((a, b) => a + b, 0) / finals.length : 0;
+  const band      =
+    composite >= 90 ? "Exceptional" :
+    composite >= 75 ? "Strong" :
+    composite >= 60 ? "Competent" :
+    composite >= 40 ? "Weak" : "Poor";
 
-  const profile = traitRollup(scores);
-  const style = managementStyle(history);
-  const strength = biggestStrength(scores);
-  const mistake = biggestMistake(scores);
-  const decision = mostImportantDecision(history);
+  const profile     = traitRollup(scores);
+  const style       = managementStyle(history);
+  const strength    = biggestStrength(scores);
+  const mistake     = biggestMistake(scores);
+  const decision    = mostImportantDecision(history);
   const consequence = delayedConsequence(history);
-  const missed = missedOpportunity(history, s);
-  const timeline = decisionTimeline(history, priorities);
-  const sold = Boolean(eg && eg.path === "B");
+  const missed      = missedOpportunity(history, s);
+  const timeline    = decisionTimeline(history, priorities);
+  const sold        = Boolean(eg && eg.path === "B");
 
-  // ── HEADER BLOCK ────────────────────────────────────────────────────────────
-  // Top accent bar spanning full width with gradient effect (simulated with darker tone)
+  // ── TOP BAR ───────────────────────────────────────────────────────────────────
   doc.setFillColor(ACCENT);
-  doc.rect(0, 0, PAGE_W, 8, "F");
+  doc.rect(0, 0, PAGE_W, 7, "F");
+  c.y = 38;
 
-  c.y = 40;
-
-  // Branding pill — top right, more refined
+  // Branding chip — top right, flush against margin
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(7.5);
+  doc.setFontSize(7);
   doc.setTextColor("#ffffff");
-  const brand = "MYELIN  ·  CEO PERFORMANCE REPORT";
-  const bw = doc.getTextWidth(brand) + 24;
+  const brandText = "MYELIN  ·  CEO PERFORMANCE REPORT";
+  const bw = doc.getTextWidth(brandText) + 20;
   doc.setFillColor(ACCENT);
-  doc.roundedRect(COL_R - bw, c.y - 11, bw, 18, 3, 3, "F");
-  doc.text(brand, COL_R - bw / 2, c.y, { align: "center" });
-  doc.setTextColor(INK);
+  doc.roundedRect(COL_R - bw, c.y - 10, bw, 16, 3, 3, "F");
+  doc.text(brandText, COL_R - bw / 2, c.y, { align: "center" });
 
-  // ── Company block with wrapping to prevent overflow ──
-  gap(c, 8);
+  // Company name — constrained so it never underlaps the chip
+  gap(c, 10);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(28);
+  doc.setFontSize(26);
   doc.setTextColor(INK);
-  // Prevent company name from overlapping with branding pill
-  const maxCompanyWidth = COL_R - MARGIN - bw - 20;
-  doc.text(companyName, MARGIN, c.y, { maxWidth: maxCompanyWidth });
-  const companyH = doc.getTextDimensions(companyName, { maxWidth: maxCompanyWidth }).h;
-  c.y += companyH + 14;
+  const nameMaxW = COL_R - M - bw - 16;
+  doc.text(companyName, M, c.y, { maxWidth: nameMaxW });
+  c.y += doc.getTextDimensions(companyName, { maxWidth: nameMaxW }).h + 12;
 
-  // ── CEO block — clearly separated with label-value pattern ──
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(INK_HINT);
-  doc.text("CHIEF EXECUTIVE OFFICER", MARGIN, c.y);
-  c.y += 14;
+  // CEO line
+  micro(c, "CHIEF EXECUTIVE OFFICER");
+  c.y += 13;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
   doc.setTextColor(INK_MED);
-  doc.text(ceoName, MARGIN, c.y);
-  c.y += 22;
+  doc.text(ceoName, M, c.y);
+  c.y += 20;
 
-  // Date + composite score on the same line
+  // Date + composite badge
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(INK_SOFT);
-  const dateStr = new Date().toLocaleDateString("en-IN", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-  doc.text(dateStr, MARGIN, c.y);
+  doc.text(
+    new Date().toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" }),
+    M, c.y,
+  );
+  const scoreTone: Tone = composite >= 75 ? "good" : composite < 50 ? "bad" : "neutral";
+  const badgeText = n1(composite) + "  ·  " + band.toUpperCase();
+  pill(c, badgeText, COL_R - pillW(c, badgeText), c.y, scoreTone);
+  c.y += 22;
 
-  // Composite score badge — right side of this line, larger
-  const scoreTone = composite >= 75 ? "good" : composite < 50 ? "bad" : "neutral";
-  pill(c, n1(composite) + "  ·  " + compositeBand.toUpperCase(), COL_R - 140, c.y, scoreTone);
-
-  c.y += 24;
-
-  // Full-width header rule with emphasis
+  // Header rule
   doc.setDrawColor(ACCENT);
-  doc.setLineWidth(2);
-  doc.line(MARGIN, c.y, COL_R, c.y);
-  c.y += 20;
+  doc.setLineWidth(1.5);
+  doc.line(M, c.y, COL_R, c.y);
+  c.y += 18;
 
-  // ── OUTCOME ─────────────────────────────────────────────────────────────────
-  sectionHeader(c, "Final Outcome");
+  // ── OUTCOME ──────────────────────────────────────────────────────────────────
+  section(c, "Final Outcome");
 
-  const outcomeText = sold
-    ? "You sold the company."
-    : eg && eg.gameOver
-      ? "The company did not make it."
-      : eg && eg.path === "A"
-        ? eg.covenantHit
-          ? "You took the money and hit the covenant."
-          : "You took the money and missed the covenant."
-        : "You finished the year independent.";
+  const outcomeText =
+    sold                    ? "You sold the company."
+    : eg && eg.gameOver     ? "The company did not make it."
+    : eg && eg.path === "A" ? (eg.covenantHit
+                               ? "You took the money and hit the covenant."
+                               : "You took the money and missed the covenant.")
+                            : "You finished the year independent.";
 
+  const outTone: Tone = sold ? "good" : (eg && eg.gameOver) ? "bad" : "neutral";
+  const outColor = outTone === "good" ? GOOD : outTone === "bad" ? BAD : INK;
+
+  doc.setFillColor(outColor);
+  doc.circle(M + 3, c.y - 4, 3, "F");
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(14);
+  doc.setFontSize(13);
+  doc.setTextColor(outColor);
+  doc.text(outcomeText, M + 12, c.y);
   doc.setTextColor(INK);
-  doc.text(outcomeText, MARGIN, c.y);
   c.y += 20;
 
-  body(c, style.why, { size: 10 });
-
-  gap(c, 6);
+  para(c, style.why, { size: 10 });
+  gap(c, 4);
   row(c, "Management style", style.label, { bold: true });
-  gap(c, 8);
+  gap(c, 10);
 
-  // ── KEY FIGURES ──────────────────────────────────────────────────────────────
-  sectionHeader(c, "Key Figures");
+  // ── KEY FIGURES ───────────────────────────────────────────────────────────────
+  section(c, "Key Figures");
 
-  // Highlight metrics
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(INK_HINT);
-  doc.text("PRIMARY METRICS", MARGIN, c.y);
-  c.y += 12;
-  
+  micro(c, "Primary metrics"); c.y += 13;
   row(c, "Revenue  (final quarter)", cr(v(last, "revenueT")), { bold: true });
-  row(c, "Net cash flow", inr(v(last, "netCF")), {
-    bold: true,
-    tone: v(last, "netCF") >= 0 ? "good" : "bad",
-  });
+  row(c, "Net cash flow", inr(v(last, "netCF")), { bold: true, tone: v(last, "netCF") >= 0 ? "good" : "bad" });
   row(c, "Cash on hand", inr(v(last, "cash")), { bold: true });
-  innerRule(c);
-  
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(INK_HINT);
-  doc.text("CUSTOMER METRICS", MARGIN, c.y);
-  c.y += 12;
-  
+  sep(c);
+
+  micro(c, "Customer metrics"); c.y += 13;
   row(c, "Customers", n0(v(last, "customers")));
   row(c, "Repeat rate", pct(v(last, "repeatRate")));
   row(c, "Market share", pct(v(last, "marketShare") * 100));
-  innerRule(c);
-  
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(INK_HINT);
-  doc.text("COMPANY METRICS", MARGIN, c.y);
-  c.y += 12;
-  
-  row(
-    c,
-    "Valuation",
-    cr(
-      eg && eg.finalValuation != null
-        ? Number(eg.finalValuation)
-        : v(last, "valuation"),
-    ),
-    { bold: true },
-  );
+  sep(c);
+
+  micro(c, "Company metrics"); c.y += 13;
+  row(c, "Valuation",
+    cr(eg && eg.finalValuation != null ? Number(eg.finalValuation) : v(last, "valuation")),
+    { bold: true });
   row(c, "Headcount", n0(headcount(s.staff)));
   row(c, "Employee morale", n0(s.empSat) + " / 100");
-  gap(c, 8);
+  gap(c, 10);
 
-  // ── QUARTER SCORES ───────────────────────────────────────────────────────────
-  sectionHeader(c, "Quarterly Performance");
+  // ── QUARTERLY PERFORMANCE ────────────────────────────────────────────────────
+  section(c, "Quarterly Performance");
 
   scores.forEach((sc, i) => {
-    ensureSpace(c, 50);
-    const qFinal = Number(sc.final);
-    const qTone: "good" | "bad" | "neutral" =
-      qFinal >= 70 ? "good" : qFinal < 45 ? "bad" : "neutral";
+    page(c, 50);
+    const qf = Number(sc.final);
+    const qt: Tone = qf >= 70 ? "good" : qf < 45 ? "bad" : "neutral";
 
-    // Quarter label + pill on the same line with better spacing
+    // Quarter label left, pill right — never collide
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     doc.setTextColor(INK);
-    const qLabel = "Quarter " + (i + 1);
-    doc.text(qLabel, MARGIN, c.y);
-    const labelW = doc.getTextWidth(qLabel);
-    pill(c, n1(qFinal) + "  " + sc.band, MARGIN + labelW + 16, c.y, qTone);
+    doc.text("Quarter " + (i + 1), M, c.y);
+    const pt = n1(qf) + "  " + sc.band;
+    pill(c, pt, COL_R - pillW(c, pt), c.y, qt);
     c.y += 22;
 
-    // Modifiers indented below with proper spacing and alignment
-    if (sc.modifiers.length > 0) {
-      sc.modifiers.forEach((m) => {
-        ensureSpace(c, 16);
-        const pts = Number(m.points);
-        const sign = pts > 0 ? "+" : "";
-        const modTone = pts > 0 ? GOOD : BAD;
-        const bullet = pts > 0 ? "↑" : "↓";
-        
-        // Draw bullet and points
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(9);
-        doc.setTextColor(modTone);
-        doc.text(bullet, MARGIN + 16, c.y);
-        doc.text(sign + n1(pts), MARGIN + 28, c.y);
-        
-        // Draw reason text with proper left margin
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
-        doc.setTextColor(INK_SOFT);
-        const reasonText = humanizeId(String(m.why));
-        doc.text(reasonText, MARGIN + 60, c.y, { maxWidth: COL_R - MARGIN - 60 });
-        
-        c.y += 15;
-      });
-    }
+    sc.modifiers.forEach((m) => {
+      page(c, 16);
+      const pts  = Number(m.points);
+      const sign = pts > 0 ? "+" : "";
+      const mc   = pts > 0 ? GOOD : BAD;
 
-    if (i < scores.length - 1) {
-      gap(c, 8);
-      innerRule(c);
-      gap(c, 4);
-    } else {
-      gap(c, 8);
-    }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(mc);
+      doc.text(pts > 0 ? "↑" : "↓", M + 16, c.y);
+      doc.text(sign + n1(pts), M + 28, c.y);
+
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(INK_SOFT);
+      doc.text(humanizeId(String(m.why)), M + 62, c.y, { maxWidth: COL_R - M - 62 });
+      c.y += 15;
+    });
+
+    if (i < scores.length - 1) { gap(c, 6); sep(c); gap(c, 2); }
+    else { gap(c, 10); }
   });
-
   doc.setTextColor(INK);
 
   // ── MANAGEMENT PROFILE ───────────────────────────────────────────────────────
-  sectionHeader(c, "Management Profile — Seven Dimensions");
+  section(c, "Management Profile — Seven Dimensions");
 
-  profile.forEach((t) => {
-    if (t.pct === null) {
-      row(c, humanizeId(t.name), "Not yet assessed");
-    } else {
-      row(c, humanizeId(t.name), n0(t.pct) + "%", { tone: traitTone(t.pct) });
-    }
+  profile.forEach((t, idx) => {
+    if (t.pct === null) zebraRow(c, humanizeId(t.name), "Not yet assessed", idx);
+    else zebraRow(c, humanizeId(t.name), n0(t.pct) + "%", idx, { tone: traitTone(t.pct) });
   });
-  gap(c, 4);
+  gap(c, 10);
 
-  // ── INSIGHTS ─────────────────────────────────────────────────────────────────
-  sectionHeader(c, "Leadership Insights");
+  // ── LEADERSHIP INSIGHTS ───────────────────────────────────────────────────────
+  section(c, "Leadership Insights");
 
-  insightBlock(c, "Biggest strength", humanizeId(strength.name), strength.why, "good");
-  gap(c, 4);
-  innerRule(c);
-  insightBlock(c, "Biggest mistake", humanizeId(mistake.title), String(mistake.why), "bad");
-  gap(c, 4);
-  innerRule(c);
-  insightBlock(
-    c,
-    "Most important decision",
-    "Quarter " + decision.q + ": " + decision.label,
-    decision.effect,
-    "neutral",
-  );
-  gap(c, 4);
-  innerRule(c);
-  insightBlock(c, "Unexpected consequence", consequence.title, consequence.body, "neutral");
-  gap(c, 8);
+  insight(c, "Biggest strength",          humanizeId(strength.name),                     strength.why,        "good");
+  sep(c);
+  insight(c, "Biggest mistake",           humanizeId(mistake.title),                     String(mistake.why), "bad");
+  sep(c);
+  insight(c, "Most important decision",   "Q" + decision.q + " · " + decision.label,     decision.effect,     "neutral");
+  sep(c);
+  insight(c, "Unexpected consequence",    consequence.title,                             consequence.body,    "neutral");
+  gap(c, 10);
 
   // ── DECISION TIMELINE ────────────────────────────────────────────────────────
-  sectionHeader(c, "Decision Timeline");
+  section(c, "Decision Timeline");
 
-  timeline.forEach((t, idx) => {
-    ensureSpace(c, 100);
+  timeline.forEach((t) => {
+    const bodyMaxW = CW - 32;
+    const dH = textH(c, t.decision,   bodyMaxW, 9.5);
+    const cH = textH(c, t.consequence, bodyMaxW, 9.5);
+    // card height: 32 header + (label 12 + gap 4 + text + gap 10) × 2
+    const cardH = 32 + (12 + 4 + dH + 10) + (12 + 4 + cH + 10);
 
-    // Quarter heading with refined background card
-    const cardStart = c.y;
-    doc.setFillColor(NEUTRAL_BG);
-    doc.roundedRect(MARGIN, c.y, CONTENT_W, 26, 4, 4, "F");
-    
+    page(c, cardH + 16);
+    const top = c.y;
+
+    // Card background + left accent strip
+    doc.setFillColor(MUTED_BG);
+    doc.roundedRect(M, top, CW, cardH, 5, 5, "F");
+    doc.setFillColor(ACCENT);
+    doc.roundedRect(M, top, 4, cardH, 2, 2, "F");
+
+    // Quarter heading
+    c.y = top + 20;
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     doc.setTextColor(ACCENT);
-    doc.text("Quarter " + t.q, MARGIN + 14, c.y + 16);
-
-    // Priority tag on same line if exists
+    doc.text("Quarter " + t.q, M + 16, c.y);
     if (t.priority) {
       const qw = doc.getTextWidth("Quarter " + t.q);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
       doc.setTextColor(INK_SOFT);
-      doc.text("  ·  Priority: " + t.priority, MARGIN + 14 + qw + 4, c.y + 16);
+      doc.text("  ·  Priority: " + t.priority, M + 16 + qw + 4, c.y, { maxWidth: CW - qw - 32 });
     }
-    
-    c.y += 34;
 
     // Decision block
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8.5);
-    doc.setTextColor(INK_MED);
-    doc.text("DECISION", MARGIN + 14, c.y);
-    c.y += 14;
-    
+    c.y = top + 32;
+    micro(c, "Decision", M + 16); c.y += 12;
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9.5);
     doc.setTextColor(INK);
-    const decisionMaxW = COL_R - MARGIN - 24;
-    doc.text(t.decision, MARGIN + 24, c.y, { maxWidth: decisionMaxW });
-    const decisionH = doc.getTextDimensions(t.decision, { maxWidth: decisionMaxW }).h;
-    c.y += decisionH + 14;
+    doc.text(t.decision, M + 16, c.y, { maxWidth: bodyMaxW });
+    c.y += dH + 10;
 
     // Consequence block
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8.5);
-    doc.setTextColor(INK_MED);
-    doc.text("CONSEQUENCE", MARGIN + 14, c.y);
-    c.y += 14;
-    
+    micro(c, "Consequence", M + 16); c.y += 12;
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9.5);
     doc.setTextColor(INK_SOFT);
-    const consequenceMaxW = COL_R - MARGIN - 24;
-    doc.text(t.consequence, MARGIN + 24, c.y, { maxWidth: consequenceMaxW });
-    const consequenceH = doc.getTextDimensions(t.consequence, { maxWidth: consequenceMaxW }).h;
-    c.y += consequenceH + 10;
+    doc.text(t.consequence, M + 16, c.y, { maxWidth: bodyMaxW });
 
-    if (idx < timeline.length - 1) {
-      gap(c, 10);
-      innerRule(c);
-      gap(c, 6);
-    } else {
-      gap(c, 12);
-    }
+    doc.setTextColor(INK);
+    c.y = top + cardH + 14;
   });
 
-  doc.setTextColor(INK);
-
-  // ── MISSED OPPORTUNITY ───────────────────────────────────────────────────────
-  sectionHeader(c, "Missed Opportunity");
+  // ── MISSED OPPORTUNITY ────────────────────────────────────────────────────────
+  section(c, "Missed Opportunity");
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
   doc.setTextColor(INK);
-  doc.text(missed.title, MARGIN, c.y);
+  doc.text(missed.title, M, c.y, { maxWidth: CW });
   c.y += 16;
-  body(c, missed.body);
+  para(c, missed.body);
   gap(c, 4);
 
-  // ── FOOTER on every page ─────────────────────────────────────────────────────
-  const totalPages = doc.getNumberOfPages();
-  for (let i = 1; i <= totalPages; i++) {
+  // ── FOOTER on every page ──────────────────────────────────────────────────────
+  const total = doc.getNumberOfPages();
+  for (let i = 1; i <= total; i++) {
     doc.setPage(i);
-
-    // Bottom rule with subtle styling
-    doc.setDrawColor(RULE_LIGHT);
-    doc.setLineWidth(0.5);
-    doc.line(MARGIN, PAGE_H - 40, COL_R, PAGE_H - 40);
-
+    hline({ doc, y: PAGE_H - 38 }, M, COL_R, 0.5, RULE_HAIR);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7.5);
     doc.setTextColor(INK_HINT);
-    doc.text(
-      "Myelin Decision Intelligence",
-      MARGIN,
-      PAGE_H - 26,
-    );
-    
+    doc.text("Myelin Decision Intelligence", M, PAGE_H - 24);
     doc.setTextColor(INK_SOFT);
-    doc.text(companyName + "  ·  " + ceoName, MARGIN, PAGE_H - 16);
-    
+    doc.text(companyName + "  ·  " + ceoName, M, PAGE_H - 14);
     doc.setTextColor(INK_HINT);
-    doc.text("Page " + i + " of " + totalPages, COL_R, PAGE_H - 26, { align: "right" });
+    doc.text("Page " + i + " of " + total, COL_R, PAGE_H - 24, { align: "right" });
   }
 
   return doc.output("blob");
