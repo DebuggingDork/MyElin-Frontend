@@ -26,6 +26,12 @@ import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/types";
 import { useRun } from "@/components/run/RunProvider";
 import { forgetRunIndex, runHref } from "@/lib/run/ref";
+
+// Clean company name by removing email suffix (e.g., "dengey · email" -> "dengey")
+function cleanCompanyName(name: string): string {
+  const parts = name.split(" · ");
+  return parts[0] || name;
+}
 import {
   ARCHETYPES,
   DECISION_GROUPS,
@@ -853,7 +859,7 @@ export function SimulationApp() {
           nav labels below it. */}
       <div className="flex items-center justify-between gap-2 pb-2 pl-3">
         <p className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-sim-faint">
-          {companyName} · 4 quarters
+          {cleanCompanyName(companyName)} · 4 quarters
         </p>
         <button
           type="button"
@@ -1080,7 +1086,7 @@ export function SimulationApp() {
                   </button>
                 )}
                 <CompanyNameEditor
-                  name={companyName}
+                  name={cleanCompanyName(companyName)}
                   onSave={async (newName) => {
                     setCompanyName(newName);
                     try {
