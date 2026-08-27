@@ -304,13 +304,16 @@ export function buildSimulationReportPdf(
   doc.text(brand, COL_R - bw / 2, c.y, { align: "center" });
   doc.setTextColor(INK);
 
-  // ── Company block ──
+  // ── Company block with wrapping to prevent overflow ──
   gap(c, 8);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(28);
   doc.setTextColor(INK);
-  doc.text(companyName, MARGIN, c.y);
-  c.y += 34;
+  // Prevent company name from overlapping with branding pill
+  const maxCompanyWidth = COL_R - MARGIN - bw - 20;
+  doc.text(companyName, MARGIN, c.y, { maxWidth: maxCompanyWidth });
+  const companyH = doc.getTextDimensions(companyName, { maxWidth: maxCompanyWidth }).h;
+  c.y += companyH + 14;
 
   // ── CEO block — clearly separated with label-value pattern ──
   doc.setFont("helvetica", "normal");
@@ -438,23 +441,32 @@ export function buildSimulationReportPdf(
     doc.text(qLabel, MARGIN, c.y);
     const labelW = doc.getTextWidth(qLabel);
     pill(c, n1(qFinal) + "  " + sc.band, MARGIN + labelW + 16, c.y, qTone);
-    c.y += 20;
+    c.y += 22;
 
-    // Modifiers indented below in a cleaner layout
+    // Modifiers indented below with proper spacing and alignment
     if (sc.modifiers.length > 0) {
       sc.modifiers.forEach((m) => {
-        ensureSpace(c, 14);
+        ensureSpace(c, 16);
         const pts = Number(m.points);
         const sign = pts > 0 ? "+" : "";
         const modTone = pts > 0 ? GOOD : BAD;
-        doc.setFont("helvetica", "normal");
+        const bullet = pts > 0 ? "↑" : "↓";
+        
+        // Draw bullet and points
+        doc.setFont("helvetica", "bold");
         doc.setFontSize(9);
         doc.setTextColor(modTone);
-        const bullet = pts > 0 ? "↑" : "↓";
-        doc.text(bullet + "  " + sign + n1(pts), MARGIN + 16, c.y);
+        doc.text(bullet, MARGIN + 16, c.y);
+        doc.text(sign + n1(pts), MARGIN + 28, c.y);
+        
+        // Draw reason text with proper left margin
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
         doc.setTextColor(INK_SOFT);
-        doc.text(humanizeId(String(m.why)), MARGIN + 48, c.y);
-        c.y += 14;
+        const reasonText = humanizeId(String(m.why));
+        doc.text(reasonText, MARGIN + 60, c.y, { maxWidth: COL_R - MARGIN - 60 });
+        
+        c.y += 15;
       });
     }
 

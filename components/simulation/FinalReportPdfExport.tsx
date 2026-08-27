@@ -57,6 +57,10 @@ export function FinalReportPdfExport({
         ? displayName(profile, user.email)
         : "CEO";
 
+      // Clean company name - remove any email/username suffix after separator
+      const rawCompanyName = company?.name ?? "Myelin";
+      const cleanCompanyName = rawCompanyName.split(" · ")[0]?.trim() || rawCompanyName;
+
       const blob = buildSimulationReportPdf(
         scores,
         history,
@@ -64,7 +68,7 @@ export function FinalReportPdfExport({
         s,
         ts,
         eg,
-        company?.name ?? "Myelin",
+        cleanCompanyName,
         ceoName,
       );
 
