@@ -56,6 +56,7 @@ export function useSimulationTimer(companyId: string, quarter: number): Simulati
   const [expired, setExpired] = useState(false);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const timerDataRef = useRef<StoredTimer | null>(null);
+  const initializedRef = useRef(false);
 
   // Calculate elapsed time based on stored data
   const calculateElapsed = useCallback((data: StoredTimer): number => {
@@ -75,9 +76,10 @@ export function useSimulationTimer(companyId: string, quarter: number): Simulati
     return Math.max(0, Math.floor(elapsed));
   }, []);
 
-  // Initialize or restore timer
+  // Initialize or restore timer - only once per companyId
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || initializedRef.current) return;
+    initializedRef.current = true;
 
     const stored = loadTimer(companyId);
     
@@ -86,14 +88,10 @@ export function useSimulationTimer(companyId: string, quarter: number): Simulati
       const elapsed = calculateElapsed(stored);
       const newRemaining = Math.max(0, TOTAL_SECONDS - elapsed);
       
+      timerDataRef.current = stored;
       setRemaining(newRemaining);
       setPaused(stored.pausedAt !== null);
       setExpired(newRemaining <= 0);
-      timerDataRef.current = stored;
-      
-      if (newRemaining <= 0) {
-        setExpired(true);
-      }
     } else {
       // Initialize new timer (starts when first quarter begins)
       const now = Date.now();
@@ -110,6 +108,10 @@ export function useSimulationTimer(companyId: string, quarter: number): Simulati
       setPaused(false);
       setExpired(false);
     }
+    
+    return () => {
+      initializedRef.current = false;
+    };
   }, [companyId, calculateElapsed]);
 
   // Countdown interval
