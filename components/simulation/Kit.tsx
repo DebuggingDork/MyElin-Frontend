@@ -398,17 +398,17 @@ export function TrendStat({
       }
     >
       <Eyebrow>{label}</Eyebrow>
-      <div className="mt-2 flex flex-1 flex-wrap items-end justify-between gap-x-2 gap-y-1">
-        <div className="min-w-0">
-          <div className={"font-mono text-2xl leading-tight " + TONE_TEXT[tone]}>{value}</div>
-          {sub && <div className="text-xs text-dim mt-0.5 font-mono">{sub}</div>}
+      <div className="mt-2 flex flex-col justify-between gap-y-3 flex-1">
+        <div className="min-w-0 max-w-full">
+          <div className={"font-mono text-2xl tracking-tighter leading-none break-words " + TONE_TEXT[tone]}>{value}</div>
+          {sub && <div className="text-[11px] text-dim mt-1.5 font-mono leading-tight max-w-full break-words">{sub}</div>}
         </div>
-        <div className="ml-auto text-right shrink-0 flex flex-col items-end gap-0.5">
+        <div className="shrink-0 flex flex-row items-end justify-between w-full mt-auto">
           <Sparkline values={pts} tone={invert ? "invert" : "normal"} />
           {delta !== null && (
             <div
               className={
-                "text-xs font-mono font-semibold px-1.5 py-0.5 rounded-sm " +
+                "text-[11px] font-mono font-bold px-1.5 py-0.5 rounded-sm shrink-0 " +
                 (better
                   ? "text-teal-bright bg-teal/10"
                   : "text-tone-bad bg-danger/10")

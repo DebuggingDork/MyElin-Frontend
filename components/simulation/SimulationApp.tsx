@@ -124,13 +124,13 @@ const CLOSURE_TAB = "review";
 /** Screen ids the sidebar can deep-link to. Anything else falls back to the dashboard. */
 export const SIMULATION_TABS = [
   { id: "dashboard", label: "Company" },
+  { id: "crisis", label: "Market event" },
   { id: "marketing", label: "Marketing" },
   { id: "sales", label: "Sales" },
   { id: "rnd", label: "Product" },
   { id: "ops", label: "Operations" },
   { id: "hr", label: "People" },
   { id: "finance", label: "Finance" },
-  { id: "crisis", label: "Market event" },
   { id: "balance", label: "Balance sheet" },
   { id: "learning", label: "Principles" },
   { id: "review", label: "Close the quarter" },
@@ -713,7 +713,7 @@ export function SimulationApp() {
     setError(null);
     setWorking({
       title: "Processing quarter " + state.quarter,
-      message: "Evaluating decisions and generating your quarter report…",
+      message: "We are working on your inputs and calculating your results…",
       dismiss: "Back to the review",
     });
     try {
@@ -731,6 +731,20 @@ export function SimulationApp() {
       setState(locked.nextState);
       if (locked.settlement) setEndgameOutcome(locked.settlement as unknown as Record<string, unknown>);
       if (locked.quarter >= 4) setRunStatus("completed");
+
+      let audio: HTMLAudioElement | null = null;
+      if (soundOn) {
+        audio = new Audio("/sounds/processing.wav");
+        audio.loop = true;
+        audio.volume = 0.2; // Soft background music
+        audio.play().catch(() => {});
+      }
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+
       setPhase("closed");
       // The quarter took real thought to close and the numbers arrive a beat later, so the
       // report gets an audible arrival. Fired from the same gesture that closed the quarter,
@@ -840,8 +854,8 @@ export function SimulationApp() {
 
   const tabs = [
     { id: "dashboard", label: "Company", badge: messages.filter((m) => m.tone === "critical").length, hot: false },
-    ...Object.keys(SCREEN_META).map((id) => ({ id, label: SCREEN_META[id].label, badge: 0, hot: false })),
     ...(crisisLive ? [{ id: "crisis", label: "Market event", badge: 0, hot: true }] : []),
+    ...Object.keys(SCREEN_META).map((id) => ({ id, label: SCREEN_META[id].label, badge: 0, hot: false })),
     { id: "balance", label: "Balance sheet", badge: 0, hot: false },
     { id: "learning", label: "Principles", badge: 0, hot: false },
     { id: "review", label: "Close the quarter", badge: 0, hot: false },
@@ -963,13 +977,52 @@ export function SimulationApp() {
               above stays live and legible, so a quarter being scored reads as this workspace
               being busy rather than the whole app having locked up. */}
           {working && (
-            <ProcessingOverlay
-              title={working.title}
-              message={working.message}
-              error={error}
-              onRetry={() => setWorking(null)}
-              retryLabel={working.dismiss}
-            />
+            <div className="absolute inset-0 z-[60] flex items-center justify-center bg-base/90 backdrop-blur-xl overflow-hidden transition-all duration-700">
+              {/* Background ambient animations compatible with light/dark theme */}
+              <div className="absolute inset-0 w-full h-full pointer-events-none opacity-60">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-teal/10 rounded-full blur-[120px] animate-pulse"></div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-indigo-500/5 rounded-full blur-[100px] animate-pulse" style={{ animationDuration: '4s' }}></div>
+              </div>
+
+              {/* Foreground content */}
+              <div className="relative z-10 flex flex-col items-center max-w-xl text-center px-6">
+                {/* Elegant dual-spinning ring indicator */}
+                <div className="relative w-32 h-32 mb-10 flex items-center justify-center">
+                  <div className="absolute inset-0 border-[3px] border-line rounded-full"></div>
+                  <div className="absolute inset-0 border-[3px] border-t-ink/30 border-r-ink/10 border-b-transparent border-l-transparent rounded-full animate-spin duration-1000"></div>
+                  <div className="absolute inset-3 border-[3px] border-t-teal hover:border-teal/80 border-r-teal/30 border-b-transparent border-l-transparent rounded-full animate-[spin_2s_linear_infinite_reverse]"></div>
+                  {/* Central glowing core */}
+                  <div className="w-10 h-10 bg-surface rounded-full shadow-sm border border-line flex items-center justify-center animate-pulse duration-700">
+                    <div className="w-3 h-3 bg-teal rounded-full shadow-[0_0_10px_rgba(20,184,166,0.5)]"></div>
+                  </div>
+                </div>
+
+                {error ? (
+                  <div className="bg-danger/5 border border-danger/30 p-8 rounded-2xl backdrop-blur-md w-full max-w-md mx-auto shadow-lg">
+                    <h2 className="font-serif text-3xl text-ink mb-3">Processing Error</h2>
+                    <p className="text-dim mb-8">{error}</p>
+                    <button onClick={() => setWorking(null)} className="px-6 py-2.5 bg-raise hover:bg-surface border border-line-2 text-ink font-medium rounded-full transition-all tracking-wide">
+                      {working.dismiss}
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <h2 className="font-serif text-[2.75rem] tracking-tight text-ink mb-4 leading-tight">
+                      {working.title}
+                    </h2>
+                    <p className="text-[1.1rem] text-dim max-w-sm mx-auto leading-relaxed">
+                      {working.message}
+                    </p>
+                    
+                    {/* Status ticker */}
+                    <div className="mt-14 flex items-center gap-3 text-xs uppercase tracking-[0.2em] text-teal font-mono">
+                      <span className="w-2 h-2 rounded-full bg-teal animate-ping duration-1000"></span>
+                      Stand by
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
           )}
           {timerActive && timer.paused && !working && (
             <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-amber/40 bg-amber/10 px-6 py-3 backdrop-blur-sm">
