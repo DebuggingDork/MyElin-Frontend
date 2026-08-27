@@ -518,53 +518,69 @@ export function buildSimulationReportPdf(
   sectionHeader(c, "Decision Timeline");
 
   timeline.forEach((t, idx) => {
-    ensureSpace(c, 90);
+    ensureSpace(c, 100);
 
-    // Quarter heading with subtle background
-    const qHeadStart = c.y;
+    // Quarter heading with refined background card
+    const cardStart = c.y;
     doc.setFillColor(NEUTRAL_BG);
-    doc.roundedRect(MARGIN, c.y - 4, CONTENT_W, 22, 3, 3, "F");
+    doc.roundedRect(MARGIN, c.y, CONTENT_W, 26, 4, 4, "F");
     
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     doc.setTextColor(ACCENT);
-    doc.text("Quarter " + t.q, MARGIN + 10, c.y + 10);
+    doc.text("Quarter " + t.q, MARGIN + 14, c.y + 16);
 
     // Priority tag on same line if exists
     if (t.priority) {
       const qw = doc.getTextWidth("Quarter " + t.q);
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(8.5);
+      doc.setFontSize(9);
       doc.setTextColor(INK_SOFT);
-      doc.text("·  Priority: " + t.priority, MARGIN + 10 + qw + 8, c.y + 10);
+      doc.text("  ·  Priority: " + t.priority, MARGIN + 14 + qw + 4, c.y + 16);
     }
     
-    c.y += 26;
+    c.y += 34;
 
-    // Decision
+    // Decision block
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
+    doc.setFontSize(8.5);
     doc.setTextColor(INK_MED);
-    doc.text("Decision", MARGIN + 14, c.y);
-    c.y += 13;
-    body(c, t.decision, { indent: 14, size: 9.5 });
+    doc.text("DECISION", MARGIN + 14, c.y);
+    c.y += 14;
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9.5);
+    doc.setTextColor(INK);
+    const decisionMaxW = COL_R - MARGIN - 24;
+    doc.text(t.decision, MARGIN + 24, c.y, { maxWidth: decisionMaxW });
+    const decisionH = doc.getTextDimensions(t.decision, { maxWidth: decisionMaxW }).h;
+    c.y += decisionH + 14;
 
-    // Consequence
+    // Consequence block
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
+    doc.setFontSize(8.5);
     doc.setTextColor(INK_MED);
-    doc.text("Consequence", MARGIN + 14, c.y);
-    c.y += 13;
-    body(c, t.consequence, { indent: 14, size: 9.5 });
+    doc.text("CONSEQUENCE", MARGIN + 14, c.y);
+    c.y += 14;
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9.5);
+    doc.setTextColor(INK_SOFT);
+    const consequenceMaxW = COL_R - MARGIN - 24;
+    doc.text(t.consequence, MARGIN + 24, c.y, { maxWidth: consequenceMaxW });
+    const consequenceH = doc.getTextDimensions(t.consequence, { maxWidth: consequenceMaxW }).h;
+    c.y += consequenceH + 10;
 
     if (idx < timeline.length - 1) {
-      gap(c, 6);
+      gap(c, 10);
       innerRule(c);
-      gap(c, 4);
+      gap(c, 6);
     } else {
-      gap(c, 8);
+      gap(c, 12);
     }
   });
+
+  doc.setTextColor(INK);
 
   // ── MISSED OPPORTUNITY ───────────────────────────────────────────────────────
   sectionHeader(c, "Missed Opportunity");
