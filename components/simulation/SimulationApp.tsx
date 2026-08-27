@@ -771,7 +771,7 @@ export function SimulationApp() {
       const run = await loadRun();
       resetPlan(run.state);
       setPhase(justClosed === 3 && !run.endgamePath ? "termsheet" : "briefing");
-      timer.reset();
+      // Timer continues running across quarters - don't reset
       setWorking(null);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not open the next quarter.");
@@ -802,7 +802,7 @@ export function SimulationApp() {
         resetPlan(run.state);
         setPhase("briefing");
         setTab("dashboard");
-        timer.reset();
+        // Timer continues running across quarters - don't reset
         setWorking(null);
       } catch (err) {
         setError(err instanceof ApiError ? err.message : "Could not record that decision.");
