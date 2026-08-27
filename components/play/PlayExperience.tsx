@@ -108,7 +108,7 @@ export function PlayExperience({ scenario }: { scenario: Scenario }) {
     setError(null);
     try {
       const company = await api.createCompany({
-        name: `${customName} · ${user?.email?.split("@")[0] ?? "run"}`,
+        name: customName,
       });
       setActiveCompanyId(company.id);
       // The new run changes this owner's run list, and the cached copy is what the numbered
