@@ -214,27 +214,23 @@ export function buildSimulationReportPdf(
 
   sectionLabel(c, "Quarter Scores");
   scores.forEach((sc, i) => {
+    ensureSpace(c, 32);
     ledgerRow(
       c,
       "Quarter " + (i + 1),
-      n1(Number(sc.final)) + " \u2014 " + sc.band,
+      n1(Number(sc.final)) + " — " + sc.band,
+      { strong: true },
     );
     sc.modifiers.forEach((m) => {
-      ensureSpace(c, 14);
+      ensureSpace(c, 16);
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(8);
+      doc.setFontSize(9);
       doc.setTextColor(Number(m.points) > 0 ? GOOD : BAD);
-      doc.text(
-        "  " +
-          (Number(m.points) > 0 ? "+" : "") +
-          n1(Number(m.points)) +
-          " " +
-          humanizeId(String(m.why)),
-        MARGIN + 12,
-        c.y,
-      );
-      c.y += 12;
+      const modText = (Number(m.points) > 0 ? "+" : "") + n1(Number(m.points)) + " " + humanizeId(String(m.why));
+      doc.text(modText, MARGIN + 16, c.y);
+      c.y += 14;
     });
+    c.y += 6; // Extra space between quarters
   });
   rule(c);
 
