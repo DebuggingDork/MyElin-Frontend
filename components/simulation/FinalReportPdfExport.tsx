@@ -1,10 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { Check, Download, ExternalLink, Loader2 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { buildSimulationReportPdf } from "@/lib/pdf/report-pdf-sim";
 import { useRun } from "@/components/run/RunProvider";
+import { useAuth } from "@/components/auth/AuthProvider";
+import {
+  displayName,
+  identitySnapshot,
+  identityServerSnapshot,
+  subscribeIdentity,
+} from "@/lib/identity";
 import type { QuarterScore } from "@/lib/simulation/remote";
 import type {
   CompanyState,
@@ -31,6 +38,13 @@ export function FinalReportPdfExport({
   eg: Record<string, unknown> | null;
 }) {
   const { companyId, company } = useRun();
+  const { user } = useAuth();
+  const profile = useSyncExternalStore(
+    subscribeIdentity,
+    identitySnapshot,
+    identityServerSnapshot,
+  );
+
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const [storedUrl, setStoredUrl] = useState<string | null>(null);
@@ -39,6 +53,10 @@ export function FinalReportPdfExport({
     setStatus("working");
     setError(null);
     try {
+      const ceoName = user
+        ? displayName(profile, user.email)
+        : "CEO";
+
       const blob = buildSimulationReportPdf(
         scores,
         history,
@@ -47,6 +65,7 @@ export function FinalReportPdfExport({
         ts,
         eg,
         company?.name ?? "Myelin",
+        ceoName,
       );
 
       // Download always works (local only)
@@ -61,10 +80,7 @@ export function FinalReportPdfExport({
 
       // Upload is best-effort
       try {
-        const stored = await api.storeSimulationReportPdf(
-          companyId,
-          blob,
-        );
+        const stored = await api.storeSimulationReportPdf(companyId, blob);
         setStoredUrl(stored.signed_url);
       } catch {
         // upload failed but download succeeded -- don't alarm the user
