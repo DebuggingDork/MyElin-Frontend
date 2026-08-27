@@ -6,6 +6,12 @@ import { INITIAL_STATE, BASE_STAFF, OPENING_CASH, headcount, marketDemand } from
 import { inr, n0 } from "@/lib/simulation/format";
 import { Eyebrow, Panel, Stat } from "@/components/simulation/Kit";
 
+// Clean company name by removing email suffix (e.g., "dengey · email" -> "dengey")
+function cleanCompanyName(name: string): string {
+  const parts = name.split(" · ");
+  return parts[0] || name;
+}
+
 export function IntroScreen({
   companyName,
   onStart,
@@ -15,6 +21,7 @@ export function IntroScreen({
   onStart: () => void;
   busy?: boolean;
 }) {
+  const displayName = cleanCompanyName(companyName);
   const price = INITIAL_STATE.products.pulse.price;
   const team = headcount(BASE_STAFF);
 
@@ -24,7 +31,7 @@ export function IntroScreen({
         <div>
           <Eyebrow tone="text-tone-bad">The desk is yours in a moment</Eyebrow>
           <h2 className="mt-3 font-serif text-[4rem] tracking-tight text-ink leading-[0.95]">
-            {companyName}
+            {displayName}
           </h2>
           <p className="font-mono text-sm text-dim mt-4">Pvt. Ltd. · Bengaluru, Karnataka</p>
 
