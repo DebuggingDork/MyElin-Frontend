@@ -4,13 +4,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 const TIMER_KEY = (companyId: string) => `simulation.timer.${companyId}`;
 
-const TOTAL_SECONDS = 50 * 60; // 50 minutes
+const TOTAL_SECONDS = 50 * 60; // 50 minutes for the entire simulation
 
 type StoredTimer = {
-  remaining: number;
-  running: boolean;
-  startTs: number;
-  quarter: number;
+  startTimestamp: number; // When the simulation started (first quarter)
+  pausedAt: number | null; // Timestamp when paused, null if running
+  totalPausedDuration: number; // Total time spent paused (in ms)
+  simulationStarted: boolean;
 };
 
 function loadTimer(companyId: string): StoredTimer | null {
@@ -30,7 +30,7 @@ function saveTimer(companyId: string, data: StoredTimer) {
   }
 }
 
-function clearTimer(companyId: string) {
+export function clearTimer(companyId: string) {
   try {
     window.localStorage.removeItem(TIMER_KEY(companyId));
   } catch {
@@ -54,56 +54,63 @@ export function useSimulationTimer(companyId: string, quarter: number): Simulati
   const [remaining, setRemaining] = useState(TOTAL_SECONDS);
   const [paused, setPaused] = useState(false);
   const [expired, setExpired] = useState(false);
-  const startTsRef = useRef(0);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const pauseRemainingRef = useRef(TOTAL_SECONDS);
+  const timerDataRef = useRef<StoredTimer | null>(null);
+
+  // Calculate elapsed time based on stored data
+  const calculateElapsed = useCallback((data: StoredTimer): number => {
+    if (!data.simulationStarted) return 0;
+    
+    const now = Date.now();
+    let elapsed: number;
+    
+    if (data.pausedAt !== null) {
+      // Timer is paused: use pausedAt time
+      elapsed = (data.pausedAt - data.startTimestamp - data.totalPausedDuration) / 1000;
+    } else {
+      // Timer is running: use current time
+      elapsed = (now - data.startTimestamp - data.totalPausedDuration) / 1000;
+    }
+    
+    return Math.max(0, Math.floor(elapsed));
+  }, []);
 
   // Initialize or restore timer
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const stored = loadTimer(companyId);
-    if (stored && stored.quarter === quarter) {
-      if (stored.running) {
-        // Timer was running — calculate how much time has passed since last active
-        const elapsed = Math.floor((Date.now() - stored.startTs) / 1000);
-        const newRemaining = Math.max(0, stored.remaining - elapsed);
-        setRemaining(newRemaining);
-        setPaused(false);
-        setExpired(newRemaining <= 0);
-        startTsRef.current = Date.now() - (elapsed * 1000); // preserve original start
-        if (newRemaining <= 0) {
-          setExpired(true);
-          clearTimer(companyId);
-        }
-      } else {
-        // Timer was paused — restore remaining directly
-        setRemaining(stored.remaining);
-        setPaused(true);
-        setExpired(stored.remaining <= 0);
-        pauseRemainingRef.current = stored.remaining;
+    
+    if (stored && stored.simulationStarted) {
+      // Restore existing timer
+      const elapsed = calculateElapsed(stored);
+      const newRemaining = Math.max(0, TOTAL_SECONDS - elapsed);
+      
+      setRemaining(newRemaining);
+      setPaused(stored.pausedAt !== null);
+      setExpired(newRemaining <= 0);
+      timerDataRef.current = stored;
+      
+      if (newRemaining <= 0) {
+        setExpired(true);
       }
-    } else if (stored && stored.quarter !== quarter) {
-      // Different quarter — start fresh
-      setRemaining(TOTAL_SECONDS);
-      setPaused(false);
-      setExpired(false);
-      startTsRef.current = Date.now();
-      saveTimer(companyId, { remaining: TOTAL_SECONDS, running: true, startTs: Date.now(), quarter });
     } else {
-      // No stored timer — initialize
+      // Initialize new timer (starts when first quarter begins)
+      const now = Date.now();
+      const newData: StoredTimer = {
+        startTimestamp: now,
+        pausedAt: null,
+        totalPausedDuration: 0,
+        simulationStarted: true,
+      };
+      
+      timerDataRef.current = newData;
+      saveTimer(companyId, newData);
       setRemaining(TOTAL_SECONDS);
       setPaused(false);
       setExpired(false);
-      startTsRef.current = Date.now();
-      saveTimer(companyId, { remaining: TOTAL_SECONDS, running: true, startTs: Date.now(), quarter });
     }
-
-    // Cleanup stored timer for completed run
-    return () => {
-      // Timer state persists for reload, no cleanup needed here
-    };
-  }, [companyId, quarter]);
+  }, [companyId, calculateElapsed]);
 
   // Countdown interval
   useEffect(() => {
@@ -116,14 +123,20 @@ export function useSimulationTimer(companyId: string, quarter: number): Simulati
     }
 
     tickRef.current = setInterval(() => {
-      setRemaining((prev) => {
-        if (prev <= 1) {
-          setExpired(true);
-          clearTimer(companyId);
-          return 0;
+      if (!timerDataRef.current) return;
+      
+      const elapsed = calculateElapsed(timerDataRef.current);
+      const newRemaining = Math.max(0, TOTAL_SECONDS - elapsed);
+      
+      setRemaining(newRemaining);
+      
+      if (newRemaining <= 0) {
+        setExpired(true);
+        if (tickRef.current) {
+          clearInterval(tickRef.current);
+          tickRef.current = null;
         }
-        return prev - 1;
-      });
+      }
     }, 1000);
 
     return () => {
@@ -132,30 +145,58 @@ export function useSimulationTimer(companyId: string, quarter: number): Simulati
         tickRef.current = null;
       }
     };
-  }, [paused, expired, companyId]);
+  }, [paused, expired, calculateElapsed]);
 
   const startTimer = useCallback(() => {
-    startTsRef.current = Date.now();
+    const now = Date.now();
+    const newData: StoredTimer = {
+      startTimestamp: now,
+      pausedAt: null,
+      totalPausedDuration: 0,
+      simulationStarted: true,
+    };
+    
+    timerDataRef.current = newData;
+    saveTimer(companyId, newData);
     setRemaining(TOTAL_SECONDS);
     setPaused(false);
     setExpired(false);
-    saveTimer(companyId, { remaining: TOTAL_SECONDS, running: true, startTs: Date.now(), quarter });
-  }, [companyId, quarter]);
+  }, [companyId]);
 
   const pause = useCallback(() => {
-    pauseRemainingRef.current = remaining;
+    if (!timerDataRef.current || paused) return;
+    
+    const now = Date.now();
+    const updatedData: StoredTimer = {
+      ...timerDataRef.current,
+      pausedAt: now,
+    };
+    
+    timerDataRef.current = updatedData;
+    saveTimer(companyId, updatedData);
     setPaused(true);
-    saveTimer(companyId, { remaining, running: false, startTs: 0, quarter });
-  }, [companyId, remaining, quarter]);
+  }, [companyId, paused]);
 
   const unpause = useCallback(() => {
-    startTsRef.current = Date.now();
+    if (!timerDataRef.current || !paused) return;
+    
+    const now = Date.now();
+    const pauseDuration = timerDataRef.current.pausedAt ? now - timerDataRef.current.pausedAt : 0;
+    
+    const updatedData: StoredTimer = {
+      ...timerDataRef.current,
+      pausedAt: null,
+      totalPausedDuration: timerDataRef.current.totalPausedDuration + pauseDuration,
+    };
+    
+    timerDataRef.current = updatedData;
+    saveTimer(companyId, updatedData);
     setPaused(false);
-    saveTimer(companyId, { remaining: pauseRemainingRef.current, running: true, startTs: Date.now(), quarter });
-  }, [companyId, quarter]);
+  }, [companyId, paused]);
 
   const reset = useCallback(() => {
     clearTimer(companyId);
+    timerDataRef.current = null;
     setRemaining(TOTAL_SECONDS);
     setPaused(false);
     setExpired(false);
