@@ -80,8 +80,8 @@ export function RewindModal({
               <AlertTriangle className="h-4 w-4 text-amber mt-0.5 shrink-0" />
               <div>
                 <p className="text-ink leading-relaxed">
-                  Rewinding will use 1 of your {rewindsRemaining} available rewind
-                  {rewindsRemaining === 1 ? "" : "s"}. This action cannot be undone.
+                  Rewinding will use 1 rewind. You will have {rewindsRemaining - 1} rewind
+                  {rewindsRemaining - 1 === 1 ? "" : "s"} left after this action. This cannot be undone.
                 </p>
                 <label className="flex items-center gap-2 mt-3 cursor-pointer group">
                   <input
