@@ -11,6 +11,7 @@ import { balanceCommitted, balanceOpening } from "@/lib/simulation/balance";
 import { BalanceSheetDoc } from "@/components/simulation/BalanceSheetDoc";
 import { BudgetMeter, Eyebrow, Inbox, Panel, ReadinessGrid } from "@/components/simulation/Kit";
 import { ReflectionForm, reflectionComplete } from "@/components/simulation/Panels";
+import { AlertTriangle } from "lucide-react";
 import type {
   Alloc,
   Budget,
@@ -122,8 +123,18 @@ export function ReviewScreen({
       )}
 
       {crisisUnanswered && (
-        <div className="border-l-4 border-ember bg-ember/10 px-4 py-3 text-sm text-ink">
-          There is a market event live and you have not decided how to answer it.
+        <div className="border-l-4 border-amber bg-amber/15 px-5 py-4 text-sm">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-amber shrink-0 mt-0.5" />
+            <div className="space-y-2">
+              <p className="font-semibold text-ink">Action Required: Market Event</p>
+              <p className="text-ink/90 leading-relaxed">
+                A market event is active this quarter. You must go to the{" "}
+                <strong className="text-amber">Market event</strong> section in the sidebar 
+                and decide how to respond before you can close this quarter.
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
