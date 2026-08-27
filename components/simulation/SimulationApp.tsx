@@ -976,7 +976,7 @@ export function SimulationApp() {
               <Pause className="h-4 w-4 shrink-0 text-amber" />
               <div className="min-w-0 flex-1">
                 <span className="font-serif text-sm text-ink">Simulation paused</span>
-                <span className="ml-2 text-xs text-dim">Timer frozen at {timer.formatTime()}. Inputs are read-only.</span>
+                <span className="ml-2 text-xs text-dim">All inputs are read-only while paused.</span>
               </div>
               <button
                 onClick={timer.unpause}
