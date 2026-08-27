@@ -982,12 +982,22 @@ export function SimulationApp() {
             </div>
           )}
           {timerActive && timer.expired && !working && (
-            <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/20 backdrop-blur-[1px]">
-              <div className="flex items-center gap-3 rounded-lg border border-danger/40 bg-danger/10 px-6 py-4 backdrop-blur-sm">
-                <AlertTriangle className="h-5 w-5 text-danger-soft" />
-                <div>
-                  <div className="font-serif text-lg text-ink">Time expired</div>
-                  <div className="text-sm text-dim">The 50-minute timer has ended. All inputs are now read-only.</div>
+            <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+              <div className="max-w-md rounded-lg border border-danger/40 bg-danger/10 px-8 py-6 backdrop-blur-sm shadow-2xl">
+                <div className="flex items-start gap-4">
+                  <AlertTriangle className="h-6 w-6 shrink-0 text-danger-soft mt-1" />
+                  <div>
+                    <div className="font-serif text-2xl text-ink mb-2">Time Limit Reached</div>
+                    <div className="text-sm text-ink/90 leading-relaxed space-y-2">
+                      <p>
+                        The 50-minute timer for this simulation has expired. All inputs are now read-only
+                        and you can no longer make changes or close quarters.
+                      </p>
+                      <p>
+                        You can review your decisions and progress, but no further actions are allowed.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
