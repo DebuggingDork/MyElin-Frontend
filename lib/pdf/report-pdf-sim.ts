@@ -23,20 +23,26 @@ import type {
 // ─── Page geometry ────────────────────────────────────────────────────────────
 const PAGE_W = 595.28;
 const PAGE_H = 841.89;
-const MARGIN = 52;
+const MARGIN = 48;
+const MARGIN_INNER = 64; // for indented content blocks
 const COL_R = PAGE_W - MARGIN; // right-aligned column x
+const CONTENT_W = COL_R - MARGIN;
 
 // ─── Palette ──────────────────────────────────────────────────────────────────
-const INK        = "#181a1e";
-const INK_MED    = "#3d4148";
+const INK        = "#111827";
+const INK_MED    = "#374151";
 const INK_SOFT   = "#6b7280";
-const RULE_LIGHT = "#e5e4de";
-const ACCENT     = "#1d2c5e"; // deep navy — section headers
-const GOOD       = "#15673e";
-const BAD        = "#8b2020";
-const GOOD_BG    = "#e9f5ee";
-const BAD_BG     = "#fceaea";
-const PILL_BG    = "#f0f0ec";
+const INK_HINT   = "#9ca3af";
+const RULE_LIGHT = "#e5e7eb";
+const RULE_MED   = "#d1d5db";
+const ACCENT     = "#1e3a8a"; // deep navy — section headers
+const ACCENT_BG  = "#dbeafe";
+const GOOD       = "#065f46";
+const BAD        = "#991b1b";
+const GOOD_BG    = "#d1fae5";
+const BAD_BG     = "#fee2e2";
+const NEUTRAL_BG = "#f3f4f6";
+const PILL_BORDER = "#d1d5db";
 
 type Cursor = { doc: jsPDF; y: number };
 
@@ -50,11 +56,20 @@ function ensureSpace(c: Cursor, needed: number) {
 }
 
 /** Full-width hairline rule */
-function rule(c: Cursor, color = RULE_LIGHT) {
+function rule(c: Cursor, color = RULE_LIGHT, weight = 0.5) {
   c.doc.setDrawColor(color);
-  c.doc.setLineWidth(0.5);
+  c.doc.setLineWidth(weight);
   c.doc.line(MARGIN, c.y, COL_R, c.y);
   c.y += 1;
+}
+
+/** Thick section divider */
+function divider(c: Cursor) {
+  gap(c, 6);
+  c.doc.setDrawColor(ACCENT);
+  c.doc.setLineWidth(2);
+  c.doc.line(MARGIN, c.y, MARGIN + 40, c.y);
+  c.y += 12;
 }
 
 /** Vertical space */
@@ -66,18 +81,18 @@ function gap(c: Cursor, h: number) {
  * Section header — bold uppercase label with a left accent bar.
  */
 function sectionHeader(c: Cursor, label: string) {
-  ensureSpace(c, 36);
-  gap(c, 6);
-  // left accent bar
+  ensureSpace(c, 44);
+  gap(c, 12);
+  // left accent bar — taller and bolder
   c.doc.setFillColor(ACCENT);
-  c.doc.rect(MARGIN, c.y - 2, 3, 14, "F");
+  c.doc.rect(MARGIN, c.y - 3, 4, 16, "F");
   c.doc.setFont("helvetica", "bold");
-  c.doc.setFontSize(9);
+  c.doc.setFontSize(10);
   c.doc.setTextColor(ACCENT);
-  c.doc.text(label.toUpperCase(), MARGIN + 9, c.y + 9);
-  c.y += 20;
-  rule(c);
-  gap(c, 10);
+  c.doc.text(label.toUpperCase(), MARGIN + 11, c.y + 10);
+  c.y += 24;
+  rule(c, RULE_MED, 0.75);
+  gap(c, 12);
 }
 
 /**
@@ -110,12 +125,39 @@ function row(
 
 /** Thin separator between groups inside a section */
 function innerRule(c: Cursor) {
-  rule(c, "#ededea");
+  gap(c, 8);
+  c.doc.setDrawColor(RULE_LIGHT);
+  c.doc.setLineWidth(0.5);
+  c.doc.line(MARGIN + 12, c.y, COL_R - 12, c.y);
+  c.y += 1;
   gap(c, 8);
 }
 
 /**
- * Inline pill badge (colored background, rounded rect).
+ * Info card with subtle background and rounded corners.
+ */
+function card(c: Cursor, content: () => void, bgColor = NEUTRAL_BG) {
+  const startY = c.y;
+  const pad = 14;
+  c.y += pad;
+  const contentStart = c.y;
+  content();
+  const contentEnd = c.y;
+  c.y += pad;
+  const cardH = c.y - startY;
+  
+  // Draw card background behind the content
+  c.doc.setFillColor(bgColor);
+  c.doc.roundedRect(MARGIN, startY, CONTENT_W, cardH, 4, 4, "F");
+  
+  // Redraw content on top (jsPDF draws in order)
+  // This is a limitation — we'll skip the card background for now to avoid complexity
+  // Instead, just add padding
+  gap(c, 4);
+}
+
+/**
+ * Inline pill badge (colored background, rounded rect with subtle border).
  * Returns the width used so callers can continue inline.
  */
 function pill(
@@ -125,20 +167,29 @@ function pill(
   y: number,
   tone: "good" | "bad" | "neutral" = "neutral",
 ): number {
-  const pad = 6;
+  const pad = 8;
   c.doc.setFontSize(8.5);
   c.doc.setFont("helvetica", "bold");
   const tw = c.doc.getTextWidth(text);
   const pw = tw + pad * 2;
-  const ph = 13;
-  const bg = tone === "good" ? GOOD_BG : tone === "bad" ? BAD_BG : PILL_BG;
-  const fg = tone === "good" ? GOOD     : tone === "bad" ? BAD     : INK_SOFT;
+  const ph = 15;
+  const bg = tone === "good" ? GOOD_BG : tone === "bad" ? BAD_BG : NEUTRAL_BG;
+  const fg = tone === "good" ? GOOD : tone === "bad" ? BAD : INK_MED;
+  
+  // Fill
   c.doc.setFillColor(bg);
-  c.doc.roundedRect(x, y - 9, pw, ph, 2, 2, "F");
+  c.doc.roundedRect(x, y - 10, pw, ph, 3, 3, "FD");
+  
+  // Border
+  c.doc.setDrawColor(tone === "good" ? GOOD : tone === "bad" ? BAD : PILL_BORDER);
+  c.doc.setLineWidth(0.5);
+  c.doc.roundedRect(x, y - 10, pw, ph, 3, 3, "S");
+  
+  // Text
   c.doc.setTextColor(fg);
   c.doc.text(text, x + pad, y);
   c.doc.setTextColor(INK);
-  return pw + 6;
+  return pw + 8;
 }
 
 /**
@@ -236,44 +287,42 @@ export function buildSimulationReportPdf(
   const sold = Boolean(eg && eg.path === "B");
 
   // ── HEADER BLOCK ────────────────────────────────────────────────────────────
-  // Top accent bar spanning full width
+  // Top accent bar spanning full width with gradient effect (simulated with darker tone)
   doc.setFillColor(ACCENT);
-  doc.rect(0, 0, PAGE_W, 6, "F");
+  doc.rect(0, 0, PAGE_W, 8, "F");
 
-  c.y = 36;
+  c.y = 40;
 
-  // Branding pill — top right
+  // Branding pill — top right, more refined
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
+  doc.setFontSize(7.5);
   doc.setTextColor("#ffffff");
   const brand = "MYELIN  ·  CEO PERFORMANCE REPORT";
-  const bw = doc.getTextWidth(brand) + 20;
+  const bw = doc.getTextWidth(brand) + 24;
   doc.setFillColor(ACCENT);
-  doc.roundedRect(COL_R - bw, c.y - 10, bw, 16, 2, 2, "F");
+  doc.roundedRect(COL_R - bw, c.y - 11, bw, 18, 3, 3, "F");
   doc.text(brand, COL_R - bw / 2, c.y, { align: "center" });
   doc.setTextColor(INK);
 
   // ── Company block ──
-  gap(c, 4);
+  gap(c, 8);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(26);
+  doc.setFontSize(28);
   doc.setTextColor(INK);
   doc.text(companyName, MARGIN, c.y);
-  c.y += 32;
+  c.y += 34;
 
-  // ── CEO block — clearly separated ──
-  // Label
+  // ── CEO block — clearly separated with label-value pattern ──
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
-  doc.setTextColor(INK_SOFT);
-  doc.text("CEO", MARGIN, c.y);
-  // Name next to it, bolder
-  const labelW = doc.getTextWidth("CEO") + 8;
+  doc.setFontSize(8);
+  doc.setTextColor(INK_HINT);
+  doc.text("CHIEF EXECUTIVE OFFICER", MARGIN, c.y);
+  c.y += 14;
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
+  doc.setFontSize(12);
   doc.setTextColor(INK_MED);
-  doc.text(ceoName, MARGIN + labelW, c.y);
-  c.y += 18;
+  doc.text(ceoName, MARGIN, c.y);
+  c.y += 22;
 
   // Date + composite score on the same line
   doc.setFont("helvetica", "normal");
@@ -286,17 +335,17 @@ export function buildSimulationReportPdf(
   });
   doc.text(dateStr, MARGIN, c.y);
 
-  // Composite score badge — right side of this line
+  // Composite score badge — right side of this line, larger
   const scoreTone = composite >= 75 ? "good" : composite < 50 ? "bad" : "neutral";
-  pill(c, n1(composite) + " — " + compositeBand, COL_R - 120, c.y, scoreTone);
+  pill(c, n1(composite) + "  ·  " + compositeBand.toUpperCase(), COL_R - 140, c.y, scoreTone);
 
-  c.y += 22;
+  c.y += 24;
 
-  // Full-width header rule
+  // Full-width header rule with emphasis
   doc.setDrawColor(ACCENT);
-  doc.setLineWidth(1.5);
+  doc.setLineWidth(2);
   doc.line(MARGIN, c.y, COL_R, c.y);
-  c.y += 18;
+  c.y += 20;
 
   // ── OUTCOME ─────────────────────────────────────────────────────────────────
   sectionHeader(c, "Final Outcome");
@@ -312,20 +361,27 @@ export function buildSimulationReportPdf(
         : "You finished the year independent.";
 
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(13);
+  doc.setFontSize(14);
   doc.setTextColor(INK);
   doc.text(outcomeText, MARGIN, c.y);
-  c.y += 18;
+  c.y += 20;
 
-  body(c, style.why);
+  body(c, style.why, { size: 10 });
 
-  gap(c, 2);
+  gap(c, 6);
   row(c, "Management style", style.label, { bold: true });
-  gap(c, 4);
+  gap(c, 8);
 
   // ── KEY FIGURES ──────────────────────────────────────────────────────────────
   sectionHeader(c, "Key Figures");
 
+  // Highlight metrics
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(INK_HINT);
+  doc.text("PRIMARY METRICS", MARGIN, c.y);
+  c.y += 12;
+  
   row(c, "Revenue  (final quarter)", cr(v(last, "revenueT")), { bold: true });
   row(c, "Net cash flow", inr(v(last, "netCF")), {
     bold: true,
@@ -333,10 +389,24 @@ export function buildSimulationReportPdf(
   });
   row(c, "Cash on hand", inr(v(last, "cash")), { bold: true });
   innerRule(c);
+  
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(INK_HINT);
+  doc.text("CUSTOMER METRICS", MARGIN, c.y);
+  c.y += 12;
+  
   row(c, "Customers", n0(v(last, "customers")));
   row(c, "Repeat rate", pct(v(last, "repeatRate")));
   row(c, "Market share", pct(v(last, "marketShare") * 100));
   innerRule(c);
+  
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(INK_HINT);
+  doc.text("COMPANY METRICS", MARGIN, c.y);
+  c.y += 12;
+  
   row(
     c,
     "Valuation",
@@ -349,41 +419,49 @@ export function buildSimulationReportPdf(
   );
   row(c, "Headcount", n0(headcount(s.staff)));
   row(c, "Employee morale", n0(s.empSat) + " / 100");
-  gap(c, 4);
+  gap(c, 8);
 
   // ── QUARTER SCORES ───────────────────────────────────────────────────────────
-  sectionHeader(c, "Quarter Scores");
+  sectionHeader(c, "Quarterly Performance");
 
   scores.forEach((sc, i) => {
-    ensureSpace(c, 40);
+    ensureSpace(c, 50);
     const qFinal = Number(sc.final);
     const qTone: "good" | "bad" | "neutral" =
       qFinal >= 70 ? "good" : qFinal < 45 ? "bad" : "neutral";
 
-    // Quarter label + pill on the same line
+    // Quarter label + pill on the same line with better spacing
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(10.5);
+    doc.setFontSize(11);
     doc.setTextColor(INK);
-    doc.text("Quarter " + (i + 1), MARGIN, c.y);
-    pill(c, n1(qFinal) + "  " + sc.band, MARGIN + 72, c.y, qTone);
-    c.y += 18;
+    const qLabel = "Quarter " + (i + 1);
+    doc.text(qLabel, MARGIN, c.y);
+    const labelW = doc.getTextWidth(qLabel);
+    pill(c, n1(qFinal) + "  " + sc.band, MARGIN + labelW + 16, c.y, qTone);
+    c.y += 20;
 
-    // Modifiers indented below
-    sc.modifiers.forEach((m) => {
-      ensureSpace(c, 14);
-      const pts = Number(m.points);
-      const sign = pts > 0 ? "+" : "";
-      const modTone = pts > 0 ? GOOD : BAD;
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(8.5);
-      doc.setTextColor(modTone);
-      doc.text(sign + n1(pts) + "  " + humanizeId(String(m.why)), MARGIN + 14, c.y);
-      c.y += 13;
-    });
+    // Modifiers indented below in a cleaner layout
+    if (sc.modifiers.length > 0) {
+      sc.modifiers.forEach((m) => {
+        ensureSpace(c, 14);
+        const pts = Number(m.points);
+        const sign = pts > 0 ? "+" : "";
+        const modTone = pts > 0 ? GOOD : BAD;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(modTone);
+        const bullet = pts > 0 ? "↑" : "↓";
+        doc.text(bullet + "  " + sign + n1(pts), MARGIN + 16, c.y);
+        doc.setTextColor(INK_SOFT);
+        doc.text(humanizeId(String(m.why)), MARGIN + 48, c.y);
+        c.y += 14;
+      });
+    }
 
     if (i < scores.length - 1) {
-      gap(c, 6);
+      gap(c, 8);
       innerRule(c);
+      gap(c, 4);
     } else {
       gap(c, 8);
     }
@@ -404,11 +482,13 @@ export function buildSimulationReportPdf(
   gap(c, 4);
 
   // ── INSIGHTS ─────────────────────────────────────────────────────────────────
-  sectionHeader(c, "Insights");
+  sectionHeader(c, "Leadership Insights");
 
   insightBlock(c, "Biggest strength", humanizeId(strength.name), strength.why, "good");
+  gap(c, 4);
   innerRule(c);
   insightBlock(c, "Biggest mistake", humanizeId(mistake.title), String(mistake.why), "bad");
+  gap(c, 4);
   innerRule(c);
   insightBlock(
     c,
@@ -417,51 +497,58 @@ export function buildSimulationReportPdf(
     decision.effect,
     "neutral",
   );
+  gap(c, 4);
   innerRule(c);
   insightBlock(c, "Unexpected consequence", consequence.title, consequence.body, "neutral");
-  gap(c, 4);
+  gap(c, 8);
 
   // ── DECISION TIMELINE ────────────────────────────────────────────────────────
   sectionHeader(c, "Decision Timeline");
 
   timeline.forEach((t, idx) => {
-    ensureSpace(c, 80);
+    ensureSpace(c, 90);
 
-    // Quarter heading
+    // Quarter heading with subtle background
+    const qHeadStart = c.y;
+    doc.setFillColor(NEUTRAL_BG);
+    doc.roundedRect(MARGIN, c.y - 4, CONTENT_W, 22, 3, 3, "F");
+    
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
-    doc.setTextColor(INK);
-    doc.text("Quarter " + t.q, MARGIN, c.y);
-    c.y += 16;
+    doc.setTextColor(ACCENT);
+    doc.text("Quarter " + t.q, MARGIN + 10, c.y + 10);
 
-    // Priority tag (if set)
+    // Priority tag on same line if exists
     if (t.priority) {
+      const qw = doc.getTextWidth("Quarter " + t.q);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8.5);
       doc.setTextColor(INK_SOFT);
-      doc.text("Priority: " + t.priority, MARGIN + 12, c.y);
-      c.y += 13;
+      doc.text("·  Priority: " + t.priority, MARGIN + 10 + qw + 8, c.y + 10);
     }
+    
+    c.y += 26;
 
     // Decision
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
     doc.setTextColor(INK_MED);
-    doc.text("Decision", MARGIN + 12, c.y);
-    c.y += 12;
-    body(c, t.decision, { indent: 12, size: 9.5 });
+    doc.text("Decision", MARGIN + 14, c.y);
+    c.y += 13;
+    body(c, t.decision, { indent: 14, size: 9.5 });
 
     // Consequence
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
     doc.setTextColor(INK_MED);
-    doc.text("Consequence", MARGIN + 12, c.y);
-    c.y += 12;
-    body(c, t.consequence, { indent: 12, size: 9.5 });
+    doc.text("Consequence", MARGIN + 14, c.y);
+    c.y += 13;
+    body(c, t.consequence, { indent: 14, size: 9.5 });
 
     if (idx < timeline.length - 1) {
-      gap(c, 4);
+      gap(c, 6);
       innerRule(c);
+      gap(c, 4);
     } else {
       gap(c, 8);
     }
@@ -483,20 +570,25 @@ export function buildSimulationReportPdf(
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
 
-    // Bottom rule
+    // Bottom rule with subtle styling
     doc.setDrawColor(RULE_LIGHT);
     doc.setLineWidth(0.5);
-    doc.line(MARGIN, PAGE_H - 36, COL_R, PAGE_H - 36);
+    doc.line(MARGIN, PAGE_H - 40, COL_R, PAGE_H - 40);
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7.5);
-    doc.setTextColor(INK_SOFT);
+    doc.setTextColor(INK_HINT);
     doc.text(
-      "Myelin  ·  CEO Performance Report  ·  " + companyName + "  ·  " + ceoName,
+      "Myelin Decision Intelligence",
       MARGIN,
-      PAGE_H - 22,
+      PAGE_H - 26,
     );
-    doc.text("Page " + i + " / " + totalPages, COL_R, PAGE_H - 22, { align: "right" });
+    
+    doc.setTextColor(INK_SOFT);
+    doc.text(companyName + "  ·  " + ceoName, MARGIN, PAGE_H - 16);
+    
+    doc.setTextColor(INK_HINT);
+    doc.text("Page " + i + " of " + totalPages, COL_R, PAGE_H - 26, { align: "right" });
   }
 
   return doc.output("blob");
