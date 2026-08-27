@@ -9,6 +9,7 @@
  */
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   BUFFER,
   PRIORITY_BY_ID,
@@ -369,16 +370,25 @@ export function FinalScreen({
         eg={eg}
       />
 
-      <button
-        onClick={onRestart}
-        disabled={busy}
-        className={
-          "w-full py-4 font-serif text-xl " +
-          (busy ? "bg-raise-2 text-faint" : "bg-chrome text-white hover:bg-danger-deep")
-        }
-      >
-        {busy ? "Starting a new run…" : "Run the year again"}
-      </button>
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <Link
+          href="/runs"
+          className="flex-1 border-2 border-line-2 bg-surface py-4 text-center font-serif text-xl text-ink hover:bg-raise-2 hover:border-ink transition-colors"
+        >
+          Go to Home
+        </Link>
+        
+        <button
+          onClick={onRestart}
+          disabled={busy}
+          className={
+            "flex-1 py-4 font-serif text-xl transition-colors " +
+            (busy ? "bg-raise-2 text-faint" : "bg-chrome text-white hover:bg-danger-deep")
+          }
+        >
+          {busy ? "Starting a new run…" : "Run the year again"}
+        </button>
+      </div>
     </div>
   );
 }
