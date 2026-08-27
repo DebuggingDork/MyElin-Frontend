@@ -40,18 +40,18 @@ function ensureSpace(c: Cursor, needed: number) {
 
 function rule(c: Cursor) {
   c.doc.setDrawColor(RULE);
-  c.doc.setLineWidth(0.5);
+  c.doc.setLineWidth(1);
   c.doc.line(MARGIN, c.y, PAGE_W - MARGIN, c.y);
-  c.y += 12;
+  c.y += 16;
 }
 
 function sectionLabel(c: Cursor, label: string) {
-  ensureSpace(c, 36);
+  ensureSpace(c, 40);
   c.doc.setFont("helvetica", "bold");
-  c.doc.setFontSize(9);
-  c.doc.setTextColor(INK_SOFT);
+  c.doc.setFontSize(11);
+  c.doc.setTextColor(INK);
   c.doc.text(label.toUpperCase(), MARGIN, c.y);
-  c.y += 16;
+  c.y += 20;
 }
 
 function ledgerRow(
@@ -60,19 +60,19 @@ function ledgerRow(
   value: string,
   opts?: { strong?: boolean; tone?: string },
 ) {
-  ensureSpace(c, 18);
+  ensureSpace(c, 20);
   c.doc.setFont("helvetica", opts?.strong ? "bold" : "normal");
-  c.doc.setFontSize(10);
+  c.doc.setFontSize(opts?.strong ? 11 : 10);
   c.doc.setTextColor(INK);
   c.doc.text(label, MARGIN, c.y);
   c.doc.setFont("helvetica", opts?.strong ? "bold" : "normal");
-  c.doc.setFontSize(10);
+  c.doc.setFontSize(opts?.strong ? 11 : 10);
   if (opts?.tone === "good") c.doc.setTextColor(GOOD);
   else if (opts?.tone === "bad") c.doc.setTextColor(BAD);
   else c.doc.setTextColor(INK);
   c.doc.text(value, PAGE_W - MARGIN, c.y, { align: "right" });
   c.doc.setTextColor(INK);
-  c.y += 16;
+  c.y += 18;
 }
 
 const v = (r: QuarterResultShape, k: string) => r[k] as number;
@@ -90,6 +90,9 @@ export function buildSimulationReportPdf(
 ): Blob {
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const c: Cursor = { doc, y: MARGIN };
+
+  // Clean company name by removing email suffix
+  const cleanName = companyName.split(" · ")[0] || companyName;
 
   const last = history[history.length - 1];
   const finals = scores.map((sc) => Number(sc.final));
@@ -117,21 +120,23 @@ export function buildSimulationReportPdf(
   const timeline = decisionTimeline(history, priorities);
   const sold = Boolean(eg && eg.path === "B");
 
+  // Header with better spacing
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(22);
+  doc.setFontSize(24);
   doc.setTextColor(INK);
-  doc.text(companyName, MARGIN, c.y);
-  c.y += 28;
+  doc.text(cleanName, MARGIN, c.y);
+  c.y += 32;
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
+  doc.setFontSize(11);
   doc.setTextColor(INK_SOFT);
   doc.text(
-    "CEO Performance Report \u2014 Myelin Decision Intelligence",
+    "CEO Performance Report — Myelin Decision Intelligence",
     MARGIN,
     c.y,
   );
-  c.y += 14;
+  c.y += 16;
+  doc.setFontSize(10);
   doc.text(
     new Date().toLocaleDateString("en-IN", {
       year: "numeric",
@@ -141,7 +146,7 @@ export function buildSimulationReportPdf(
     MARGIN,
     c.y,
   );
-  c.y += 20;
+  c.y += 28;
 
   rule(c);
 
@@ -178,18 +183,16 @@ export function buildSimulationReportPdf(
   rule(c);
 
   sectionLabel(c, "Key Figures");
-  ledgerRow(c, "Revenue, final quarter", cr(v(last, "revenueT")));
+  ledgerRow(c, "Revenue, final quarter", cr(v(last, "revenueT")), { strong: true });
   ledgerRow(c, "Net cash flow", inr(v(last, "netCF")), {
+    strong: true,
     tone: v(last, "netCF") >= 0 ? "good" : "bad",
   });
-  ledgerRow(c, "Cash", inr(v(last, "cash")));
+  ledgerRow(c, "Cash", inr(v(last, "cash")), { strong: true });
   ledgerRow(
     c,
     "Customers",
-    n0(v(last, "customers")) +
-      " (repeat " +
-      pct(v(last, "repeatRate")) +
-      ")",
+    n0(v(last, "customers")) + " (repeat " + pct(v(last, "repeatRate")) + ")",
   );
   ledgerRow(c, "Market share", pct(v(last, "marketShare") * 100));
   ledgerRow(
@@ -200,6 +203,7 @@ export function buildSimulationReportPdf(
         ? Number(eg.finalValuation)
         : v(last, "valuation"),
     ),
+    { strong: true },
   );
   ledgerRow(
     c,
