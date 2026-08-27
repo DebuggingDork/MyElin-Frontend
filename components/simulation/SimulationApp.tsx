@@ -884,13 +884,19 @@ export function SimulationApp() {
               tab === t.id
                 ? "border-teal-deep bg-teal-deep text-white font-medium"
                 : t.hot
-                  ? "border-sim-line bg-sim-surface-raised text-tone-bad hover:border-danger/40"
+                  ? "border-amber/60 bg-amber/10 text-amber font-semibold hover:border-amber hover:bg-amber/15 animate-pulse"
                   : "border-sim-line bg-sim-surface-raised text-sim-ink hover:border-teal/40 hover:bg-sim-surface-hover",
             )}
           >
             {t.label}
             {t.badge > 0 && (
               <span className="rounded-full bg-danger px-1.5 text-xs font-mono text-white">{t.badge}</span>
+            )}
+            {t.hot && (
+              <span className="flex h-2 w-2">
+                <span className="absolute inline-flex h-2 w-2 animate-ping rounded-full bg-amber opacity-75"></span>
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-amber"></span>
+              </span>
             )}
           </button>
         ))}
