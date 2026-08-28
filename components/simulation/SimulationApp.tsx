@@ -25,6 +25,7 @@ import { LogOut, PanelLeftOpen, X } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/types";
 import { useRun } from "@/components/run/RunProvider";
+import { useRewindSFX } from "@/lib/simulation/use-rewind-sfx";
 import { forgetRunIndex, runHref } from "@/lib/run/ref";
 
 // Clean company name by removing email suffix (e.g., "dengey · email" -> "dengey")
@@ -376,6 +377,7 @@ export function SimulationApp() {
   const rewindsRemaining = MAX_REWINDS - rewindsUsed;
   const [rewindModalOpen, setRewindModalOpen] = useState(false);
   const [rewindBusy, setRewindBusy] = useState(false);
+  const rewindSFX = useRewindSFX();
   /**
    * Set to a quarter number while the 3-second preloader is running, null otherwise.
    * Drives the RewindPreloader overlay; the actual API call fires when the preloader
@@ -700,8 +702,11 @@ export function SimulationApp() {
   const startQuarter = useCallback(() => {
     setPhase("play");
     setTab("dashboard");
-    // Never reset the timer if it has already expired — the CEO does not get extra time
-    // by being on the briefing screen when the clock ran out.
+    // startTimer() is a no-op if the simulation timer is already running (Q2/Q3/Q4 entry)
+    // and also a no-op if the timer has already expired — the CEO does not get extra time
+    // by being on the briefing screen when the clock ran out. The 50-minute budget is
+    // shared across all four quarters; only Q1's first "Start the quarter" click ever
+    // actually initialises the clock.
     if (!timer.expired) timer.startTimer();
   }, [setTab, timer]);
 
@@ -721,8 +726,12 @@ export function SimulationApp() {
     setRewindBusy(true);
     setError(null);
     setRewindModalOpen(false);
+    // Start SFX here — synchronously inside the click handler (user-gesture task),
+    // before React re-renders. This is the earliest possible moment and avoids the
+    // post-paint delay that useEffect inside the preloader would cause.
+    rewindSFX.start();
     setRewindTargetQuarter(targetQuarter);
-  }, [rewindBusy]);
+  }, [rewindBusy, rewindSFX]);
 
   /**
    * Phase 2 — called by RewindPreloader exactly once, after its 3-second countdown.
@@ -744,6 +753,9 @@ export function SimulationApp() {
       await loadRun();
       setPhase("briefing");
     } catch (err) {
+      // Stop audio immediately if the API call fails — the preloader is gone but the
+      // sound could still be mid-loop since onStop wasn't called via the normal path.
+      rewindSFX.stop();
       setError(
         err instanceof ApiError
           ? (err.body as { reason?: string })?.reason ?? err.message
@@ -778,6 +790,18 @@ export function SimulationApp() {
       setHistory((h) => [...h, locked.result]);
       setScores((s) => [...s, locked.score]);
       setPriorities((p) => [...p, priority]);
+      // Reset plan fields to defaults in the same batch as the state advance so that the
+      // autosave effect — which fires on [phase, plan, state.quarter] — writes clean default
+      // values for the next quarter's draft key rather than the current quarter's inputs.
+      // Without this, the autosave fires with state.quarter already incremented to Q(n+1) but
+      // alloc still holding Q(n)'s values, creating a stale draft that resetPlan then restores.
+      setAlloc(emptyAlloc());
+      setWarranty("6mo");
+      setPayTerms(locked.nextState.payTerms);
+      setStartInno([]);
+      setPriority(null);
+      setReflection({ sacrifice: [] });
+      setCrisis(emptyCrisis());
       setState(locked.nextState);
       if (locked.settlement) setEndgameOutcome(locked.settlement as unknown as Record<string, unknown>);
       if (locked.quarter >= 4) setRunStatus("completed");
@@ -1080,6 +1104,7 @@ export function SimulationApp() {
           {rewindTargetQuarter !== null && (
             <RewindPreloader
               targetQuarter={rewindTargetQuarter}
+              onStop={rewindSFX.stop}
               onComplete={() => void executeRewind(rewindTargetQuarter)}
             />
           )}
