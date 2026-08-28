@@ -50,20 +50,16 @@ export function ChunkReveal({
     skippedRef.current = false;
     let i = 0;
     let timeoutId = 0;
-    let sfxStarted = false;
+
+    // Start SFX immediately — before the first setTimeout fires — so audio and the
+    // appearance of the first words are simultaneous rather than offset by 60–220 ms.
+    if (enableSfx) sfx.start();
 
     function step() {
       if (skippedRef.current) return;
       const chunk = 1 + Math.floor(Math.random() * 3);
       i = Math.min(words.length, i + chunk);
       setShown(i);
-
-      // Start SFX on the very first chunk — audio and text are now in lockstep.
-      if (enableSfx && !sfxStarted) {
-        sfxStarted = true;
-        sfx.start();
-      }
-
       if (i < words.length) {
         timeoutId = window.setTimeout(step, 60 + Math.random() * 160);
       }
@@ -73,7 +69,7 @@ export function ChunkReveal({
       window.clearTimeout(timeoutId);
       // Stop SFX if this effect tears down before the animation completes (text prop changed,
       // reduced-motion toggled, or component unmounting).
-      if (enableSfx && sfxStarted) sfx.stop();
+      if (enableSfx) sfx.stop();
     };
   // sfx is a stable object from useRef — its identity does not change across renders.
   // eslint-disable-next-line react-hooks/exhaustive-deps
