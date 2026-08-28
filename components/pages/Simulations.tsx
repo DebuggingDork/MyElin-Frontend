@@ -7,6 +7,7 @@ import { duration, easeOut } from "@/lib/media";
 import { api, getToken } from "@/lib/api/client";
 import { runHref } from "@/lib/run/ref";
 import type { CompanyListItem } from "@/lib/api/types";
+import { isTimerExpired } from "@/lib/simulation/timer";
 import { cn } from "@/lib/utils";
 import { useSimulationHref } from "@/components/play/entry";
 import { Figures, Masthead } from "@/components/layout/PageChrome";
@@ -137,6 +138,11 @@ export function Simulations() {
    * through the entry gate and its "30 uninterrupted minutes" prompt -- asking them to commit
    * the whole session again when they only have one quarter left to play. The API already
    * reports progress per owned run, so the button can say what it actually does.
+   *
+   * A run whose shared 50-minute timer has already reached 00:00 is no longer resumable: it is
+   * read-only, and a returning CEO should start a fresh run instead of getting a "Resume" that
+   * cannot give them back their time. Expiry is read from the persisted timer state, not from
+   * transient component state, so a refresh agrees with the live simulation.
    */
   const [resumable, setResumable] = useState<CompanyListItem | null>(null);
 
@@ -148,9 +154,14 @@ export function Simulations() {
       .listCompanies({ limit: 1 })
       .then(({ entries }) => {
         if (cancelled) return;
-        // Newest first from the API; the first still-running one is the one to offer.
+        // Newest first from the API; the first still-running one that hasn't hit its timer
+        // ceiling is the one to offer.
         setResumable(
-          entries.find((e) => e.run_status === "active" || e.run_status === "distressed") ?? null,
+          entries.find(
+            (e) =>
+              (e.run_status === "active" || e.run_status === "distressed") &&
+              !isTimerExpired(e.id),
+          ) ?? null,
         );
       })
       .catch(() => {
