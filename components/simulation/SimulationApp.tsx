@@ -44,10 +44,12 @@ import {
 } from "@/lib/simulation/constants";
 import { inr } from "@/lib/simulation/format";
 import {
+  playProcessing,
   playQuarterClosed,
   setSoundEnabled,
   soundEnabled,
   soundEnabledOnServer,
+  stopProcessing,
   subscribeSound,
 } from "@/lib/sound";
 import {
@@ -775,6 +777,11 @@ export function SimulationApp() {
       message: "We are working on your inputs and calculating your results…",
       dismiss: "Back to the review",
     });
+    // Start the processing loop synchronously inside this click's task — before the first
+    // `await` — so browser autoplay allows it. Calling `.play()` after an `await` has left
+    // the user-gesture task and gets blocked silently. This play also unlocks the page's
+    // audio so playQuarterClosed() can fire a few seconds later.
+    playProcessing();
     try {
       const locked = await simulationApi.lock(companyId, plan);
       // Committed to the server, so the local draft has done its job.
@@ -797,25 +804,18 @@ export function SimulationApp() {
       // to the quarter that just closed.
       setPhase("closed");
 
-      let audio: HTMLAudioElement | null = null;
-      if (soundOn) {
-        audio = new Audio("/sounds/processing.wav");
-        audio.loop = true;
-        audio.volume = 0.2; // Soft background music
-        audio.play().catch(() => {});
-      }
       await new Promise((resolve) => setTimeout(resolve, 5000));
-      if (audio) {
-        audio.pause();
-        audio.currentTime = 0;
-      }
+      stopProcessing();
 
       // The quarter took real thought to close and the numbers arrive a beat later, so the
-      // report gets an audible arrival. Fired from the same gesture that closed the quarter,
-      // which is what makes it legal under the browser's autoplay rules.
+      // report gets an audible arrival. The processing loop started above unlocked the page's
+      // audio, so this chime plays even though it fires a few seconds after the click.
       playQuarterClosed();
       setWorking(null);
     } catch (err) {
+      // If the quarter could not be locked, the processing loop would otherwise keep
+      // playing forever. Stop it here so the error is seen (and heard nothing) plainly.
+      stopProcessing();
       setError(
         err instanceof ApiError
           ? err.message + (err.body.reason ? " — " + err.body.reason : "")

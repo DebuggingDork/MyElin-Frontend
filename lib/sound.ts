@@ -16,6 +16,7 @@
 
 const SOUND_KEY = "myelin.sound";
 const CHIME = "/sounds/quarter-closed.wav";
+const PROCESSING = "/sounds/processing.wav";
 
 /** One element, reused. Constructing an Audio per play leaks decoders on a long run. */
 let chime: HTMLAudioElement | null = null;
@@ -70,5 +71,48 @@ export function playQuarterClosed(): void {
     });
   } catch {
     /* Same: never let the cue break the screen it is decorating. */
+  }
+}
+
+/**
+ * The soft loop that plays while a quarter is being scored.
+ *
+ * Unlike the chime, this one is meant to start the very moment the CEO hits "Close the
+ * quarter", so it is fired synchronously inside that click's task (before any `await`).
+ * That is what makes it legal under browser autoplay rules: a `.play()` called after an
+ * `await` has already left the user-gesture task and gets blocked silently. Starting here
+ * also unlocks the page's audio so the quarter-closed chime can fire a few seconds later.
+ *
+ * The element is reused and preloaded so a play never has to wait on a first fetch.
+ */
+let processingSound: HTMLAudioElement | null = null;
+
+/** Start the (looping) processing sound, unless sound is off. Safe to call any time. */
+export function playProcessing(): void {
+  if (typeof window === "undefined" || !soundEnabled()) return;
+  try {
+    if (!processingSound) {
+      processingSound = new Audio(PROCESSING);
+      processingSound.preload = "auto";
+      processingSound.loop = true;
+      processingSound.volume = 0.2; // Soft background, never foreground.
+    }
+    processingSound.currentTime = 0;
+    void processingSound.play().catch(() => {
+      /* Autoplay refused or no output device. Silence is acceptable. */
+    });
+  } catch {
+    /* Never let the cue break the screen it is decorating. */
+  }
+}
+
+/** Stop the processing sound if it is playing. Safe to call any time. */
+export function stopProcessing(): void {
+  if (typeof window === "undefined" || !processingSound) return;
+  try {
+    processingSound.pause();
+    processingSound.currentTime = 0;
+  } catch {
+    /* Element may be gone; nothing to recover. */
   }
 }
