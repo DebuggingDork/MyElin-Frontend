@@ -93,6 +93,7 @@ import { PrinciplesScreen } from "@/components/simulation/screens/Principles";
 import { BalanceSheetScreen } from "@/components/simulation/screens/BalanceSheetScreen";
 import { SectionNav } from "@/components/simulation/SectionNav";
 import { RewindModal } from "@/components/simulation/RewindModal";
+import { RewindPreloader } from "@/components/simulation/RewindPreloader";
 import type {
   Alloc,
   ArchetypeId,
@@ -356,6 +357,12 @@ export function SimulationApp() {
   const rewindsRemaining = MAX_REWINDS - rewindsUsed;
   const [rewindModalOpen, setRewindModalOpen] = useState(false);
   const [rewindBusy, setRewindBusy] = useState(false);
+  /**
+   * Set to a quarter number while the 3-second preloader is running, null otherwise.
+   * Drives the RewindPreloader overlay; the actual API call fires when the preloader
+   * calls its onComplete callback.
+   */
+  const [rewindTargetQuarter, setRewindTargetQuarter] = useState<number | null>(null);
 
   /* Read-only wrappers: when the simulation is paused or expired, every setter becomes a no-op
      so no value can be changed through any code path. */
@@ -677,11 +684,33 @@ export function SimulationApp() {
     timer.startTimer();
   }, [setTab, timer]);
 
-  const handleRewind = useCallback(async (targetQuarter: number) => {
+  /**
+   * Phase 1 — user clicks "Confirm Rewind" in the modal.
+   *
+   * Closes the modal immediately and shows the 3-second RewindPreloader overlay.
+   * The actual API call does NOT happen yet — it fires in executeRewind() once the
+   * preloader's onComplete fires.
+   *
+   * The inFlight guard is set here (synchronously) so a second click arriving
+   * in the same event loop tick is ignored by every other action too.
+   */
+  const handleRewind = useCallback((targetQuarter: number) => {
     if (inFlight.current || rewindBusy) return;
     inFlight.current = true;
     setRewindBusy(true);
     setError(null);
+    setRewindModalOpen(false);
+    setRewindTargetQuarter(targetQuarter);
+  }, [rewindBusy]);
+
+  /**
+   * Phase 2 — called by RewindPreloader exactly once, after its 3-second countdown.
+   *
+   * Performs the actual POST /rewind, reloads the run, and transitions to briefing.
+   * On failure the preloader is dismissed, the error banner is shown, and the guard
+   * is released so the CEO can try again.
+   */
+  const executeRewind = useCallback(async (targetQuarter: number) => {
     try {
       const result = await simulationApi.rewind(companyId, targetQuarter);
       // Clear localStorage drafts for all deleted quarters
@@ -690,9 +719,8 @@ export function SimulationApp() {
           window.localStorage.removeItem(draftKey(companyId, q));
         } catch { /* nothing to recover from */ }
       }
-      // Reload full state from server -- replay architecture handles restoration
+      // Reload full state from server — replay architecture handles restoration
       await loadRun();
-      setRewindModalOpen(false);
       setPhase("briefing");
     } catch (err) {
       setError(
@@ -701,10 +729,11 @@ export function SimulationApp() {
           : "Rewind failed",
       );
     } finally {
+      setRewindTargetQuarter(null);
       setRewindBusy(false);
       inFlight.current = false;
     }
-  }, [companyId, loadRun, rewindBusy]);
+  }, [companyId, loadRun]);
 
   const closeQuarter = useCallback(async () => {
     if (inFlight.current) return;
@@ -976,8 +1005,7 @@ export function SimulationApp() {
           {/* Anchored to the simulation surface rather than the viewport: the account bar
               above stays live and legible, so a quarter being scored reads as this workspace
               being busy rather than the whole app having locked up. */}
-          {working && (
-            <div className="absolute inset-0 z-[60] flex items-center justify-center bg-base/90 backdrop-blur-xl overflow-hidden transition-all duration-700">
+          {working && (            <div className="absolute inset-0 z-[60] flex items-center justify-center bg-base/90 backdrop-blur-xl overflow-hidden transition-all duration-700">
               {/* Background ambient animations compatible with light/dark theme */}
               <div className="absolute inset-0 w-full h-full pointer-events-none opacity-60">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-teal/10 rounded-full blur-[120px] animate-pulse"></div>
@@ -1023,6 +1051,16 @@ export function SimulationApp() {
                 )}
               </div>
             </div>
+          )}
+          {/* Rewind preloader — 3-second immersive transition between Confirm Rewind and
+              the actual API call. Sits at the same z-level as the working overlay but uses
+              amber theming and a countdown rather than the teal spinner, making it feel
+              intentionally different from a normal processing wait. */}
+          {rewindTargetQuarter !== null && (
+            <RewindPreloader
+              targetQuarter={rewindTargetQuarter}
+              onComplete={() => void executeRewind(rewindTargetQuarter)}
+            />
           )}
           {timerActive && timer.paused && !working && (
             <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-amber/40 bg-amber/10 px-6 py-3 backdrop-blur-sm">
