@@ -352,6 +352,17 @@ export function SimulationApp() {
   const readOnly = timer.paused || timer.expired;
   const timerActive = (phase === "briefing" || phase === "play") && runStatus !== "completed";
 
+  /**
+   * Whether the user has dismissed the "Time Limit Reached" popup.
+   *
+   * Dismissing hides the popup and reveals the play surface in read-only mode, letting the
+   * CEO navigate between sections and review all previously-entered values. It does NOT
+   * restore editing: `readOnly` stays true because `timer.expired` stays true. The dismissed
+   * flag is ephemeral (session only) — a page refresh shows the popup again, but the
+   * simulation remains read-only because the localStorage-backed timer still reads `expired`.
+   */
+  const [timerExpiredDismissed, setTimerExpiredDismissed] = useState(false);
+
   /* ── rewind ────────────────────────────────────────────────────── */
   const MAX_REWINDS = 2;
   const rewindsRemaining = MAX_REWINDS - rewindsUsed;
@@ -681,7 +692,9 @@ export function SimulationApp() {
   const startQuarter = useCallback(() => {
     setPhase("play");
     setTab("dashboard");
-    timer.startTimer();
+    // Never reset the timer if it has already expired — the CEO does not get extra time
+    // by being on the briefing screen when the clock ran out.
+    if (!timer.expired) timer.startTimer();
   }, [setTab, timer]);
 
   /**
@@ -1078,9 +1091,17 @@ export function SimulationApp() {
               </button>
             </div>
           )}
-          {timerActive && timer.expired && !working && (
+          {timerActive && timer.expired && !working && !timerExpiredDismissed && (
             <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-              <div className="max-w-md rounded-lg border border-danger/40 bg-danger/10 px-8 py-6 backdrop-blur-sm shadow-2xl">
+              <div className="relative max-w-md rounded-lg border border-danger/40 bg-danger/10 px-8 py-6 backdrop-blur-sm shadow-2xl">
+                {/* Dismiss button — closes the popup but keeps simulation read-only */}
+                <button
+                  onClick={() => setTimerExpiredDismissed(true)}
+                  aria-label="Close notification"
+                  className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded text-ink/50 transition-colors hover:bg-danger/20 hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-danger/60"
+                >
+                  <X className="h-4 w-4" />
+                </button>
                 <div className="flex items-start gap-4">
                   <AlertTriangle className="h-6 w-6 shrink-0 text-danger-soft mt-1" />
                   <div>
@@ -1094,6 +1115,12 @@ export function SimulationApp() {
                         You can review your decisions and progress, but no further actions are allowed.
                       </p>
                     </div>
+                    <button
+                      onClick={() => setTimerExpiredDismissed(true)}
+                      className="mt-5 flex items-center gap-2 border border-danger/40 px-4 py-2 text-xs uppercase tracking-widest text-ink/80 transition-colors hover:border-danger/70 hover:bg-danger/10 hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-danger/60"
+                    >
+                      Review my simulation
+                    </button>
                   </div>
                 </div>
               </div>
@@ -1225,7 +1252,7 @@ export function SimulationApp() {
                       {timer.formatTime()}
                     </span>
                   )}
-                  {timerActive && (
+                  {timerActive && !timer.expired && (
                     <button
                       onClick={() => timer.paused ? timer.unpause() : timer.pause()}
                       className={cn(
@@ -1249,7 +1276,7 @@ export function SimulationApp() {
                       )}
                     </button>
                   )}
-                  {rewindsRemaining > 0 && history.length > 0 && phase !== "final" && (
+                  {rewindsRemaining > 0 && history.length > 0 && phase !== "final" && !timer.expired && (
                     <button
                       onClick={() => setRewindModalOpen(true)}
                       disabled={rewindBusy}
