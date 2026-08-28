@@ -90,6 +90,7 @@ export function NewspaperKpi({
           <ChunkReveal
             text={copy.evaluation}
             onDone={() => setEvalDone(true)}
+            enableSfx
             className="newsprint-lead mt-3 max-w-[62ch] text-[16px] leading-[1.75]"
           />
 

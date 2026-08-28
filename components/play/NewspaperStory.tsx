@@ -87,6 +87,7 @@ export function NewspaperStory({
           <ChunkReveal
             text={copy.lead}
             onDone={() => setStoryDone(true)}
+            enableSfx
             className="newsprint-lead mt-6 max-w-[62ch] text-[17px] leading-[1.75]"
           />
 
