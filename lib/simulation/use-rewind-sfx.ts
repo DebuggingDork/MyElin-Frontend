@@ -6,19 +6,19 @@ import { soundEnabled } from "@/lib/sound";
 /**
  * Rewind sound effect hook.
  *
- * Loads the MP3 from the public simulation-assets Supabase Storage bucket —
- * no auth token needed in the browser. The element is allocated lazily (first
- * start() call) so the hook is free to be mounted with zero side-effects.
+ * The Audio element is created eagerly at hook mount so it is fully allocated
+ * and ready before start() is ever called — no lazy-creation delay at the
+ * moment the user confirms the rewind.
+ *
+ * start() and stop() are exposed as stable refs so they can be called from
+ * anywhere — including directly from a click handler in SimulationApp —
+ * without needing to be listed in useCallback dependency arrays.
  *
  * loop: true  — the clip is ~2 s; looping covers the full 3-second countdown
- *               without gaps or silence at the end. stop() cuts it exactly when
- *               the preloader finishes, regardless of where the loop is mid-cycle.
+ *               without gaps or silence at the end.
  *
- * Cleanup: a useEffect return always calls stop() so navigating away mid-countdown
- * never leaves audio playing in the background.
- *
- * Audio failures (autoplay block, no output device, network error) are swallowed —
- * the rewind must never depend on sound succeeding.
+ * Cleanup: a useEffect return always calls stop() on unmount.
+ * All playback failures are swallowed — the rewind must never depend on audio.
  */
 
 const REWIND_SFX_URL =
@@ -30,62 +30,45 @@ const VOLUME = 0.5;
 export function useRewindSFX() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  /** Lazily create the Audio element — only on the client, only when first needed. */
-  function getAudio(): HTMLAudioElement | null {
-    if (typeof window === "undefined") return null;
-    if (!audioRef.current) {
-      const el = new Audio(REWIND_SFX_URL);
-      el.loop = true;
-      el.volume = VOLUME;
-      el.preload = "auto";
-      audioRef.current = el;
-    }
-    return audioRef.current;
-  }
+  // Stable function refs so callers (including SimulationApp's handleRewind)
+  // can call start/stop without stale-closure issues.
+  const startRef = useRef<() => void>(() => {});
+  const stopRef  = useRef<() => void>(() => {});
 
-  /**
-   * Start the rewind SFX.
-   *
-   * Called the moment the user confirms the rewind. The audio is already
-   * inside the browser's autoplay-allowed window because it originates from
-   * the "Confirm Rewind" button click (a direct user gesture).
-   */
-  function start() {
-    if (!soundEnabled()) return;
-    const audio = getAudio();
-    if (!audio) return;
-    try {
-      audio.currentTime = 0;
-      void audio.play().catch(() => {
-        /* Autoplay refused or no output device — countdown continues normally. */
-      });
-    } catch {
-      /* Never break the rewind. */
-    }
-  }
-
-  /**
-   * Stop the rewind SFX.
-   *
-   * Called when the 3-second preloader ends, when the component unmounts,
-   * or when an error aborts the countdown early.
-   */
-  function stop() {
-    const audio = audioRef.current;
-    if (!audio) return;
-    try {
-      audio.pause();
-      audio.currentTime = 0;
-    } catch {
-      /* Element may already be GC'd during a fast unmount — ignore. */
-    }
-  }
-
-  /* Guarantee cleanup if the consuming component unmounts while audio is active. */
   useEffect(() => {
-    return () => stop();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Eagerly allocate the element at mount — zero allocation cost when start() fires.
+    if (typeof window === "undefined") return;
+    const el = new Audio(REWIND_SFX_URL);
+    el.loop = true;
+    el.volume = VOLUME;
+    el.preload = "auto";
+    audioRef.current = el;
+
+    startRef.current = () => {
+      if (!soundEnabled()) return;
+      try {
+        el.currentTime = 0;
+        void el.play().catch(() => {});
+      } catch { /* never break the rewind */ }
+    };
+
+    stopRef.current = () => {
+      try {
+        el.pause();
+        el.currentTime = 0;
+      } catch { /* element may be GC'd on fast unmount */ }
+    };
+
+    return () => {
+      stopRef.current();
+      audioRef.current = null;
+    };
   }, []);
+
+  // start / stop are thin wrappers that always delegate to the current ref —
+  // safe to call at any time, including synchronously from a click handler.
+  const start = () => startRef.current();
+  const stop  = () => stopRef.current();
 
   return { start, stop };
 }
