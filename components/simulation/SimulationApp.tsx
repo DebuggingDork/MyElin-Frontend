@@ -363,6 +363,14 @@ export function SimulationApp() {
    */
   const [timerExpiredDismissed, setTimerExpiredDismissed] = useState(false);
 
+  /**
+   * When the timer has expired and the popup is dismissed, the CEO enters review mode.
+   * `reviewQuarter` is the 1-based quarter number they are currently viewing (null = the
+   * live play surface for the current quarter, which is already read-only). Switching quarter
+   * shows the read-only ClosedScreen for that historical quarter without re-running anything.
+   */
+  const [reviewQuarter, setReviewQuarter] = useState<number | null>(null);
+
   /* ── rewind ────────────────────────────────────────────────────── */
   const MAX_REWINDS = 2;
   const rewindsRemaining = MAX_REWINDS - rewindsUsed;
@@ -1588,31 +1596,120 @@ export function SimulationApp() {
   return chrome(
     <div className="space-y-5">
       {errorBanner}
-      {/* The preview is debounced and re-runs on every edit, so this is the one wait the CEO
-          sees repeatedly -- it stays a single quiet line rather than anything that redraws the
-          screen under the form they are filling in. */}
-      {!projection && (
-        <InlineLoading
-          label="Running the plan…"
-          sub="The engine is costing what you have entered so far."
-          className="border-l-4 border-line-2 bg-raise px-4 py-3"
-        />
+      {/* ── Post-expiry review banner ───────────────────────────────
+          Only visible after the time limit has expired and the popup is dismissed.
+          Lets the CEO jump to any closed quarter's full read-only report, or return
+          to the current quarter view. Quarter tabs remain usable for navigation. */}
+      {timer.expired && timerExpiredDismissed && (
+        <div className="border border-danger/30 bg-danger/5 px-4 py-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-danger-soft shrink-0">
+              <Clock className="h-3.5 w-3.5" />
+              <span>Time expired — review mode</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {/* Button for the live (current) quarter view */}
+              <button
+                onClick={() => setReviewQuarter(null)}
+                className={cn(
+                  "border px-3 py-1 text-xs uppercase tracking-widest transition-colors",
+                  reviewQuarter === null
+                    ? "border-ink bg-ink text-white"
+                    : "border-line-2 text-dim hover:border-ink/40 hover:text-ink",
+                )}
+              >
+                Current view
+              </button>
+              {/* One button per closed quarter */}
+              {history.map((_, i) => {
+                const q = i + 1;
+                return (
+                  <button
+                    key={q}
+                    onClick={() => setReviewQuarter(q)}
+                    className={cn(
+                      "border px-3 py-1 text-xs uppercase tracking-widest transition-colors",
+                      reviewQuarter === q
+                        ? "border-ink bg-ink text-white"
+                        : "border-line-2 text-dim hover:border-ink/40 hover:text-ink",
+                    )}
+                  >
+                    Quarter {q} report
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       )}
-      {body}
-      {/* Rendered here rather than inside each section, so every section ends the same way and
-          a new one inherits it for free. `tabs` is the rail's own list, so the order these
-          walk is the order the rail shows -- including the market event, which is only in
-          both when it is live.
+      {/* ── Body: either the historical quarter report or the live play surface ── */}
+      {reviewQuarter !== null && timer.expired && timerExpiredDismissed ? (
+        (() => {
+          /* Render the closed report for the selected review quarter. All data comes from
+             the already-loaded history/scores/priorities arrays — no network call needed. */
+          const rIdx = reviewQuarter - 1;
+          const rResult = history[rIdx];
+          const rScore = scores[rIdx];
+          const rPriority = priorities[rIdx] ?? null;
+          // Reflection is stored only for the live quarter's draft; historical quarters
+          // show an empty reflection (all questions unanswered) which is fine — the report
+          // bands that use it (priority match, risk) will simply show nothing.
+          const rReflection: Reflection = { sacrifice: [] };
+          const rConstraint = bindingConstraint(rResult, rResult.entering);
+          const rDirs = readiness(rResult, rResult.entering);
+          const rHistory = history.slice(0, reviewQuarter);
+          const rPrior = history[rIdx - 1];
+          return (
+            <ClosedScreen
+              r={rResult}
+              prior={rPrior}
+              history={rHistory}
+              score={rScore}
+              constraint={rConstraint}
+              dirs={rDirs}
+              priority={rPriority}
+              reflection={rReflection}
+              onNext={() => {
+                // Advance to the next closed quarter if one exists, otherwise clear review.
+                if (reviewQuarter < history.length) {
+                  setReviewQuarter(reviewQuarter + 1);
+                } else {
+                  setReviewQuarter(null);
+                }
+              }}
+              busy={false}
+            />
+          );
+        })()
+      ) : (
+        <>
+          {/* The preview is debounced and re-runs on every edit, so this is the one wait the CEO
+              sees repeatedly -- it stays a single quiet line rather than anything that redraws the
+              screen under the form they are filling in. */}
+          {!projection && (
+            <InlineLoading
+              label="Running the plan…"
+              sub="The engine is costing what you have entered so far."
+              className="border-l-4 border-line-2 bg-raise px-4 py-3"
+            />
+          )}
+          {body}
+          {/* Rendered here rather than inside each section, so every section ends the same way and
+              a new one inherits it for free. `tabs` is the rail's own list, so the order these
+              walk is the order the rail shows -- including the market event, which is only in
+              both when it is live.
 
-          Left off the closure section itself: that screen already ends with the button that
-          commits the quarter, and a second one beside it would be either a duplicate or a way
-          past the reflection gate. */}
-      {tab !== CLOSURE_TAB && (
-        <SectionNav
-          next={nextSection}
-          onNext={() => nextSection && setTab(nextSection.id)}
-          onClosure={() => setTab(CLOSURE_TAB)}
-        />
+              Left off the closure section itself: that screen already ends with the button that
+              commits the quarter, and a second one beside it would be either a duplicate or a way
+              past the reflection gate. */}
+          {tab !== CLOSURE_TAB && (
+            <SectionNav
+              next={nextSection}
+              onNext={() => nextSection && setTab(nextSection.id)}
+              onClosure={() => setTab(CLOSURE_TAB)}
+            />
+          )}
+        </>
       )}
     </div>,
     true,
