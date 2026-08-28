@@ -17,6 +17,7 @@ import { asNumber } from "@/lib/api/catalog";
 import type { CompanyListItem } from "@/lib/api/types";
 import type { Scenario } from "@/lib/play/types";
 import { Action, Container } from "@/components/ui/Kit";
+import { isTimerExpired } from "@/lib/simulation/timer";
 import { cn } from "@/lib/utils";
 
 /** Teal is the live system; vermilion is what it cost. */
@@ -32,8 +33,19 @@ const RUN_TONE: Record<string, string> = {
 const COLUMNS = "grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.2fr)]";
 const COLUMNS_SM = "sm:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.2fr)]";
 
-const isLive = (run: CompanyListItem) =>
+const isBackendLive = (run: CompanyListItem) =>
   run.run_status === "active" || run.run_status === "distressed";
+
+/** How a run is acting in the picker.
+ *  - `live`: still open on the backend AND the shared 50-minute timer still has time left → Resume.
+ *  - `expired`: still open on the backend but the timer reached 00:00 → New Simulation (never Resume).
+ *  - `review`: genuinely closed/failed → Review. */
+const runKind = (run: CompanyListItem): "live" | "expired" | "review" => {
+  if (!isBackendLive(run)) return "review";
+  return isTimerExpired(run.id) ? "expired" : "live";
+};
+
+const isLive = (run: CompanyListItem) => runKind(run) === "live";
 
 export function RunPicker({
   scenario,
@@ -109,7 +121,7 @@ export function RunPicker({
           </div>
 
           {[...open, ...closed].map((run) => (
-            <RunRow key={run.id} run={run} onResume={() => onResume(run)} />
+            <RunRow key={run.id} run={run} onResume={() => onResume(run)} onStart={onStart} />
           ))}
         </div>
       </Container>
@@ -117,16 +129,31 @@ export function RunPicker({
   );
 }
 
-function RunRow({ run, onResume }: { run: CompanyListItem; onResume: () => void }) {
-  const live = isLive(run);
+function RunRow({
+  run,
+  onResume,
+  onStart,
+}: {
+  run: CompanyListItem;
+  onResume: () => void;
+  onStart: () => void;
+}) {
+  const kind = runKind(run);
   const quarters = run.total_quarters || 4;
 
   return (
-    <button
-      type="button"
+    <div
       onClick={onResume}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onResume();
+        }
+      }}
       className={cn(
-        "group grid w-full grid-cols-[1fr_auto] items-center gap-x-6 gap-y-2 border-b border-line",
+        "group grid w-full cursor-pointer grid-cols-[1fr_auto] items-center gap-x-6 gap-y-2 border-b border-line",
         "py-3.5 text-left transition-colors duration-200 hover:bg-[var(--panel)]",
         COLUMNS_SM,
       )}
@@ -158,7 +185,9 @@ function RunRow({ run, onResume }: { run: CompanyListItem; onResume: () => void 
       </span>
 
       {/* State and action share the last column and never wrap: two words on two lines with a
-          stray arrow under them was the alignment that made this row look broken. */}
+          stray arrow under them was the alignment that made this row look broken. An expired
+          run keeps its run reachable for review (the row still opens it), but its primary
+          action is New Simulation rather than Resume. */}
       <span className="flex items-center justify-end gap-4 whitespace-nowrap">
         <span
           className={cn(
@@ -166,14 +195,28 @@ function RunRow({ run, onResume }: { run: CompanyListItem; onResume: () => void 
             RUN_TONE[run.run_status] ?? "text-dim",
           )}
         >
-          {live && <span className="live-dot h-1.5 w-1.5 shrink-0 rounded-full bg-teal" />}
-          {run.run_status}
+          {kind === "live" && <span className="live-dot h-1.5 w-1.5 shrink-0 rounded-full bg-teal" />}
+          {kind === "expired" ? "expired" : run.run_status}
         </span>
-        <span className="hidden shrink-0 items-center gap-1 text-[13px] text-teal sm:inline-flex">
-          {live ? "Resume" : "Review"}
-          <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-        </span>
+        {kind === "expired" ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onStart();
+            }}
+            className="flex shrink-0 items-center gap-1 text-[13px] text-teal"
+          >
+            New Simulation
+            <ArrowRight className="h-3.5 w-3.5" />
+          </button>
+        ) : (
+          <span className="hidden shrink-0 items-center gap-1 text-[13px] text-teal sm:inline-flex">
+            {kind === "live" ? "Resume" : "Review"}
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+          </span>
+        )}
       </span>
-    </button>
+    </div>
   );
 }
