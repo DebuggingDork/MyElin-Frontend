@@ -2,69 +2,49 @@
 
 import { useEffect, useRef, useState } from "react";
 import { RotateCcw } from "lucide-react";
-import { useRewindSFX } from "@/lib/simulation/use-rewind-sfx";
 
 /**
  * Fullscreen rewind transition overlay — renders for exactly 3 seconds, then calls onComplete.
  *
- * Visual design follows the existing working-overlay (bg-base/90, backdrop-blur-xl, ambient
- * blobs, absolute inset-0 z-[60]) but uses amber instead of teal to make the rewind feel
- * distinct and intentional.
- *
- * Layout:
- *   - Depleting arc ring (SVG, amber stroke, one full rotation per second)
- *   - Large countdown digit  3 → 2 → 1
- *   - Headline: "Rewinding Simulation"
- *   - Sub-line: dynamic "Returning to Quarter N…"
- *   - SFX plays for the full 3 seconds, stops before onComplete fires
- *
- * Guarantees:
- *   - onComplete fires exactly once after 3 seconds
- *   - SFX is stopped before onComplete so the actual rewind API call has
- *     no audio leaking through it
- *   - Cleanup on unmount stops SFX and clears all timers (handles edge-case
- *     where parent unmounts before 3 s are up, e.g. error path)
+ * Audio is NOT managed here. The parent (SimulationApp) starts the SFX synchronously inside
+ * the click handler — before React re-renders — so audio is already playing the moment this
+ * component mounts. onStop is called here when the countdown ends (or on unmount) to stop it.
  */
 
 const TOTAL_MS = 3000;
-const TICK_MS = 50; // smooth arc animation
+const TICK_MS = 50;
 
-/** SVG arc helpers */
-const R = 54; // radius of arc circle (viewBox is 120×120, centre 60,60)
+const R = 54;
 const CIRCUMFERENCE = 2 * Math.PI * R;
 
 function arcDashOffset(elapsed: number): number {
   const progress = Math.min(elapsed / TOTAL_MS, 1);
-  // starts full (offset=0), drains to empty (offset=CIRCUMFERENCE) as time passes
   return CIRCUMFERENCE * progress;
 }
 
 export function RewindPreloader({
   targetQuarter,
+  onStop,
   onComplete,
 }: {
-  /** The quarter we're rewinding TO — shown in the sub-line. */
   targetQuarter: number;
-  /** Called once, after exactly 3 seconds. Trigger the actual API call here. */
+  /** Called to stop the rewind SFX — fired when countdown ends or component unmounts. */
+  onStop: () => void;
   onComplete: () => void;
 }) {
   const [elapsed, setElapsed] = useState(0);
-  // countdown digit: 3 when elapsed<1000, 2 when <2000, 1 when <3000
   const countdown = Math.max(1, 3 - Math.floor(elapsed / 1000));
   const dashOffset = arcDashOffset(elapsed);
 
-  const sfx = useRewindSFX();
   const completedRef = useRef(false);
   const startRef = useRef<number>(0);
   const tickRef = useRef<number>(0);
   const onCompleteRef = useRef(onComplete);
-  // keep the ref current without re-running effects
+  const onStopRef = useRef(onStop);
   onCompleteRef.current = onComplete;
+  onStopRef.current = onStop;
 
   useEffect(() => {
-    // Start audio immediately on mount — we're already inside the user-gesture task
-    sfx.start();
-
     startRef.current = performance.now();
 
     function tick() {
@@ -75,10 +55,10 @@ export function RewindPreloader({
       if (ms >= TOTAL_MS) {
         if (!completedRef.current) {
           completedRef.current = true;
-          sfx.stop();
+          onStopRef.current();
           onCompleteRef.current();
         }
-        return; // stop ticking
+        return;
       }
       tickRef.current = window.setTimeout(tick, TICK_MS);
     }
@@ -87,10 +67,8 @@ export function RewindPreloader({
 
     return () => {
       window.clearTimeout(tickRef.current);
-      sfx.stop();
+      onStopRef.current();
     };
-    // sfx object identity is stable (built from refs) — intentionally omitted from deps
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
