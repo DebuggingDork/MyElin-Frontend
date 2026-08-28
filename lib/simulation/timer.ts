@@ -38,6 +38,29 @@ export function clearTimer(companyId: string) {
   }
 }
 
+/**
+ * Whether this browser's persisted timer for the run has already run out — computed from the
+ * stored start/pause state, never from transient component state, so a cached/refreshed page
+ * reads the same answer as the live simulation. Used by list views (e.g. the run picker) to
+ * stop offering "Resume" once the shared 50-minute timer is at 00:00.
+ *
+ * Base a proper countdown on `useSimulationTimer`; this is a cheap, read-only snapshot for
+ * screens that only need the expired/non-expired distinction.
+ */
+export function isTimerExpired(companyId: string): boolean {
+  if (typeof window === "undefined") return false;
+  const stored = loadTimer(companyId);
+  if (!stored || !stored.simulationStarted) return false;
+  const now = Date.now();
+  let elapsed: number;
+  if (stored.pausedAt !== null) {
+    elapsed = (stored.pausedAt - stored.startTimestamp - stored.totalPausedDuration) / 1000;
+  } else {
+    elapsed = (now - stored.startTimestamp - stored.totalPausedDuration) / 1000;
+  }
+  return elapsed >= TOTAL_SECONDS;
+}
+
 export type SimulationTimerResult = {
   remaining: number;
   paused: boolean;
