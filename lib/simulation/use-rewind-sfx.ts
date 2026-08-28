@@ -30,6 +30,20 @@ const VOLUME = 0.5;
 export function useRewindSFX() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Create the element if it doesn't already exist. This runs eagerly at mount to preload
+  // so the first rewind starts instantly, AND as a fallback inside start() in case a gesture
+  // fires before the mount effect has run (making the first playback more reliable).
+  const ensureAudio = () => {
+    if (typeof window === "undefined") return null;
+    if (audioRef.current) return audioRef.current;
+    const el = new Audio(REWIND_SFX_URL);
+    el.loop = true;
+    el.volume = VOLUME;
+    el.preload = "auto";
+    audioRef.current = el;
+    return el;
+  };
+
   // Stable function refs so callers (including SimulationApp's handleRewind)
   // can call start/stop without stale-closure issues.
   const startRef = useRef<() => void>(() => {});
@@ -37,25 +51,27 @@ export function useRewindSFX() {
 
   useEffect(() => {
     // Eagerly allocate the element at mount — zero allocation cost when start() fires.
-    if (typeof window === "undefined") return;
-    const el = new Audio(REWIND_SFX_URL);
-    el.loop = true;
-    el.volume = VOLUME;
-    el.preload = "auto";
-    audioRef.current = el;
+    const el = ensureAudio();
+    if (!el) return;
 
     startRef.current = () => {
       if (!soundEnabled()) return;
+      // Start/stop must survive across renders, so they re-ensure the element each call
+      // rather than closing over the mount-time one.
+      const target = ensureAudio();
+      if (!target) return;
       try {
-        el.currentTime = 0;
-        void el.play().catch(() => {});
+        target.currentTime = 0;
+        void target.play().catch(() => {});
       } catch { /* never break the rewind */ }
     };
 
     stopRef.current = () => {
+      const target = audioRef.current;
+      if (!target) return;
       try {
-        el.pause();
-        el.currentTime = 0;
+        target.pause();
+        target.currentTime = 0;
       } catch { /* element may be GC'd on fast unmount */ }
     };
 
