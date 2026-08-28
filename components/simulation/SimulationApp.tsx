@@ -787,21 +787,15 @@ export function SimulationApp() {
       setHistory((h) => [...h, locked.result]);
       setScores((s) => [...s, locked.score]);
       setPriorities((p) => [...p, priority]);
-      // Reset plan fields to defaults in the same batch as the state advance so that the
-      // autosave effect — which fires on [phase, plan, state.quarter] — writes clean default
-      // values for the next quarter's draft key rather than the current quarter's inputs.
-      // Without this, the autosave fires with state.quarter already incremented to Q(n+1) but
-      // alloc still holding Q(n)'s values, creating a stale draft that resetPlan then restores.
-      setAlloc(emptyAlloc());
-      setWarranty("6mo");
-      setPayTerms(locked.nextState.payTerms);
-      setStartInno([]);
-      setPriority(null);
-      setReflection({ sacrifice: [] });
-      setCrisis(emptyCrisis());
       setState(locked.nextState);
       if (locked.settlement) setEndgameOutcome(locked.settlement as unknown as Record<string, unknown>);
       if (locked.quarter >= 4) setRunStatus("completed");
+      // Phase must change in the same batch as setState so the auto-save effect sees
+      // phase="closed" immediately and does NOT write the old alloc to the next
+      // quarter's draft key. Previously this was after the 5 s timeout, which let the
+      // auto-save fire with state.quarter already advanced but alloc still belonging
+      // to the quarter that just closed.
+      setPhase("closed");
 
       let audio: HTMLAudioElement | null = null;
       if (soundOn) {
@@ -816,7 +810,6 @@ export function SimulationApp() {
         audio.currentTime = 0;
       }
 
-      setPhase("closed");
       // The quarter took real thought to close and the numbers arrive a beat later, so the
       // report gets an audible arrival. Fired from the same gesture that closed the quarter,
       // which is what makes it legal under the browser's autoplay rules.
