@@ -702,13 +702,10 @@ export function SimulationApp() {
   const startQuarter = useCallback(() => {
     setPhase("play");
     setTab("dashboard");
-    // startTimer() is a no-op if the simulation timer is already running (Q2/Q3/Q4 entry)
-    // and also a no-op if the timer has already expired — the CEO does not get extra time
-    // by being on the briefing screen when the clock ran out. The 50-minute budget is
-    // shared across all four quarters; only Q1's first "Start the quarter" click ever
-    // actually initialises the clock.
-    if (!timer.expired) timer.startTimer();
-  }, [setTab, timer]);
+    // Timer is initialized once on mount (persisted in localStorage) and counts down
+    // continuously across all four quarters. We must NOT call startTimer() here because
+    // that would overwrite the stored timer with a fresh 50 minutes on every quarter entry.
+  }, [setTab]);
 
   /**
    * Phase 1 — user clicks "Confirm Rewind" in the modal.
