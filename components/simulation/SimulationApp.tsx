@@ -1140,7 +1140,7 @@ export function SimulationApp() {
                       <h2 className="font-serif text-3xl text-white mb-3">Processing Error</h2>
                       <p className="text-white/60 mb-8">{error}</p>
                       <button onClick={() => setWorking(null)} className="px-6 py-2.5 border border-white/20 text-white/80 text-sm uppercase tracking-widest hover:bg-white/10 transition-colors">
-                        {working.dismiss}
+                        {working?.dismiss || "Dismiss"}
                       </button>
                     </div>
                   </div>
