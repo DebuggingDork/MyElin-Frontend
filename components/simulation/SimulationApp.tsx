@@ -412,6 +412,10 @@ export function SimulationApp() {
    *  Kept separate from `phase` so `setPhase("closed")` can fire immediately
    *  (auto-save guard) while the cinematic loader stays visible for the full 5 s. */
   const [processingOverlay, setProcessingOverlay] = useState(false);
+  /** Quarter number captured at the moment Close Quarter is clicked.
+   *  `state.quarter` advances after `setState(locked.nextState)`, so reading it
+   *  at render time would show the NEXT quarter's number in the loader. */
+  const [closingQuarter, setClosingQuarter] = useState(1);
 
   /* `busy` is state, so two clicks landing in the same tick would both read `false`. The
      buttons are disabled on `busy` and that is what normally prevents it, but a lock is the one
@@ -782,6 +786,7 @@ export function SimulationApp() {
       dismiss: "Back to the review",
     });
     setProcessingOverlay(true);
+    setClosingQuarter(state.quarter);
     // Start the processing loop synchronously inside this click's task — before the first
     // `await` — so browser autoplay allows it. Calling `.play()` after an `await` has left
     // the user-gesture task and gets blocked silently. This play also unlocks the page's
@@ -1052,7 +1057,7 @@ export function SimulationApp() {
                Quarter-specific copy mirrors the two screenshot designs exactly:
                - Q1–Q3: "THE MARKET HAS RESPONDED." / 5-step market pipeline
                - Q4   : "THE DECISIONS ARE MADE."   / 5-step reveal pipeline   */
-            const qNum = state.quarter;
+            const qNum = closingQuarter;
             const isFinal = qNum >= 4;
             const headline = isFinal
               ? "THE DECISIONS ARE MADE."
@@ -1140,7 +1145,7 @@ export function SimulationApp() {
                       <h2 className="font-serif text-3xl text-white mb-3">Processing Error</h2>
                       <p className="text-white/60 mb-8">{error}</p>
                       <button onClick={() => setWorking(null)} className="px-6 py-2.5 border border-white/20 text-white/80 text-sm uppercase tracking-widest hover:bg-white/10 transition-colors">
-                        {working.dismiss}
+                        {working?.dismiss ?? "Dismiss"}
                       </button>
                     </div>
                   </div>

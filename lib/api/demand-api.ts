@@ -5,12 +5,27 @@
  * as users adjust their allocation sliders.
  */
 
-import { apiClient } from './client';
+import { getApiBase, getToken } from './client';
+
+async function postJson<T>(path: string, body: unknown): Promise<T> {
+  const token = getToken();
+  const res = await fetch(`${getApiBase()}${path}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`Demand API error ${res.status}`);
+  return res.json() as Promise<T>;
+}
+
 
 export interface DemandPreviewRequest {
   company_id: string;
   quarter: number;
-  
+
   // Marketing spend in lakhs
   google_ads?: number;
   meta_ads?: number;
@@ -20,7 +35,7 @@ export interface DemandPreviewRequest {
   email?: number;
   direct_marketing?: number;
   referral?: number;
-  
+
   // Optional boosts for "what if" scenarios
   brand_boost?: number;
   innovation_boost?: number;
@@ -42,7 +57,7 @@ export interface DetailedDemandResponse {
   addressable_demand_units: number;
   total_market_demand: number;
   attractive_share_pct: string;
-  
+
   // Lead breakdown
   google_leads: number;
   meta_leads: number;
@@ -53,12 +68,12 @@ export interface DetailedDemandResponse {
   direct_leads: number;
   total_raw_leads: number;
   effective_leads: number;
-  
+
   // Product metrics
   product_pull_score: string;
   conversion_ceiling_pct: string;
   expected_conversion_pct: string;
-  
+
   // Competitive position
   our_strength: string;
   rival_strength: string;
@@ -71,11 +86,11 @@ export interface DetailedDemandResponse {
 export async function previewAddressableDemand(
   request: DemandPreviewRequest
 ): Promise<DemandPreviewResponse> {
-  const response = await apiClient.post<DemandPreviewResponse>(
+  const response = await postJson<DemandPreviewResponse>(
     '/api/demand/preview',
     request
   );
-  return response.data;
+  return response;
 }
 
 /**
@@ -85,11 +100,11 @@ export async function previewAddressableDemand(
 export async function getDetailedDemand(
   request: DemandPreviewRequest
 ): Promise<DetailedDemandResponse> {
-  const response = await apiClient.post<DetailedDemandResponse>(
+  const response = await postJson<DetailedDemandResponse>(
     '/api/demand/detailed',
     request
   );
-  return response.data;
+  return response;
 }
 
 /**
