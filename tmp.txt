@@ -1,0 +1,33 @@
+            </div>
+          </div>
+        </div>)}
+
+      <div>
+        <Eyebrow tone="text-rose-800">Before you allocate</Eyebrow>
+        <h3 className="font-serif text-xl mb-2">Roughly how many buyers you could reach this quarter</h3>
+        <p className="font-mono text-3xl text-stone-900">{d0(estimateAddressableDemand(s, s.quarter))} <span className="text-sm text-stone-500 font-sans">buyers, if you fund marketing and pricing well</span></p>
+        <p className="text-xs text-stone-500 mt-2 italic">
+          Size Sales capacity and how much you plan to produce against this number, not against how much cash you have.
+          It's an estimate from where the company stands right now — the real figure depends on what you actually
+          decide, and will differ once the quarter closes.
+        </p>
+      </div>
+
+      <div>
+        <Eyebrow tone="text-rose-800">Where the plan puts pressure</Eyebrow>
+        <h3 className="font-serif text-xl mb-2">Operating readiness</h3>
+        <Directional dirs={dirs} />
+        <p className="text-xs text-stone-500 mt-2 italic">
+          Direction only. You will not know the exact revenue, profit or cash until the quarter closes — which is
+          the situation you would actually be in.
+        </p>
+      </div>
+
+      <Inbox messages={inbox} limit={5} />
+      <HealthPanel health={health} />
+
+      {history.length > 0 && (
+        <Card eyebrow="Market share" title="Your share of a category that is growing without you">
+
+-----------------
+

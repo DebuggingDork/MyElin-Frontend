@@ -408,6 +408,10 @@ export function SimulationApp() {
    * it is up, so a failure returns the CEO to exactly the review they submitted.
    */
   const [working, setWorking] = useState<Working | null>(null);
+  /** True for the entire quarter-close window (API call + 5 s delay).
+   *  Kept separate from `phase` so `setPhase("closed")` can fire immediately
+   *  (auto-save guard) while the cinematic loader stays visible for the full 5 s. */
+  const [processingOverlay, setProcessingOverlay] = useState(false);
 
   /* `busy` is state, so two clicks landing in the same tick would both read `false`. The
      buttons are disabled on `busy` and that is what normally prevents it, but a lock is the one
@@ -777,6 +781,7 @@ export function SimulationApp() {
       message: "We are working on your inputs and calculating your results…",
       dismiss: "Back to the review",
     });
+    setProcessingOverlay(true);
     // Start the processing loop synchronously inside this click's task — before the first
     // `await` — so browser autoplay allows it. Calling `.play()` after an `await` has left
     // the user-gesture task and gets blocked silently. This play also unlocks the page's
@@ -805,6 +810,7 @@ export function SimulationApp() {
       setPhase("closed");
 
       await new Promise((resolve) => setTimeout(resolve, 5000));
+      setProcessingOverlay(false);
       stopProcessing();
 
       // The quarter took real thought to close and the numbers arrive a beat later, so the
@@ -816,6 +822,7 @@ export function SimulationApp() {
       // If the quarter could not be locked, the processing loop would otherwise keep
       // playing forever. Stop it here so the error is seen (and heard nothing) plainly.
       stopProcessing();
+      setProcessingOverlay(false);
       setError(
         err instanceof ApiError
           ? err.message + (err.body.reason ? " — " + err.body.reason : "")
@@ -1040,53 +1047,203 @@ export function SimulationApp() {
           {/* Anchored to the simulation surface rather than the viewport: the account bar
               above stays live and legible, so a quarter being scored reads as this workspace
               being busy rather than the whole app having locked up. */}
-          {working && (            <div className="absolute inset-0 z-[60] flex items-center justify-center bg-base/90 backdrop-blur-xl overflow-hidden transition-all duration-700">
-              {/* Background ambient animations compatible with light/dark theme */}
-              <div className="absolute inset-0 w-full h-full pointer-events-none opacity-60">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-teal/10 rounded-full blur-[120px] animate-pulse"></div>
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-indigo-500/5 rounded-full blur-[100px] animate-pulse" style={{ animationDuration: '4s' }}></div>
-              </div>
-
-              {/* Foreground content */}
-              <div className="relative z-10 flex flex-col items-center max-w-xl text-center px-6">
-                {/* Elegant dual-spinning ring indicator */}
-                <div className="relative w-32 h-32 mb-10 flex items-center justify-center">
-                  <div className="absolute inset-0 border-[3px] border-line rounded-full"></div>
-                  <div className="absolute inset-0 border-[3px] border-t-ink/30 border-r-ink/10 border-b-transparent border-l-transparent rounded-full animate-spin duration-1000"></div>
-                  <div className="absolute inset-3 border-[3px] border-t-teal hover:border-teal/80 border-r-teal/30 border-b-transparent border-l-transparent rounded-full animate-[spin_2s_linear_infinite_reverse]"></div>
-                  {/* Central glowing core */}
-                  <div className="w-10 h-10 bg-surface rounded-full shadow-sm border border-line flex items-center justify-center animate-pulse duration-700">
-                    <div className="w-3 h-3 bg-teal rounded-full shadow-[0_0_10px_rgba(20,184,166,0.5)]"></div>
-                  </div>
+          {processingOverlay && (() => {
+            /* ── Cinematic quarter-close loader ──────────────────────────────
+               Quarter-specific copy mirrors the two screenshot designs exactly:
+               - Q1–Q3: "THE MARKET HAS RESPONDED." / 5-step market pipeline
+               - Q4   : "THE DECISIONS ARE MADE."   / 5-step reveal pipeline   */
+            const qNum = state.quarter;
+            const isFinal = qNum >= 4;
+            const headline = isFinal
+              ? "THE DECISIONS ARE MADE."
+              : "THE MARKET HAS RESPONDED.";
+            const subA = isFinal
+              ? "Every choice had a consequence."
+              : "New signals are emerging.";
+            const subB = isFinal
+              ? "Now we reveal what you've created."
+              : "Your next move matters.";
+            const statusLabel = isFinal ? "REVEALING YOUR OUTCOME" : "SITUATION EVOLVING";
+            const statusSub = isFinal
+              ? "Almost there..."
+              : "Processing outcomes and updating the world...";
+            const steps = isFinal
+              ? [
+                  { icon: "📋", label: "DECISIONS\nRECORDED",  active: false, done: true  },
+                  { icon: "📊", label: "MARKET\nRESPONDED",   active: false, done: true  },
+                  { icon: "📈", label: "TRENDS\nEMERGED",     active: false, done: true  },
+                  { icon: "⚙️",  label: "SYSTEMS\nADJUSTED",   active: false, done: true  },
+                  { icon: "🎯", label: "OUTCOME\nREVEALING",  active: true,  done: false },
+                ]
+              : [
+                  { icon: "📋", label: "DECISIONS\nRECORDED",    active: false, done: true  },
+                  { icon: "⚙️",  label: "MARKET\nRESPONDED",     active: true,  done: false },
+                  { icon: "📦", label: "IMPACTS\nCALCULATING",  active: false, done: false },
+                  { icon: "📈", label: "OUTCOMES\nEMERGING",    active: false, done: false },
+                  { icon: "👁️", label: "NEXT QUARTER\nLOADING", active: false, done: false },
+                ];
+            const quote = isFinal
+              ? "You faced uncertainty. You made trade-offs.\nNow see the full picture."
+              : "Every quarter is a test of judgment under uncertainty.\nThe numbers will tell their story.";
+            return (
+              <div className="absolute inset-0 z-[60] overflow-hidden" style={{ background: "radial-gradient(ellipse at 60% 40%, #0d1f2d 0%, #050c12 60%, #000 100%)" }}>
+                {/* ── Atmospheric background layers ─────────────────── */}
+                {/* City skyline silhouette — lower-left */}
+                <div className="absolute bottom-0 left-0 w-1/2 h-2/3 opacity-20 pointer-events-none"
+                  style={{ background: "linear-gradient(to top, rgba(0,200,170,0.08) 0%, transparent 100%)" }}>
+                  <svg viewBox="0 0 400 300" className="w-full h-full" preserveAspectRatio="xMinYMax meet">
+                    <rect x="10"  y="180" width="30" height="120" fill="#14b8a6" opacity="0.3"/>
+                    <rect x="50"  y="140" width="20" height="160" fill="#14b8a6" opacity="0.25"/>
+                    <rect x="80"  y="160" width="40" height="140" fill="#14b8a6" opacity="0.2"/>
+                    <rect x="130" y="120" width="25" height="180" fill="#14b8a6" opacity="0.3"/>
+                    <rect x="165" y="150" width="35" height="150" fill="#14b8a6" opacity="0.2"/>
+                    <rect x="210" y="100" width="20" height="200" fill="#14b8a6" opacity="0.25"/>
+                    <rect x="240" y="130" width="45" height="170" fill="#14b8a6" opacity="0.15"/>
+                    <rect x="295" y="160" width="30" height="140" fill="#14b8a6" opacity="0.2"/>
+                    <rect x="335" y="110" width="25" height="190" fill="#14b8a6" opacity="0.25"/>
+                    <rect x="370" y="145" width="30" height="155" fill="#14b8a6" opacity="0.2"/>
+                    {/* Windows */}
+                    {[10,50,80,130,165,210,240,295,335,370].map((x, i) => (
+                      Array.from({length: 6}).map((_, j) => (
+                        <rect key={`${i}-${j}`} x={x+4} y={310-j*22-20} width="4" height="3" fill="#14b8a6" opacity={Math.random() > 0.4 ? 0.6 : 0.1}/>
+                      ))
+                    ))}
+                  </svg>
                 </div>
+                {/* Galaxy / particle cluster — upper-right */}
+                <div className="absolute top-0 right-0 w-1/2 h-full opacity-25 pointer-events-none">
+                  <svg viewBox="0 0 400 400" className="w-full h-full">
+                    <defs>
+                      <radialGradient id="gx" cx="70%" cy="30%" r="50%">
+                        <stop offset="0%" stopColor="#14b8a6" stopOpacity="0.4"/>
+                        <stop offset="100%" stopColor="#14b8a6" stopOpacity="0"/>
+                      </radialGradient>
+                    </defs>
+                    <ellipse cx="280" cy="120" rx="180" ry="100" fill="url(#gx)" transform="rotate(-30 280 120)"/>
+                    {Array.from({length: 60}).map((_, i) => (
+                      <circle key={i} cx={200+Math.cos(i*0.7)*150+i*2} cy={80+Math.sin(i*0.5)*100+i*1.5}
+                        r={Math.random()*1.5+0.5} fill="#14b8a6" opacity={Math.random()*0.8+0.2}/>
+                    ))}
+                  </svg>
+                </div>
+                {/* Teal road / light trail leading to center */}
+                <div className="absolute bottom-0 left-1/4 w-1/2 h-2/3 pointer-events-none opacity-15"
+                  style={{ background: "linear-gradient(to top, rgba(20,184,166,0.6) 0%, transparent 80%)" }}>
+                </div>
+                {/* Top and bottom edge vignettes */}
+                <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 20%, transparent 75%, rgba(0,0,0,0.7) 100%)" }}/>
 
+                {/* ── Error state ───────────────────────────────────── */}
                 {error ? (
-                  <div className="bg-danger/5 border border-danger/30 p-8 rounded-2xl backdrop-blur-md w-full max-w-md mx-auto shadow-lg">
-                    <h2 className="font-serif text-3xl text-ink mb-3">Processing Error</h2>
-                    <p className="text-dim mb-8">{error}</p>
-                    <button onClick={() => setWorking(null)} className="px-6 py-2.5 bg-raise hover:bg-surface border border-line-2 text-ink font-medium rounded-full transition-all tracking-wide">
-                      {working.dismiss}
-                    </button>
+                  <div className="absolute inset-0 flex items-center justify-center px-6">
+                    <div className="max-w-md w-full border border-red-500/30 bg-red-900/20 backdrop-blur-md px-8 py-6 text-center">
+                      <h2 className="font-serif text-3xl text-white mb-3">Processing Error</h2>
+                      <p className="text-white/60 mb-8">{error}</p>
+                      <button onClick={() => setWorking(null)} className="px-6 py-2.5 border border-white/20 text-white/80 text-sm uppercase tracking-widest hover:bg-white/10 transition-colors">
+                        {working.dismiss}
+                      </button>
+                    </div>
                   </div>
                 ) : (
-                  <>
-                    <h2 className="font-serif text-[2.75rem] tracking-tight text-ink mb-4 leading-tight">
-                      {working.title}
-                    </h2>
-                    <p className="text-[1.1rem] text-dim max-w-sm mx-auto leading-relaxed">
-                      {working.message}
-                    </p>
-                    
-                    {/* Status ticker */}
-                    <div className="mt-14 flex items-center gap-3 text-xs uppercase tracking-[0.2em] text-teal font-mono">
-                      <span className="w-2 h-2 rounded-full bg-teal animate-ping duration-1000"></span>
-                      Stand by
+                  <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center gap-0">
+                    {/* ── Animated logo ring ─────────────────────────── */}
+                    <div className="relative w-24 h-24 mb-6 flex items-center justify-center shrink-0">
+                      {/* Outer arc ring — teal partial circle */}
+                      <svg className="absolute inset-0 w-full h-full animate-spin" style={{ animationDuration: "4s", animationTimingFunction: "linear" }} viewBox="0 0 96 96">
+                        <circle cx="48" cy="48" r="44" fill="none" stroke="#14b8a6" strokeWidth="2.5" strokeDasharray="180 100" strokeLinecap="round" opacity="0.8"/>
+                      </svg>
+                      {/* Inner pulsing dot on ring */}
+                      <svg className="absolute inset-0 w-full h-full animate-spin" style={{ animationDuration: "4s", animationTimingFunction: "linear" }} viewBox="0 0 96 96">
+                        <circle cx="48" cy="4" r="4" fill="#14b8a6"/>
+                      </svg>
+                      {/* Static base ring */}
+                      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 96 96">
+                        <circle cx="48" cy="48" r="44" fill="none" stroke="#14b8a6" strokeWidth="0.5" opacity="0.2"/>
+                      </svg>
+                      {/* M logo in center */}
+                      <div className="relative w-12 h-12 rounded-full bg-[#0a1a24] border border-[#14b8a6]/30 flex items-center justify-center">
+                        <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none">
+                          <path d="M3 18V6l4.5 6 4.5-6 4.5 6 4.5-6v12" stroke="#14b8a6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
                     </div>
-                  </>
+
+                    {/* ── Quarter label ──────────────────────────────── */}
+                    <div className="flex items-center gap-3 mb-2 shrink-0">
+                      <div className="h-px w-10 bg-[#14b8a6]/50"/>
+                      <span className="text-[#14b8a6] text-xs uppercase tracking-[0.25em] font-mono">Quarter {qNum} Closed.</span>
+                      <div className="h-px w-10 bg-[#14b8a6]/50"/>
+                    </div>
+
+                    {/* ── Main headline ──────────────────────────────── */}
+                    <h1 className="text-white font-bold text-3xl sm:text-4xl md:text-5xl tracking-wide mb-4 leading-tight shrink-0" style={{ fontFamily: "system-ui, sans-serif", letterSpacing: "0.05em" }}>
+                      {headline}
+                    </h1>
+
+                    {/* ── Subtitle pair ──────────────────────────────── */}
+                    <p className="text-[#14b8a6] text-sm mb-1 shrink-0">{subA}</p>
+                    <p className="text-white/70 text-sm mb-5 shrink-0">{subB}</p>
+
+                    {/* ── Divider dot ────────────────────────────────── */}
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#14b8a6] mb-5 animate-pulse shrink-0"/>
+
+                    {/* ── Status icon + label ────────────────────────── */}
+                    {isFinal ? (
+                      /* Hourglass icon for revealing */
+                      <svg viewBox="0 0 24 24" className="w-7 h-7 text-[#14b8a6] mb-2 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                        <path d="M5 3h14M5 21h14M7 3v5l5 4-5 4v5M17 3v5l-5 4 5 4v5"/>
+                      </svg>
+                    ) : (
+                      /* Refresh / evolving icon */
+                      <svg viewBox="0 0 24 24" className="w-7 h-7 text-[#14b8a6] mb-2 shrink-0 animate-spin" style={{ animationDuration: "2s" }} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                        <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                      </svg>
+                    )}
+                    <p className="text-[#14b8a6] text-xs font-bold uppercase tracking-[0.2em] mb-1 shrink-0">{statusLabel}</p>
+                    <p className="text-white/50 text-xs mb-6 shrink-0">{statusSub}</p>
+
+                    {/* ── 5-step progress pipeline ───────────────────── */}
+                    <div className="flex items-start justify-center gap-0 mb-7 w-full max-w-xl shrink-0">
+                      {steps.map((step, i) => (
+                        <div key={i} className="flex items-center">
+                          <div className="flex flex-col items-center gap-2">
+                            {/* Icon circle */}
+                            <div className={[
+                              "w-11 h-11 rounded-full border-2 flex items-center justify-center text-base transition-all",
+                              step.active
+                                ? "border-[#14b8a6] bg-transparent shadow-[0_0_16px_rgba(20,184,166,0.5)]"
+                                : step.done
+                                  ? "border-[#14b8a6]/40 bg-transparent opacity-70"
+                                  : "border-white/10 bg-transparent opacity-30",
+                            ].join(" ")}>
+                              <span>{step.icon}</span>
+                            </div>
+                            {/* Label */}
+                            <p className={[
+                              "text-[9px] uppercase tracking-widest text-center leading-tight w-16 whitespace-pre-line",
+                              step.active ? "text-[#14b8a6] font-bold" : "text-white/40",
+                            ].join(" ")}>
+                              {step.label}
+                            </p>
+                          </div>
+                          {/* Dashed connector */}
+                          {i < steps.length - 1 && (
+                            <div className="w-8 sm:w-12 h-px border-t border-dashed border-white/20 mb-6 mx-1"/>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* ── Quote card ─────────────────────────────────── */}
+                    <div className="max-w-sm w-full border border-[#14b8a6]/20 bg-[#14b8a6]/5 backdrop-blur-sm px-5 py-3 flex items-start gap-3 shrink-0">
+                      <span className="text-[#14b8a6] text-2xl leading-none mt-0.5 shrink-0">&ldquo;</span>
+                      <p className="text-white/70 text-xs leading-relaxed text-left whitespace-pre-line">{quote}</p>
+                    </div>
+                  </div>
                 )}
               </div>
-            </div>
-          )}
+            );
+          })()}
           {/* Rewind preloader — 3-second immersive transition between Confirm Rewind and
               the actual API call. Sits at the same z-level as the working overlay but uses
               amber theming and a countdown rather than the teal spinner, making it feel

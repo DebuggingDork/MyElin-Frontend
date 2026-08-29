@@ -11,7 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { BUFFER, PRIORITY_BY_ID, QUARTER_BRIEFS } from "@/lib/simulation/constants";
+import { BUFFER, PRIORITY_BY_ID, QUARTER_BRIEFS, estimateAddressableDemand } from "@/lib/simulation/constants";
 import { cr, inr, n0, n1, pct } from "@/lib/simulation/format";
 import {
   CHART_AXIS,
@@ -150,6 +150,23 @@ export function DashboardScreen({
           </div>
         </div>
       )}
+
+      {/* ── Addressable Demand ─────────────────────────────────────── */}
+      <div>
+        <Eyebrow tone="text-danger-soft">Before you allocate</Eyebrow>
+        <h3 className="font-serif text-xl mb-2">Roughly how many buyers you could reach this quarter</h3>
+        <p className="font-mono text-3xl text-ink">
+          {n0(estimateAddressableDemand(s, s.quarter))}{" "}
+          <span className="text-sm text-dim font-sans">
+            buyers, if you fund marketing and pricing well
+          </span>
+        </p>
+        <p className="text-xs text-dim mt-2 italic max-w-3xl">
+          Size Sales capacity and how much you plan to produce against this number, not against how much
+          cash you have. It&apos;s an estimate from where the company stands right now — the real figure
+          depends on what you actually decide, and will differ once the quarter closes.
+        </p>
+      </div>
 
       {/* ── Operating readiness ────────────────────────────────────── */}
       <div className="border border-line overflow-hidden">

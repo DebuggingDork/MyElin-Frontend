@@ -60,6 +60,19 @@ export const COMPETITORS = [
   { id: "tail", name: "The long tail", pos: "Unbranded", strength: 84, note: "Dozens of white-label brands on the marketplaces." },
 ] as const;
 
+export function estimateAddressableDemand(s: CompanyState, q: number): number {
+  const rivalGrow = Math.pow(1 + CATEGORY_GROWTH, q - 1);
+  const rivalTotal = COMPETITORS.reduce((t, rv) => t + rv.strength * rivalGrow, 0);
+  const productPull = Math.max(
+    4,
+    16 + num(s.brand) + 0.6 * num(s.innovation) + 0.5 * num(s.quality) + 0.25 * (num(s.satisfaction) - 50)
+  );
+  const fillIdx = 0.75 + 0.25 * clamp(num(s.fillRate), 0, 1);
+  const ourStrength = productPull * fillIdx;
+  const attractShare = ourStrength / (ourStrength + rivalTotal);
+  return Math.round(marketDemand(q) * attractShare);
+}
+
 /* ── departments ──────────────────────────────────────────────────── */
 
 export type Department = {
@@ -1420,7 +1433,7 @@ export const DETAIL_SCREENS: DetailScreen[] = [
               ? "under-running the plant by " + n0(installed - capability)
               : "plant fully loaded",
             n0(run * c.op * (c.s.supplierRel / 100) * (1 - c.s.attrition / 100)) +
-              " actually built after losses",
+            " actually built after losses",
           ];
         },
       },
@@ -1431,8 +1444,8 @@ export const DETAIL_SCREENS: DetailScreen[] = [
         preview: (v, c) => [
           "+" + n1(4 * pw(v, 0.5) * c.op) + " reliability",
           "to " +
-            n1(Math.min(100, c.s.supplierRel + 4 * pw(v, 0.5) * c.op)) +
-            " — multiplies everything built",
+          n1(Math.min(100, c.s.supplierRel + 4 * pw(v, 0.5) * c.op)) +
+          " — multiplies everything built",
         ],
       },
       {
