@@ -6,6 +6,9 @@ import type {
   CompanyListResponse,
   CrisisAllocationSubmit,
   CrisisBriefingResponse,
+  DemandPreviewRequest,
+  DemandPreviewResponse,
+  DetailedDemandResponse,
   EndgameDecisionResponse,
   EndgameDecisionSubmit,
   EndgamePreviewResponse,
@@ -493,5 +496,19 @@ export const api = {
   getSimulationReportPdf: (companyId: string) =>
     request<SimulationReportPdfResponse>(
       `/companies/${companyId}/simulation/report/pdf`,
+    ),
+
+  /* ── Demand Preview ─────────────────────────────────────────── */
+
+  previewDemand: (body: DemandPreviewRequest) =>
+    request<DemandPreviewResponse>(
+      "/api/demand/preview",
+      { method: "POST", body: JSON.stringify(body) },
+    ),
+
+  getDetailedDemand: (body: DemandPreviewRequest) =>
+    request<DetailedDemandResponse>(
+      "/api/demand/detailed",
+      { method: "POST", body: JSON.stringify(body) },
     ),
 };

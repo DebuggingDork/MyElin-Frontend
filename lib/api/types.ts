@@ -493,3 +493,62 @@ export class ApiError extends Error {
     this.body = body;
   }
 }
+
+/* ── Demand Preview API Types ────────────────────────────────── */
+
+export type DemandPreviewRequest = {
+  company_id: string;
+  quarter: number;
+  
+  // Marketing spend in lakhs
+  google_ads?: number;
+  meta_ads?: number;
+  social_influencer?: number;
+  content_seo?: number;
+  events_pr?: number;
+  email?: number;
+  direct_marketing?: number;
+  referral?: number;
+  
+  // Optional boosts for "what if" scenarios
+  brand_boost?: number;
+  innovation_boost?: number;
+  quality_boost?: number;
+};
+
+export type DemandPreviewResponse = {
+  addressable_demand_units: number;
+  total_market_demand: number;
+  our_market_share_potential: string;
+  competitive_position_score: string;
+  product_pull_score: string;
+  rival_total_strength: string;
+  marketing_voice_index: string;
+  guidance_message: string;
+};
+
+export type DetailedDemandResponse = {
+  addressable_demand_units: number;
+  total_market_demand: number;
+  attractive_share_pct: string;
+  
+  // Lead breakdown
+  google_leads: number;
+  meta_leads: number;
+  social_leads: number;
+  content_leads: number;
+  events_leads: number;
+  email_leads: number;
+  direct_leads: number;
+  total_raw_leads: number;
+  effective_leads: number;
+  
+  // Product metrics
+  product_pull_score: string;
+  conversion_ceiling_pct: string;
+  expected_conversion_pct: string;
+  
+  // Competitive position
+  our_strength: string;
+  rival_strength: string;
+};

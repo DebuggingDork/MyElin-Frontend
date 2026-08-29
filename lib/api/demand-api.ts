@@ -5,79 +5,8 @@
  * as users adjust their allocation sliders.
  */
 
-import { getApiBase, getToken } from './client';
-
-async function postJson<T>(path: string, body: unknown): Promise<T> {
-  const token = getToken();
-  const res = await fetch(`${getApiBase()}${path}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error(`Demand API error ${res.status}`);
-  return res.json() as Promise<T>;
-}
-
-
-export interface DemandPreviewRequest {
-  company_id: string;
-  quarter: number;
-
-  // Marketing spend in lakhs
-  google_ads?: number;
-  meta_ads?: number;
-  social_influencer?: number;
-  content_seo?: number;
-  events_pr?: number;
-  email?: number;
-  direct_marketing?: number;
-  referral?: number;
-
-  // Optional boosts for "what if" scenarios
-  brand_boost?: number;
-  innovation_boost?: number;
-  quality_boost?: number;
-}
-
-export interface DemandPreviewResponse {
-  addressable_demand_units: number;
-  total_market_demand: number;
-  our_market_share_potential: string;
-  competitive_position_score: string;
-  product_pull_score: string;
-  rival_total_strength: string;
-  marketing_voice_index: string;
-  guidance_message: string;
-}
-
-export interface DetailedDemandResponse {
-  addressable_demand_units: number;
-  total_market_demand: number;
-  attractive_share_pct: string;
-
-  // Lead breakdown
-  google_leads: number;
-  meta_leads: number;
-  social_leads: number;
-  content_leads: number;
-  events_leads: number;
-  email_leads: number;
-  direct_leads: number;
-  total_raw_leads: number;
-  effective_leads: number;
-
-  // Product metrics
-  product_pull_score: string;
-  conversion_ceiling_pct: string;
-  expected_conversion_pct: string;
-
-  // Competitive position
-  our_strength: string;
-  rival_strength: string;
-}
+import { api } from './client';
+import type { DemandPreviewRequest, DemandPreviewResponse, DetailedDemandResponse } from './types';
 
 /**
  * Get quick addressable demand estimate
@@ -86,11 +15,7 @@ export interface DetailedDemandResponse {
 export async function previewAddressableDemand(
   request: DemandPreviewRequest
 ): Promise<DemandPreviewResponse> {
-  const response = await postJson<DemandPreviewResponse>(
-    '/api/demand/preview',
-    request
-  );
-  return response;
+  return api.previewDemand(request);
 }
 
 /**
@@ -100,11 +25,7 @@ export async function previewAddressableDemand(
 export async function getDetailedDemand(
   request: DemandPreviewRequest
 ): Promise<DetailedDemandResponse> {
-  const response = await postJson<DetailedDemandResponse>(
-    '/api/demand/detailed',
-    request
-  );
-  return response;
+  return api.getDetailedDemand(request);
 }
 
 /**
@@ -120,3 +41,6 @@ export function formatBuyerCount(count: number): string {
 export function parsePercentage(pct: string): number {
   return parseFloat(pct.replace('%', ''));
 }
+
+// Re-export types for convenience
+export type { DemandPreviewRequest, DemandPreviewResponse, DetailedDemandResponse };
