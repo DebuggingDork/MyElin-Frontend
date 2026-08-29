@@ -86,11 +86,6 @@ export function BuyerInterestDisplay({
     );
   }
 
-  const trend = previousCount !== null ? buyerCount - previousCount : 0;
-  const trendPercent = previousCount && previousCount > 0 
-    ? ((trend / previousCount) * 100).toFixed(1)
-    : '0';
-
   return (
     <div className={`bg-stone-50 border-l-4 border-stone-300 rounded p-6 ${className}`}>
       {/* Header */}
