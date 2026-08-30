@@ -259,7 +259,48 @@ export function Profile() {
               {/* ── the editable half ── */}
               <form onSubmit={onSave}>
                 <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-line pb-3">
-                  <p className="tick-label">Your details</p>
+                  <p className="tick-label">Your Background</p>
+                  <p className="tick-label">Editable</p>
+                </div>
+                
+                <div className="space-y-8 pt-8 pb-14 text-sm">
+                  <Field label="Current status">
+                     <div className="w-full border border-line bg-[var(--field)] px-4 py-3.5 text-[14px] text-ink cursor-not-allowed opacity-80 flex items-center justify-between">
+                       <span>Student</span>
+                       <span className="text-xs text-dim italic">Derived from account role</span>
+                     </div>
+                  </Field>
+                  <Field label="Work experience">
+                    <input
+                      type="text"
+                      maxLength={120}
+                      onChange={() => setSaved(false)}
+                      placeholder="e.g. 2 years in marketing"
+                      className="w-full border border-line bg-[var(--field)] px-4 py-3.5 text-[14px] text-ink placeholder:text-faint focus:border-teal focus:outline-none"
+                    />
+                  </Field>
+                  <Field label="Current role / designation">
+                    <input
+                      type="text"
+                      maxLength={120}
+                      onChange={() => setSaved(false)}
+                      placeholder="What is your current role?"
+                      className="w-full border border-line bg-[var(--field)] px-4 py-3.5 text-[14px] text-ink placeholder:text-faint focus:border-teal focus:outline-none"
+                    />
+                  </Field>
+                  <Field label="Industry / sector">
+                    <input
+                      type="text"
+                      maxLength={120}
+                      onChange={() => setSaved(false)}
+                      placeholder="Which industry do you operate in?"
+                      className="w-full border border-line bg-[var(--field)] px-4 py-3.5 text-[14px] text-ink placeholder:text-faint focus:border-teal focus:outline-none"
+                    />
+                  </Field>
+                </div>
+
+                <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-line pb-3">
+                  <p className="tick-label">Educational details</p>
                   <p className="tick-label">Editable</p>
                 </div>
 

@@ -54,7 +54,7 @@ export function Hero() {
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Action href="/play/startup-survival" size="lg">
+              <Action href="/pricing" size="lg">
                 Run a simulation
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Action>

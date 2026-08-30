@@ -8,7 +8,7 @@ const columns = [
     links: [
       { label: "Simulations", href: "/simulations" },
       { label: "Pricing", href: "/pricing" },
-      { label: "Play now", href: "/play/startup-survival" },
+      { label: "Play now", href: "/pricing" },
     ],
   },
   {
@@ -72,8 +72,14 @@ export function Footer() {
         </div>
 
         <div className="mt-14 flex flex-wrap items-center justify-between gap-4 border-t border-line pt-7">
-          <p className="num text-[12px] text-faint">
-            © 2025 Myelin Labs · Built for judgment
+          <p className="num text-[12px] text-faint flex items-center gap-3">
+            <span>© 2025 Myelin Labs · Built for judgment</span>
+            <span className="hidden sm:inline text-line-2">|</span>
+            <Link href="/privacy" className="hover:text-dim transition-colors">Privacy & Data</Link>
+            <span className="hidden sm:inline text-line-2">|</span>
+            <Link href="/privacy" className="hover:text-dim transition-colors">Terms</Link>
+            <span className="hidden sm:inline text-line-2">|</span>
+            <Link href="/privacy" className="hover:text-dim transition-colors">Security</Link>
           </p>
           <div className="flex items-center gap-2">
             <span className="live-dot h-1.5 w-1.5 rounded-full bg-emerald" />

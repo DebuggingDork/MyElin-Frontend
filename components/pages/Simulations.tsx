@@ -14,7 +14,7 @@ import { Figures, Masthead } from "@/components/layout/PageChrome";
 import { LedgerHead } from "@/components/home/LedgerHead";
 import { Action, Container } from "@/components/ui/Kit";
 
-type Status = "LIVE" | "BETA" | "COMING";
+type Status = "LIVE" | "BETA" | "COMING SOON";
 
 type Scenario = {
   index: string;
@@ -52,7 +52,7 @@ const scenarios: Scenario[] = [
   {
     index: "03",
     title: "Crisis Comms",
-    status: "COMING",
+    status: "COMING SOON",
     category: "Leadership",
     copy: "A safety incident is trending. Your CEO is on a flight. You have ninety minutes and one statement.",
     duration: "20 min",
@@ -62,7 +62,7 @@ const scenarios: Scenario[] = [
   {
     index: "04",
     title: "Turnaround",
-    status: "COMING",
+    status: "COMING SOON",
     category: "Operator",
     copy: "You inherit a Series C company at ₹4 Cr of burn and five months of runway. Save it or wind it down.",
     duration: "40 min",
@@ -72,7 +72,7 @@ const scenarios: Scenario[] = [
   {
     index: "05",
     title: "Fundraise",
-    status: "COMING",
+    status: "COMING SOON",
     category: "Founder",
     copy: "Pitch twelve funds, negotiate the term sheets, choose your lead. Dilution against control, priced in public.",
     duration: "25 min",
@@ -82,7 +82,7 @@ const scenarios: Scenario[] = [
   {
     index: "06",
     title: "Product Pivot",
-    status: "COMING",
+    status: "COMING SOON",
     category: "PM",
     copy: "Growth has flatlined for three quarters. Pivot, bridge, or persevere — and defend it to the people who funded the old plan.",
     duration: "30 min",
@@ -104,7 +104,7 @@ const figures = [
 const statusTone: Record<Status, string> = {
   LIVE: "text-teal",
   BETA: "text-ember",
-  COMING: "text-faint",
+  "COMING SOON": "text-faint",
 };
 
 /** Intensity as seven ticks, so six cases can be compared at a glance instead of each

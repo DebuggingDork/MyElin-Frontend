@@ -199,7 +199,7 @@ export function DecisionUrgency() {
 
           {/* CTA Row exactly as in skeleton */}
           <div className="flex flex-wrap items-center gap-4">
-            <Action href="/play/startup-survival" size="lg">
+            <Action href="/pricing" size="lg">
               Take the decision
             </Action>
             <span className="text-[13px] text-faint">
