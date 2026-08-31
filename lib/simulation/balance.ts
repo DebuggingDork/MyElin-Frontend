@@ -75,8 +75,9 @@ export function balanceClosing(r: QuarterResultShape): BalanceView {
     re: r.retainedEarnings as number,
     equity: r.equity as number,
     invUnits: r.invUnitsOut as number,
-    // Already inside `equity` by the time the quarter closes.
-    raised: 0,
+    // Money received against share capital (the Q4 Path A cheque). The engine folds it into its
+    // `equity` so the closing sheet ties out; surface it as its own row for the BalanceSheetDoc.
+    raised: (r.equityRaised as number | undefined) ?? 0,
   };
 }
 
