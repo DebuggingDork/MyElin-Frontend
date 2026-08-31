@@ -23,3 +23,20 @@ export function useSimulationHref(slug: string = LIVE_SCENARIO) {
   // Routes traffic tracking to /pricing as we are not giving anything free directly to students
   return "/pricing";
 }
+
+/**
+ * The direct "start the simulation" link, used by means that deliberately open the play flow
+ * (rather than the track-traffic-to-pricing route `useSimulationHref` points every other
+ * control at). This is the original auth-aware entry: an authenticated visitor lands on the
+ * scenario's setup screen, and a signed-out one is sent to login with `next=` carrying them
+ * back to the same scenario afterwards.
+ *
+ * Falls back to the play URL until auth has hydrated, which is also what the server renders --
+ * so the link is never a dead end, it just may cost the signed-out visitor one redirect on a
+ * click made in the first tick after paint.
+ */
+export function usePlaySimulationHref(slug: string = LIVE_SCENARIO) {
+  const { user, ready } = useAuth();
+  const target = playHref(slug);
+  return ready && !user ? `/login?next=${encodeURIComponent(target)}` : target;
+}
