@@ -536,6 +536,10 @@ export function SimulationApp() {
     setPriorities(
       run.history.map((h) => ((h as Record<string, unknown>).priority as PriorityId | null) ?? null),
     );
+    // A reopen of a completed run carries the settled term-sheet outcome from the server so the
+    // final report renders exactly as it did the moment the year closed, instead of rebuilding
+    // it from nothing (which produced a materially different report on every reopen).
+    if (run.settlement) setEndgameOutcome(run.settlement as unknown as Record<string, unknown>);
 
     if (run.quartersLocked >= 3 && run.history.length >= 3) {
       try {

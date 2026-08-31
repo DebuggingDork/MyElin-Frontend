@@ -304,6 +304,8 @@ export type RunResponse = {
   scores: QuarterScore[];
   endgamePath: string | null;
   rewindsUsed: number;
+  /** The frozen Q4 term-sheet outcome, present only once a completed run is reopened. */
+  settlement?: Record<string, unknown> | null;
 };
 
 export type RewindResponse = {
