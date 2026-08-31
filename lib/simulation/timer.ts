@@ -153,27 +153,10 @@ export function useSimulationTimer(companyId: string, quarter: number): Simulati
     };
   }, [companyId, calculateElapsed]);
 
-  // Resume from an exit pause, folding the away-spent wall-clock time into
-  // totalPausedDuration so it is never charged to the user.
-  const resumeFromExit = useCallback(() => {
-    if (!timerDataRef.current) return;
-    if (!isExitPause) return;
-    if (timerDataRef.current.pausedAt === null) return;
-    const now = Date.now();
-    const pauseDuration = now - timerDataRef.current.pausedAt;
-    const updatedData: StoredTimer = {
-      ...timerDataRef.current,
-      pausedAt: null,
-      totalPausedDuration: timerDataRef.current.totalPausedDuration + pauseDuration,
-      exitPaused: false,
-    };
-    timerDataRef.current = updatedData;
-    saveTimer(companyId, updatedData);
-    setPaused(false);
-    setIsExitPause(false);
-  }, [companyId, isExitPause]);
-
-  // Countdown interval
+  // Countdown interval — a single, controlled lifecycle. The effect is keyed on `paused` and
+  // `expired`, so whenever the timer is running exactly one interval exists: pausing tears it
+  // down in the effect's cleanup, and resuming (via `unpause`) re-creates a fresh one. No
+  // duplicate intervals can accumulate from repeated pause/resume cycles.
   useEffect(() => {
     if (paused || expired) {
       if (tickRef.current) {
@@ -239,24 +222,34 @@ export function useSimulationTimer(companyId: string, quarter: number): Simulati
     setIsExitPause(false);
   }, [companyId, paused]);
 
+  /**
+   * Resume from a paused state — the action behind the "Resume" button (manual pause or
+   * automatic tab pause alike).
+   *
+   * Restores the exact persisted remaining time (the pause span is folded into
+   * `totalPausedDuration` so no time spent paused is charged) and clears the paused flag,
+   * which re-creates the single countdown interval on the next render. Does nothing when the
+   * run has genuinely expired — an expired run stays read-only and cannot resume.
+   */
   const unpause = useCallback(() => {
     if (!timerDataRef.current || !paused) return;
-    
+    if (expired) return;
+
     const now = Date.now();
     const pauseDuration = timerDataRef.current.pausedAt ? now - timerDataRef.current.pausedAt : 0;
-    
+
     const updatedData: StoredTimer = {
       ...timerDataRef.current,
       pausedAt: null,
       totalPausedDuration: timerDataRef.current.totalPausedDuration + pauseDuration,
       exitPaused: false,
     };
-    
+
     timerDataRef.current = updatedData;
     saveTimer(companyId, updatedData);
     setPaused(false);
     setIsExitPause(false);
-  }, [companyId, paused]);
+  }, [companyId, paused, expired]);
 
   /**
    * Pause because the user left/exited the simulation. Marks the pause as an "exit pause"
@@ -289,21 +282,16 @@ export function useSimulationTimer(companyId: string, quarter: number): Simulati
   //     back button within the app)
   //
   // All three write an "exit pause" to localStorage so the exact remaining time survives a
-  // full reload / re-open. The interval is torn down because `paused` flips true, and the
-  // wall-clock time spent away is folded into `totalPausedDuration` on resume -- never
-  // charged to the user.
+  // full reload / re-open, and the interval is torn down because `paused` flips true.
   //
-  // Returning to visibility or remounting auto-resumes (see `resumeFromExit`), because an
-  // exit pause is never a deliberate pause: the user came back and wants to keep going.
+  // The simulation stays paused until the CEO explicitly clicks Resume (`unpause`). Returning
+  // to the tab alone does NOT restart the timer — no auto-resume on visibility. Only a fresh
+  // mount / reopen of the run resumes automatically from the persisted remaining time.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const runPauseForExit = () => pauseForExit();
     const onVisibility = () => {
-      if (document.visibilityState === "hidden") {
-        runPauseForExit();
-      } else if (document.visibilityState === "visible") {
-        resumeFromExit();
-      }
+      if (document.visibilityState === "hidden") runPauseForExit();
     };
     window.addEventListener("pagehide", runPauseForExit);
     document.addEventListener("visibilitychange", onVisibility);
@@ -314,7 +302,7 @@ export function useSimulationTimer(companyId: string, quarter: number): Simulati
       // keeps running and the exact remaining time is persisted.
       runPauseForExit();
     };
-  }, [pauseForExit, resumeFromExit]);
+  }, [pauseForExit]);
 
   const reset = useCallback(() => {
     clearTimer(companyId);
