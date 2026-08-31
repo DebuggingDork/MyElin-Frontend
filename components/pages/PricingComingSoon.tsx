@@ -15,7 +15,7 @@ import { easeOut } from "@/lib/media";
 import { Masthead } from "@/components/layout/PageChrome";
 import { Action, Container } from "@/components/ui/Kit";
 import { cn } from "@/lib/utils";
-import { useSimulationHref } from "@/components/play/entry";
+import { usePlaySimulationHref } from "@/components/play/entry";
 
 const pilotFeatures = [
   { icon: User, title: "Student access", copy: "Access to the selected simulation for your cohort." },
@@ -79,7 +79,7 @@ function TierCard({
 }
 
 export function PricingComingSoon() {
-  const simulationHref = useSimulationHref();
+  const simulationHref = usePlaySimulationHref();
 
   return (
     <section className="relative flex flex-col pt-[68px]">
@@ -146,7 +146,7 @@ export function PricingComingSoon() {
             </ul>
 
             <div className="flex flex-col pt-6 border-t border-line border-teal/20 mt-auto">
-              <Action href="/#contact" size="lg" className="w-full justify-center mb-4 bg-teal text-black hover:bg-teal-light">
+              <Action href="/?type=pilot#contact" size="lg" className="w-full justify-center mb-4 bg-teal text-black hover:bg-teal-light">
                 Request a Pilot <ArrowRight className="h-4 w-4 ml-2" />
               </Action>
               <div className="h-[64px] flex flex-col items-center justify-center">
@@ -170,7 +170,7 @@ export function PricingComingSoon() {
             </ul>
 
             <div className="flex flex-col pt-6 border-t border-line mt-auto">
-              <Action href="/#contact" variant="outline" size="lg" className="w-full justify-center mb-4">
+              <Action href="/?type=talk#contact" variant="outline" size="lg" className="w-full justify-center mb-4">
                 Talk to Us <ArrowRight className="h-4 w-4 ml-2" />
               </Action>
               <div className="h-[64px] flex items-center justify-center">
