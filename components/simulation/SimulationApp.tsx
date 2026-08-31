@@ -992,13 +992,20 @@ export function SimulationApp() {
         ))}
       </nav>
       <div className="mt-3 shrink-0 border-t border-sim-line pt-3">
-        <Link
-          href="/simulations"
-          className="flex items-center gap-2 rounded-lg px-3 py-2 text-[13px] text-sim-faint transition-colors hover:bg-sim-surface-hover hover:text-sim-ink"
+        {/* Leaving the simulation pauses the shared timer so the countdown freezes at the
+            current remaining time. On return the timer auto-resumes from exactly where it
+            left off; time spent away is never charged. */}
+        <button
+          type="button"
+          onClick={() => {
+            timer.pauseForExit();
+            router.push("/simulations");
+          }}
+          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[13px] text-sim-faint transition-colors hover:bg-sim-surface-hover hover:text-sim-ink"
         >
           <LogOut className="h-3.5 w-3.5 shrink-0" />
           Exit run
-        </Link>
+        </button>
       </div>
     </>
   );
