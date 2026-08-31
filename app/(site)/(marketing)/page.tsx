@@ -5,6 +5,7 @@ import { Institutions } from "@/components/home/Institutions";
 import { Why } from "@/components/home/Why";
 import { AxonGaps } from "@/components/home/AxonGaps";
 import { DecisionUrgency } from "@/components/home/DecisionUrgency";
+import { Contact } from "@/components/home/Contact";
 
 export default function Home() {
   return (
@@ -16,6 +17,7 @@ export default function Home() {
       <Dimensions />
       <How />
       <Institutions />
+      <Contact />
     </>
   );
 }
