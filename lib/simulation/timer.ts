@@ -11,6 +11,7 @@ type StoredTimer = {
   pausedAt: number | null; // Timestamp when paused, null if running
   totalPausedDuration: number; // Total time spent paused (in ms)
   simulationStarted: boolean;
+  exitPaused?: boolean; // True when paused because the user exited/navigated away
 };
 
 function loadTimer(companyId: string): StoredTimer | null {
@@ -66,9 +67,11 @@ export type SimulationTimerResult = {
   paused: boolean;
   expired: boolean;
   elapsed: number;
+  isExitPause: boolean;
   startTimer: () => void;
   pause: () => void;
   unpause: () => void;
+  pauseForExit: () => void;
   reset: () => void;
   formatTime: () => string;
 };
@@ -77,6 +80,7 @@ export function useSimulationTimer(companyId: string, quarter: number): Simulati
   const [remaining, setRemaining] = useState(TOTAL_SECONDS);
   const [paused, setPaused] = useState(false);
   const [expired, setExpired] = useState(false);
+  const [isExitPause, setIsExitPause] = useState(false);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const timerDataRef = useRef<StoredTimer | null>(null);
   const initializedRef = useRef(false);
@@ -107,7 +111,18 @@ export function useSimulationTimer(companyId: string, quarter: number): Simulati
     const stored = loadTimer(companyId);
     
     if (stored && stored.simulationStarted) {
-      // Restore existing timer
+      // Restore existing timer. If the run was left in an "exit pause" (the user exited,
+      // navigated away, refreshed or closed the tab), resume it immediately: fold the
+      // spent-away wall-clock time into totalPausedDuration so nothing outside the
+      // simulation is counted, and clear the exit flag. The countdown then continues from
+      // exactly the remaining time the user left.
+      if (stored.pausedAt !== null && stored.exitPaused) {
+        const pauseDuration = Date.now() - stored.pausedAt;
+        stored.pausedAt = null;
+        stored.totalPausedDuration += pauseDuration;
+        stored.exitPaused = false;
+        saveTimer(companyId, stored);
+      }
       const elapsed = calculateElapsed(stored);
       const newRemaining = Math.max(0, TOTAL_SECONDS - elapsed);
       
@@ -115,6 +130,7 @@ export function useSimulationTimer(companyId: string, quarter: number): Simulati
       setRemaining(newRemaining);
       setPaused(stored.pausedAt !== null);
       setExpired(newRemaining <= 0);
+      setIsExitPause(Boolean(stored.exitPaused) && stored.pausedAt !== null);
     } else {
       // Initialize new timer (starts when first quarter begins)
       const now = Date.now();
@@ -136,6 +152,26 @@ export function useSimulationTimer(companyId: string, quarter: number): Simulati
       initializedRef.current = false;
     };
   }, [companyId, calculateElapsed]);
+
+  // Resume from an exit pause, folding the away-spent wall-clock time into
+  // totalPausedDuration so it is never charged to the user.
+  const resumeFromExit = useCallback(() => {
+    if (!timerDataRef.current) return;
+    if (!isExitPause) return;
+    if (timerDataRef.current.pausedAt === null) return;
+    const now = Date.now();
+    const pauseDuration = now - timerDataRef.current.pausedAt;
+    const updatedData: StoredTimer = {
+      ...timerDataRef.current,
+      pausedAt: null,
+      totalPausedDuration: timerDataRef.current.totalPausedDuration + pauseDuration,
+      exitPaused: false,
+    };
+    timerDataRef.current = updatedData;
+    saveTimer(companyId, updatedData);
+    setPaused(false);
+    setIsExitPause(false);
+  }, [companyId, isExitPause]);
 
   // Countdown interval
   useEffect(() => {
@@ -200,6 +236,7 @@ export function useSimulationTimer(companyId: string, quarter: number): Simulati
     timerDataRef.current = updatedData;
     saveTimer(companyId, updatedData);
     setPaused(true);
+    setIsExitPause(false);
   }, [companyId, paused]);
 
   const unpause = useCallback(() => {
@@ -212,12 +249,72 @@ export function useSimulationTimer(companyId: string, quarter: number): Simulati
       ...timerDataRef.current,
       pausedAt: null,
       totalPausedDuration: timerDataRef.current.totalPausedDuration + pauseDuration,
+      exitPaused: false,
     };
     
     timerDataRef.current = updatedData;
     saveTimer(companyId, updatedData);
     setPaused(false);
+    setIsExitPause(false);
   }, [companyId, paused]);
+
+  /**
+   * Pause because the user left/exited the simulation. Marks the pause as an "exit pause"
+   * so the simulation can distinguish it from a manual pause and auto-resume on return.
+   *
+   * If the simulation is already intentionally paused (manual Pause), that manual state is
+   * preserved — leaving it as a manual pause means it stays paused when the user returns,
+   * exactly as a manual pause should. Only an actually-running timer becomes an exit pause.
+   */
+  const pauseForExit = useCallback(() => {
+    if (!timerDataRef.current || !timerDataRef.current.simulationStarted) return;
+    if (timerDataRef.current.pausedAt !== null) return;
+    const updatedData: StoredTimer = {
+      ...timerDataRef.current,
+      pausedAt: Date.now(),
+      exitPaused: true,
+    };
+    timerDataRef.current = updatedData;
+    saveTimer(companyId, updatedData);
+    setPaused(true);
+    setIsExitPause(true);
+  }, [companyId]);
+
+  // Handle leaving the simulation deterministically.
+  //
+  // Three triggers pause the timer so the countdown freezes the moment the user is away:
+  //   - `pagehide` (browser close / tab close / navigating to another site)
+  //   - `visibilitychange` -> hidden (tab switch / minimise / backgrounding)
+  //   - this effect's own cleanup (the simulation route unmounting, e.g. Exit run or the
+  //     back button within the app)
+  //
+  // All three write an "exit pause" to localStorage so the exact remaining time survives a
+  // full reload / re-open. The interval is torn down because `paused` flips true, and the
+  // wall-clock time spent away is folded into `totalPausedDuration` on resume -- never
+  // charged to the user.
+  //
+  // Returning to visibility or remounting auto-resumes (see `resumeFromExit`), because an
+  // exit pause is never a deliberate pause: the user came back and wants to keep going.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const runPauseForExit = () => pauseForExit();
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        runPauseForExit();
+      } else if (document.visibilityState === "visible") {
+        resumeFromExit();
+      }
+    };
+    window.addEventListener("pagehide", runPauseForExit);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("pagehide", runPauseForExit);
+      document.removeEventListener("visibilitychange", onVisibility);
+      // Component is leaving (route close / exit). Pause deterministically so no interval
+      // keeps running and the exact remaining time is persisted.
+      runPauseForExit();
+    };
+  }, [pauseForExit, resumeFromExit]);
 
   const reset = useCallback(() => {
     clearTimer(companyId);
@@ -225,6 +322,7 @@ export function useSimulationTimer(companyId: string, quarter: number): Simulati
     setRemaining(TOTAL_SECONDS);
     setPaused(false);
     setExpired(false);
+    setIsExitPause(false);
   }, [companyId]);
 
   const formatTime = useCallback(() => {
@@ -235,5 +333,5 @@ export function useSimulationTimer(companyId: string, quarter: number): Simulati
 
   const elapsed = TOTAL_SECONDS - remaining;
 
-  return { remaining, paused, expired, elapsed, startTimer, pause, unpause, reset, formatTime };
+  return { remaining, paused, expired, elapsed, isExitPause, startTimer, pause, unpause, pauseForExit, reset, formatTime };
 }
