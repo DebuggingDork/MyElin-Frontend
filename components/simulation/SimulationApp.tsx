@@ -646,6 +646,11 @@ export function SimulationApp() {
   useEffect(() => {
     if (phase !== "play" && phase !== "briefing") return;
     if (runStatus === "completed") return;
+    // While paused (or expired) the plan is frozen and the inputs are read-only, so there is
+    // nothing new to preview -- and firing one would just race the resume transition. Skipping
+    // it here (and re-firing on the first render after Resume, via `readOnly` flipping false in
+    // the deps) guarantees exactly one preview runs when the CEO comes back, never a duplicate.
+    if (readOnly) return;
 
     let cancelled = false;
     const timer = setTimeout(() => {
@@ -657,6 +662,9 @@ export function SimulationApp() {
           setBudget(pv.budget);
           setCommitReading(pv.commitReading);
           if (pv.crisis) setBriefing(pv.crisis);
+          // A plan ran successfully: whichever transient preview failure (a dropped/aborted
+          // request during a pause or tab transition) put the banner up no longer applies.
+          setError((cur) => (cur && cur.endsWith("Could not run the plan.") ? null : cur));
         })
         .catch((err) => {
           if (!cancelled) setError(err instanceof ApiError ? err.message : "Could not run the plan.");
@@ -667,7 +675,7 @@ export function SimulationApp() {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [companyId, plan, phase, runStatus]);
+  }, [companyId, plan, phase, runStatus, readOnly]);
 
   /* ── derived readings (pure functions of the server's result) ─── */
 
