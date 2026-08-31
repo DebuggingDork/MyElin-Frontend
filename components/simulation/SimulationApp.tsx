@@ -1791,7 +1791,7 @@ export function SimulationApp() {
                 className={cn(
                   "border px-3 py-1 text-xs uppercase tracking-widest transition-colors",
                   reviewQuarter === null
-                    ? "border-ink bg-ink text-white"
+                    ? "border-danger/40 bg-danger/15 text-danger-soft"
                     : "border-line-2 text-dim hover:border-ink/40 hover:text-ink",
                 )}
               >
@@ -1807,7 +1807,7 @@ export function SimulationApp() {
                     className={cn(
                       "border px-3 py-1 text-xs uppercase tracking-widest transition-colors",
                       reviewQuarter === q
-                        ? "border-ink bg-ink text-white"
+                        ? "border-danger/40 bg-danger/15 text-danger-soft"
                         : "border-line-2 text-dim hover:border-ink/40 hover:text-ink",
                     )}
                   >
