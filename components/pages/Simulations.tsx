@@ -388,6 +388,7 @@ export function Simulations() {
 function ScenarioCard({ scenario, delay }: { scenario: Scenario; delay: number }) {
   const simulationHref = useSimulationHref();
   const isLive = scenario.status === "LIVE";
+  const isBeta = scenario.status === "BETA";
 
   return (
     <motion.article
@@ -404,6 +405,8 @@ function ScenarioCard({ scenario, delay }: { scenario: Scenario; delay: number }
         <span className="num text-[11px] text-faint">{scenario.index}</span>
         <span className={cn("tick-label flex items-center gap-2", statusTone[scenario.status])}>
           {isLive && <span className="live-dot h-1.5 w-1.5 rounded-full bg-teal" />}
+          {isBeta && <span className="h-1.5 w-1.5 rounded-full bg-ember" />}
+          {!isLive && !isBeta && <span className="h-1.5 w-1.5 rounded-full bg-faint" />}
           {scenario.status}
         </span>
       </div>
