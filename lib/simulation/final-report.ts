@@ -18,6 +18,7 @@ import type {
   TermSheet,
   TermSheetOffer,
 } from "@/lib/simulation/types";
+import type { QuarterScore as RemoteQuarterScore } from "@/lib/simulation/remote";
 
 const BUFFER = 30_00_000; // ₹30 lakhs working capital buffer
 
@@ -287,7 +288,7 @@ export function buildTermSheet(
  */
 export function buildFinalReport(
   history: QuarterResultShape[],
-  scores: QuarterScore[],
+  scores: RemoteQuarterScore[],
   state: CompanyState,
   endgameOutcome?: EndgameOutcome,
   termSheet?: TermSheet
@@ -308,12 +309,27 @@ export function buildFinalReport(
     tierReason = result.reason;
   }
 
+  // Map remote scores to internal format
+  const mappedScores: QuarterScore[] = scores.map((s) => ({
+    traits: s.traits.map((t) => ({
+      name: t.name,
+      weight: t.weight,
+      subs: [],
+      points: 0,
+    })),
+    traitTotal: s.traitTotal,
+    mods: s.modifiers.map((m) => ({ d: m.points, why: m.why })),
+    modTotal: s.modifierTotal,
+    final: s.final,
+    band: s.band,
+  }));
+
   // Aggregate all trait scores and modifiers
-  const allTraits = scores.flatMap((s) => s.traits);
-  const allMods = scores.flatMap((s) => s.mods);
+  const allTraits = mappedScores.flatMap((s) => s.traits);
+  const allMods = mappedScores.flatMap((s) => s.mods);
 
   // Calculate final score from last quarter or all quarters
-  const lastScore = scores[scores.length - 1];
+  const lastScore = mappedScores[mappedScores.length - 1];
   const traitTotal = lastScore?.traitTotal || 0;
   const modTotal = lastScore?.modTotal || 0;
   const finalScore = lastScore?.final || 0;
@@ -352,7 +368,7 @@ export function buildFinalReport(
     totalProfit,
     finalCash,
     finalMarketShare,
-    quarterScores: scores,
+    quarterScores: mappedScores,
     endgameOutcome,
     termSheet,
     gameOver,
