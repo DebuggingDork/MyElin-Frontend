@@ -380,6 +380,10 @@ export function SimulationApp() {
   const [rewindModalOpen, setRewindModalOpen] = useState(false);
   const [rewindBusy, setRewindBusy] = useState(false);
   const rewindSFX = useRewindSFX();
+  // Stable ref so handleRewind (a useCallback) can call start/stop without
+  // listing rewindSFX in its dependency array (the object changes every render).
+  const rewindSFXRef = useRef(rewindSFX);
+  rewindSFXRef.current = rewindSFX;
   /**
    * Set to a quarter number while the 3-second preloader is running, null otherwise.
    * Drives the RewindPreloader overlay; the actual API call fires when the preloader
@@ -751,9 +755,9 @@ export function SimulationApp() {
     // Start SFX here — synchronously inside the click handler (user-gesture task),
     // before React re-renders. This is the earliest possible moment and avoids the
     // post-paint delay that useEffect inside the preloader would cause.
-    rewindSFX.start();
+    rewindSFXRef.current.start();
     setRewindTargetQuarter(targetQuarter);
-  }, [rewindBusy, rewindSFX]);
+  }, [rewindBusy]);
 
   /**
    * Phase 2 — called by RewindPreloader exactly once, after its 3-second countdown.
@@ -777,7 +781,7 @@ export function SimulationApp() {
     } catch (err) {
       // Stop audio immediately if the API call fails — the preloader is gone but the
       // sound could still be mid-loop since onStop wasn't called via the normal path.
-      rewindSFX.stop();
+      rewindSFXRef.current.stop();
       setError(
         err instanceof ApiError
           ? (err.body as { reason?: string })?.reason ?? err.message
@@ -1289,7 +1293,7 @@ export function SimulationApp() {
           {rewindTargetQuarter !== null && (
             <RewindPreloader
               targetQuarter={rewindTargetQuarter}
-              onStop={rewindSFX.stop}
+              onStop={() => rewindSFXRef.current.stop()}
               onComplete={() => void executeRewind(rewindTargetQuarter)}
             />
           )}

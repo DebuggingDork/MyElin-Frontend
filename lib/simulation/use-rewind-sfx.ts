@@ -1,23 +1,17 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { soundEnabled } from "@/lib/sound";
 
 /**
  * Rewind sound effect hook.
  *
- * The Audio element is created eagerly at hook mount so it is fully allocated
- * and ready before start() is ever called — no lazy-creation delay at the
- * moment the user confirms the rewind.
+ * start() is fully self-contained — it creates the Audio element on demand and
+ * plays immediately. This means it works correctly whether called from a
+ * synchronous click handler (before any useEffect has run) or from inside a
+ * React effect. No ref-initialization race, no useEffect dependency.
  *
- * start() and stop() are exposed as stable refs so they can be called from
- * anywhere — including directly from a click handler in SimulationApp —
- * without needing to be listed in useCallback dependency arrays.
- *
- * loop: true  — the clip is ~2 s; looping covers the full 3-second countdown
- *               without gaps or silence at the end.
- *
- * Cleanup: a useEffect return always calls stop() on unmount.
+ * loop: true so the ~2 s clip covers the full 3-second countdown without gaps.
  * All playback failures are swallowed — the rewind must never depend on audio.
  */
 
@@ -30,61 +24,36 @@ const VOLUME = 0.5;
 export function useRewindSFX() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Create the element if it doesn't already exist. This runs eagerly at mount to preload
-  // so the first rewind starts instantly, AND as a fallback inside start() in case a gesture
-  // fires before the mount effect has run (making the first playback more reliable).
-  const ensureAudio = () => {
+  function getOrCreate(): HTMLAudioElement | null {
     if (typeof window === "undefined") return null;
-    if (audioRef.current) return audioRef.current;
-    const el = new Audio(REWIND_SFX_URL);
-    el.loop = true;
-    el.volume = VOLUME;
-    el.preload = "auto";
-    audioRef.current = el;
-    return el;
-  };
+    if (!audioRef.current) {
+      const el = new Audio(REWIND_SFX_URL);
+      el.loop = true;
+      el.volume = VOLUME;
+      el.preload = "auto";
+      audioRef.current = el;
+    }
+    return audioRef.current;
+  }
 
-  // Stable function refs so callers (including SimulationApp's handleRewind)
-  // can call start/stop without stale-closure issues.
-  const startRef = useRef<() => void>(() => {});
-  const stopRef  = useRef<() => void>(() => {});
-
-  useEffect(() => {
-    // Eagerly allocate the element at mount — zero allocation cost when start() fires.
-    const el = ensureAudio();
+  function start() {
+    if (!soundEnabled()) return;
+    const el = getOrCreate();
     if (!el) return;
+    try {
+      el.currentTime = 0;
+      void el.play().catch(() => {});
+    } catch { /* never break the rewind */ }
+  }
 
-    startRef.current = () => {
-      if (!soundEnabled()) return;
-      // Start/stop must survive across renders, so they re-ensure the element each call
-      // rather than closing over the mount-time one.
-      const target = ensureAudio();
-      if (!target) return;
-      try {
-        target.currentTime = 0;
-        void target.play().catch(() => {});
-      } catch { /* never break the rewind */ }
-    };
-
-    stopRef.current = () => {
-      const target = audioRef.current;
-      if (!target) return;
-      try {
-        target.pause();
-        target.currentTime = 0;
-      } catch { /* element may be GC'd on fast unmount */ }
-    };
-
-    return () => {
-      stopRef.current();
-      audioRef.current = null;
-    };
-  }, []);
-
-  // start / stop are thin wrappers that always delegate to the current ref —
-  // safe to call at any time, including synchronously from a click handler.
-  const start = () => startRef.current();
-  const stop  = () => stopRef.current();
+  function stop() {
+    const el = audioRef.current;
+    if (!el) return;
+    try {
+      el.pause();
+      el.currentTime = 0;
+    } catch { /* element may be GC'd on fast unmount */ }
+  }
 
   return { start, stop };
 }
