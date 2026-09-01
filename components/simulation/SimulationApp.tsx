@@ -902,8 +902,15 @@ export function SimulationApp() {
         // it is the server that decides that, so the client has to ask.
         const run = await loadRun();
         resetPlan(run.state);
-        setPhase("briefing");
-        setTab("dashboard");
+        
+        // Path C means "stay independent" - run ends without Q4
+        if (path === "C") {
+          setPhase("final");
+        } else {
+          // Paths A & B continue to Q4
+          setPhase("briefing");
+          setTab("dashboard");
+        }
         // Timer continues running across quarters - don't reset
         setWorking(null);
       } catch (err) {
