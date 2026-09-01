@@ -23,7 +23,7 @@ const faqs: FaqItem[] = [
     a: [
       "No. Myelin is not an LMS. An LMS is primarily designed to deliver and organize learning content—courses, lectures, videos, assignments, quizzes, and assessments. Myelin is designed around decision practice.",
       "There are no chapters to complete before you can act. The learner enters a situation, receives information, makes decisions, allocates resources, and sees the simulated environment respond.",
-      "The important difference is the learning loop: Situation → Decision → Consequence → New Information → Adaptation → Reflection. A student does not simply answer: "What is the correct management decision?" They have to make the decision and then deal with what that decision creates.",
+      "The important difference is the learning loop: Situation → Decision → Consequence → New Information → Adaptation → Reflection. A student does not simply answer: \"What is the correct management decision?\" They have to make the decision and then deal with what that decision creates.",
       "Myelin can therefore complement an LMS rather than replace it. A university can use its existing LMS for curriculum, content, assignments, and administration, while using Myelin for experiential decision practice and simulation-based assessment.",
     ],
     topic: "Product",
@@ -31,7 +31,7 @@ const faqs: FaqItem[] = [
   {
     q: "How is my decision graded?",
     a: [
-      "Myelin does not grade you simply on whether you "won." The simulation records the decisions you make throughout the experience and evaluates them against the situation, information available at the time, constraints, trade-offs, and consequences.",
+      "Myelin does not grade you simply on whether you \"won.\" The simulation records the decisions you make throughout the experience and evaluates them against the situation, information available at the time, constraints, trade-offs, and consequences.",
       "The current Myelin framework evaluates seven dimensions: Strategic Thinking, Capital Allocation, Risk Management, Systems Thinking, Leadership & People Management, Adaptability, and Long-Term Value Creation.",
       "A strong outcome alone does not automatically mean a strong decision. A student can make a sensible decision and still experience a poor external outcome. Conversely, a poor decision can occasionally produce a good outcome. That distinction matters because Myelin is designed to evaluate judgment, not luck.",
       "The final report therefore combines the student's overall performance with their decision history, quarter-by-quarter outcomes, strengths, mistakes, missed opportunities, and recurring patterns.",
@@ -62,7 +62,7 @@ const faqs: FaqItem[] = [
       "The Decision Intelligence Report is not intended to replace a résumé, interview, degree, or professional experience. Its purpose is to provide an additional source of evidence about how a person approaches decisions in simulated situations.",
       "A conventional résumé tells an employer what someone has done. A simulation can provide evidence about how that person behaves when they have to: make trade-offs, operate with incomplete information, manage risk, allocate limited resources, respond to changing conditions, and adapt when their assumptions prove wrong.",
       "The report can summarize these patterns across the simulation and present the evidence in a structured format. For universities, the same report can be used for learning feedback and development, rather than recruitment alone.",
-      "The important boundary is that Myelin should not claim: "This report proves how you will perform at work." Instead: "This report provides structured evidence of how you made decisions in the simulation." That distinction keeps the report credible.",
+      "The important boundary is that Myelin should not claim: \"This report proves how you will perform at work.\" Instead: \"This report provides structured evidence of how you made decisions in the simulation.\" That distinction keeps the report credible.",
     ],
     topic: "Reports",
   },
