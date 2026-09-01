@@ -35,6 +35,7 @@ import { Bar, Eyebrow, LedgerRow, Panel, Stat } from "@/components/simulation/Ki
 import { QuarterCharts } from "@/components/simulation/QuarterCharts";
 import { BalanceSheetDoc } from "@/components/simulation/BalanceSheetDoc";
 import { FinalReportPdfExport } from "@/components/simulation/FinalReportPdfExport";
+import { BAND_STYLES, buildFinalReport, calculateTier } from "@/lib/simulation/final-report";
 import type { QuarterScore } from "@/lib/simulation/remote";
 import type {
   CompanyState,
@@ -85,10 +86,50 @@ export function FinalScreen({
   const timeline = decisionTimeline(history, priorities);
   const sold = Boolean(eg && eg.path === "B");
 
+  // Build final report with tier classification
+  const finalReport = history.length >= 3 
+    ? buildFinalReport(history, scores, s, eg as any, ts || undefined)
+    : null;
+
+  const tierInfo = history.length >= 3 && history[0] && history[1] && history[2]
+    ? calculateTier(history[0], history[1], history[2], s)
+    : null;
+
   
 
   return (
     <div className="space-y-6">
+      {/* Year-End Scorecard Header with Tier Classification */}
+      {finalReport && tierInfo && (
+        <div className="bg-stone-900 text-white p-6 border-t-4 border-t-amber-500">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <Eyebrow tone="text-amber-400">Year-End Scorecard · Company Classification</Eyebrow>
+              <div className="flex flex-wrap items-baseline gap-4 mt-2">
+                <h2 className="font-serif text-4xl">{tierInfo.tier}</h2>
+                <div className={`inline-block px-4 py-2 font-serif text-xl ${BAND_STYLES[finalReport.ceoBand]}`}>
+                  CEO Rating: {finalReport.ceoBand}
+                </div>
+              </div>
+              <p className="text-sm text-stone-300 mt-3 max-w-3xl leading-relaxed">
+                {tierInfo.reason}
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 text-right">
+              <div>
+                <div className="text-xs uppercase tracking-widest text-stone-400">Final Score</div>
+                <div className="font-mono text-3xl font-bold text-amber-400">{n1(finalReport.finalScore)}</div>
+              </div>
+              <div>
+                <div className="text-xs text-stone-400">Valuation</div>
+                <div className="font-mono text-xl text-stone-200">{cr(finalReport.finalValuation)}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Original CEO Performance Report Header */}
       <div className="bg-chrome text-white p-6">
         <Eyebrow tone="text-danger-soft">CEO performance report</Eyebrow>
         <h2 className="font-serif text-4xl mt-1">
@@ -144,6 +185,90 @@ export function FinalScreen({
           />
         </div>
       </Panel>
+
+      {/* Comprehensive Year-End Summary */}
+      {finalReport && (
+        <Panel eyebrow="Full-Year Performance" title="Twelve months of Nadi Wear">
+          <div className="grid items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <Stat 
+              label="Total units sold" 
+              value={n0(finalReport.totalUnitsSold)} 
+              sub="all quarters combined"
+            />
+            <Stat 
+              label="Total revenue" 
+              value={cr(finalReport.totalRevenue)} 
+              sub="cumulative"
+            />
+            <Stat 
+              label="Total net profit" 
+              value={cr(finalReport.totalProfit)} 
+              tone={TONE_TEXT[finalReport.totalProfit >= 0 ? "good" : "bad"]}
+              sub={finalReport.totalProfit >= 0 ? "profitable year" : "loss-making year"}
+            />
+            <Stat 
+              label="Final cash position" 
+              value={inr(finalReport.finalCash)} 
+              tone={TONE_TEXT[finalReport.finalCash < BUFFER ? "bad" : "good"]}
+              sub={finalReport.finalCash >= BUFFER ? "above buffer" : "below buffer"}
+            />
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <div className="border border-stone-200 p-3">
+              <div className="text-xs uppercase tracking-widest text-stone-500">Trait Score</div>
+              <div className="font-mono text-2xl text-stone-900 mt-1">{n1(finalReport.traitTotal)}</div>
+              <div className="text-xs text-stone-600 mt-1">Base performance</div>
+            </div>
+            <div className="border border-stone-200 p-3">
+              <div className="text-xs uppercase tracking-widest text-stone-500">Modifiers</div>
+              <div className={`font-mono text-2xl mt-1 ${finalReport.modTotal >= 0 ? 'text-teal-700' : 'text-rose-700'}`}>
+                {finalReport.modTotal >= 0 ? '+' : ''}{n1(finalReport.modTotal)}
+              </div>
+              <div className="text-xs text-stone-600 mt-1">{finalReport.mods.length} adjustments</div>
+            </div>
+            <div className="border border-amber-200 bg-amber-50 p-3">
+              <div className="text-xs uppercase tracking-widest text-amber-700">Final CEO Score</div>
+              <div className="font-mono text-2xl text-amber-900 mt-1 font-bold">{n1(finalReport.finalScore)}</div>
+              <div className={`text-sm font-semibold mt-1 ${finalReport.ceoBand === 'Exceptional' ? 'text-emerald-700' : finalReport.ceoBand === 'Strong' ? 'text-teal-700' : finalReport.ceoBand === 'Competent' ? 'text-amber-700' : 'text-rose-700'}`}>
+                {finalReport.ceoBand}
+              </div>
+            </div>
+          </div>
+        </Panel>
+      )}
+
+      {/* Scoring Modifiers Breakdown */}
+      {finalReport && finalReport.mods.length > 0 && (
+        <Panel eyebrow="Performance Adjustments" title="What moved your score">
+          <div className="space-y-2">
+            {finalReport.mods
+              .sort((a, b) => Math.abs(b.d) - Math.abs(a.d))
+              .slice(0, 10)
+              .map((mod, i) => (
+                <div 
+                  key={i} 
+                  className={`flex items-start justify-between gap-4 p-3 border-l-4 ${
+                    mod.d > 0 
+                      ? 'border-teal-500 bg-teal-50' 
+                      : 'border-rose-500 bg-rose-50'
+                  }`}
+                >
+                  <p className="text-sm text-stone-900 flex-1">{formatDisplayText(mod.why)}</p>
+                  <div className={`font-mono text-lg font-semibold shrink-0 ${
+                    mod.d > 0 ? 'text-teal-700' : 'text-rose-700'
+                  }`}>
+                    {mod.d > 0 ? '+' : ''}{n1(mod.d)}
+                  </div>
+                </div>
+              ))}
+            {finalReport.mods.length > 10 && (
+              <p className="text-xs text-stone-500 text-center pt-2">
+                Showing top 10 of {finalReport.mods.length} total modifiers
+              </p>
+            )}
+          </div>
+        </Panel>
+      )}
 
       <QuarterCharts history={history} />
 
