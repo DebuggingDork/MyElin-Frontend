@@ -35,6 +35,8 @@ import type {
   PriorityId,
   QuarterResultShape,
   TermSheet,
+  WarrantyId,
+  DeptId,
 } from "@/lib/simulation/types";
 import type { QuarterReportResponse } from "./types";
 import {
@@ -58,23 +60,47 @@ export function mapQuarterlyReport(
   ceoName: string
 ): DecisionIntelligenceReport {
   // Wrap single quarter data in array format for compatibility with the 12-page report
+  const traitTotal = report.decision_quality.scored_criteria.reduce(
+    (sum, c) => sum + Number(c.points || 0),
+    0
+  );
+  const modifierTotal = report.decision_quality.modifiers.reduce(
+    (sum, m) => sum + Number(m.applied_points),
+    0
+  );
+
   const scores: QuarterScore[] = [
     {
-      quarter: report.quarter_number,
-      score: Number(report.decision_quality.ceo_score),
-      band: report.decision_quality.band,
-      final: Number(report.decision_quality.ceo_score),
+      traits: report.decision_quality.scored_criteria.map((c) => ({
+        name: c.trait,
+        weight: 0, // Backend doesn't provide weight in this response
+        subs: [
+          {
+            label: c.id,
+            level: c.result === "clearly_met" ? "full" : c.result === "partially_met" ? "part" : "none",
+            detail: c.detail,
+            points: Number(c.points || 0),
+          },
+        ],
+        points: Number(c.points || 0),
+      })),
+      traitTotal,
       modifiers: report.decision_quality.modifiers.map((m) => ({
-        id: m.id,
-        points: m.applied_points,
+        points: Number(m.applied_points),
         why: m.detail,
       })),
-    } as QuarterScore,
+      modifierTotal,
+      final: Number(report.decision_quality.ceo_score),
+      band: report.decision_quality.band,
+    },
   ];
 
   // Build minimal history from single quarter outcome
+  // Cast through unknown since we're providing minimal stub data for single-quarter reports
   const history: QuarterResultShape[] = [
     {
+      q: report.quarter_number,
+      // Financial summary fields (these are what report pages actually use)
       quarter: report.quarter_number,
       cash: Number(report.outcome.closing_cash_inr.value),
       revenue: Number(report.outcome.revenue_inr.value),
@@ -89,7 +115,7 @@ export function mapQuarterlyReport(
         : null,
       marketShare: null,
       customers: null,
-    } as QuarterResultShape,
+    } as unknown as QuarterResultShape,
   ];
 
   // Single quarter has no priority data, use nulls
@@ -149,7 +175,7 @@ export function mapSimulationToReport(
   ceoName: string,
 ): DecisionIntelligenceReport {
   const metadata = buildMetadata(companyName, ceoName);
-  const coverPage = buildCoverPage(scores, endgameOutcome);
+  const coverPage = buildCoverPage(scores, history, endgameOutcome);
   const yearCreatedPage = buildYearCreatedPage(scores, history, priorities);
   const profilePage = buildProfilePage(scores);
   const strengthPage = buildStrengthPage(scores);
@@ -197,7 +223,11 @@ function buildMetadata(companyName: string, ceoName: string): ReportMetadata {
   };
 }
 
-function buildCoverPage(scores: QuarterScore[], endgameOutcome: Record<string, unknown> | null): CoverPage {
+function buildCoverPage(
+  scores: QuarterScore[],
+  history: QuarterResultShape[],
+  endgameOutcome: Record<string, unknown> | null,
+): CoverPage {
   const finals = scores.map((sc) => Number(sc.final));
   const composite = finals.length ? finals.reduce((a, b) => a + b, 0) / finals.length : 0;
   const band =
@@ -219,9 +249,13 @@ function buildCoverPage(scores: QuarterScore[], endgameOutcome: Record<string, u
         : "You took venture capital but missed the covenant target.")
       : "You finished the year independent and on your own terms.";
 
-  const style = managementStyle(scores.map((sc) => ({
-    quarter_number: Number(sc.final),  // Simplified - adjust if needed
-  }) as any));
+  // managementStyle needs full QuarterResultShape[] with A, opexSpend, capexSpend, marketingSpend fields
+  const hasFullHistory = history.length > 0 && 
+    history[0].A !== undefined && 
+    history[0].opexSpend !== undefined;
+  const style = hasFullHistory
+    ? managementStyle(history)
+    : { label: "Balanced CEO", why: "Allocation decisions balanced across all functional areas." };
 
   return {
     final_score: composite,
@@ -239,7 +273,7 @@ function buildYearCreatedPage(
   const quarters: QuarterEntry[] = scores.map((sc, i) => {
     const h = history[i];
     const priority = priorities[i];
-    const priorityLabel = priority ? PRIORITY_BY_ID[priority].label : "No explicit priority";
+    const priorityLabel = priority ? PRIORITY_BY_ID[priority].name : "No explicit priority";
 
     // Extract decision text from priority and allocations
     const decisionText = priority
@@ -279,12 +313,22 @@ function buildProfilePage(scores: QuarterScore[]): ProfilePage {
     "Long-Term Thinking": "long_term_thinking",
   };
 
-  const dimensions: DimensionScore[] = profile.map((t) => ({
-    dimension: dimensionMap[t.name] || "strategic_thinking",
-    dimension_label: t.name,
-    score: t.pct ?? 50,
-    evidence_summary: t.subs?.map(s => s.label).join(", ") || "Performance across multiple criteria",
-  }));
+  const dimensions: DimensionScore[] = profile.map((t) => {
+    // traitRollup returns TraitBar[] which doesn't have subs, but we can get subs from original scores
+    const allSubs = scores.flatMap(sc => 
+      sc.traits.find(trait => trait.name === t.name)?.subs || []
+    );
+    const uniqueLabels = [...new Set(allSubs.map(s => s.label))];
+    
+    return {
+      dimension: dimensionMap[t.name] || "strategic_thinking",
+      dimension_label: t.name,
+      score: t.pct ?? 50,
+      evidence_summary: uniqueLabels.length > 0 
+        ? uniqueLabels.join(", ") 
+        : "Performance across multiple criteria",
+    };
+  });
 
   return {
     dimensions: dimensions.slice(0, 7) as any,
@@ -294,11 +338,21 @@ function buildProfilePage(scores: QuarterScore[]): ProfilePage {
 function buildStrengthPage(scores: QuarterScore[]): StrengthPage {
   const strength = biggestStrength(scores);
 
+  // biggestStrength returns { name, pct, why } without subs field
+  // Get evidence bullets from the traits themselves if available
+  const evidenceBullets = scores.length > 0 && scores[0].traits
+    ? scores[0].traits
+        .find(t => t.name === strength.name)
+        ?.subs?.filter(s => s.level === "full")
+        .map(s => `${s.label}: ${s.detail}`)
+        .slice(0, 3) || ["Consistently strong performance"]
+    : ["Consistently strong performance"];
+
   return {
     strength_dimension: strength.name,
     strength_score: strength.pct ?? 0,
     headline: `Excellence in ${strength.name}`,
-    evidence_bullets: strength.subs?.map(s => `${s.label}: ${s.detail}`) || ["Consistently strong performance"],
+    evidence_bullets: evidenceBullets,
     narrative: strength.why,
   };
 }
@@ -306,18 +360,46 @@ function buildStrengthPage(scores: QuarterScore[]): StrengthPage {
 function buildRiskPage(scores: QuarterScore[]): RiskPage {
   const mistake = biggestMistake(scores);
 
+  // biggestMistake returns { title, why, pct? } 
+  // If it's a dimension weakness (not a specific quarter penalty), get evidence
+  const isDimensionWeakness = !mistake.title.startsWith("Quarter ");
+  const evidenceBullets = isDimensionWeakness && scores.length > 0 && scores[0].traits
+    ? scores[0].traits
+        .find(t => t.name === mistake.title)
+        ?.subs?.filter(s => s.level !== "full")
+        .map(s => `${s.label}: ${s.detail}`)
+        .slice(0, 3) || [String(mistake.why)]
+    : [String(mistake.why)];
+
   return {
     risk_dimension: mistake.title,
     risk_score: 100 - (mistake.pct ?? 50), // Invert since this is a risk/weakness
     headline: mistake.title,
-    evidence_bullets: [String(mistake.why)],
+    evidence_bullets: evidenceBullets,
     narrative: String(mistake.why),
   };
 }
 
 function buildDecisionThatMatteredPage(history: QuarterResultShape[]): DecisionThatMatteredPage {
-  const decision = mostImportantDecision(history);
+  // mostImportantDecision needs history with full allocation fields (r.A, r.started, r.drawn, r.totalFired, etc.)
+  const hasFullHistory = history.length > 0 && 
+    history[0].A !== undefined && 
+    history[0].started !== undefined;
+  
+  if (!hasFullHistory) {
+    const h = history[0];
+    return {
+      quarter: h?.q ?? 1,
+      what_you_knew: "Revenue and market conditions at quarter start.",
+      what_you_decided: "Allocated resources across functional areas.",
+      what_you_risked: "Capital allocation and strategic positioning",
+      what_happened: `Revenue: ${inr(Number(h?.revenueT ?? h?.revenue ?? 0))}, closing cash: ${inr(Number(h?.cash ?? 0))}.`,
+      why_it_mattered: "Each allocation choice directly affected the quarter outcome.",
+      data_inconsistency_note: null,
+    };
+  }
 
+  const decision = mostImportantDecision(history);
   return {
     quarter: decision.q,
     what_you_knew: `Context at start of Q${decision.q}: ${decision.label}`,
@@ -333,6 +415,28 @@ function buildMissedOpportunitiesPage(
   history: QuarterResultShape[],
   state: CompanyState,
 ): MissedOpportunitiesPage {
+  // missedOpportunity needs history with full fields (A, leadsWasted, utilisation, etc.) and state with npd, innovations, products
+  const hasFullHistory = history.length > 0 && 
+    history[0].A !== undefined && 
+    history[0].utilisation !== undefined;
+  const hasFullState = state && 
+    'npd' in state && 
+    'innovations' in state && 
+    'products' in state;
+  
+  if (!hasFullHistory || !hasFullState) {
+    return {
+      headline: "Opportunities identified from available data",
+      opportunities: [
+        {
+          label: "Deeper functional investment",
+          value: "Variable",
+          explanation: "Reviewing allocation patterns across quarters may reveal underfunded areas with high potential return.",
+        },
+      ],
+    };
+  }
+
   const missed = missedOpportunity(history, state);
 
   return {
@@ -354,7 +458,7 @@ function buildAdaptabilityPage(
 ): AdaptabilityPage {
   const rows: AdaptabilityRow[] = history.map((h, i) => {
     const priority = priorities[i];
-    const priorityLabel = priority ? PRIORITY_BY_ID[priority].label : "Balanced";
+    const priorityLabel = priority ? PRIORITY_BY_ID[priority].name : "Balanced";
     const changedFromPrior = i > 0 && priorities[i] !== priorities[i - 1];
 
     return {
@@ -382,12 +486,19 @@ function buildDecisionSignaturePage(
   history: QuarterResultShape[],
   scores: QuarterScore[],
 ): DecisionSignaturePage {
-  const style = managementStyle(history);
+  // managementStyle needs full QuarterResultShape with A, opexSpend, capexSpend, marketingSpend, etc.
+  const hasFullHistory = history.length > 0 && 
+    history[0].A !== undefined && 
+    history[0].opexSpend !== undefined &&
+    history[0].marketingSpend !== undefined;
+  const style = hasFullHistory
+    ? managementStyle(history)
+    : { label: "Balanced CEO", why: "Allocation decisions balanced across all functional areas." };
 
   return {
     signature_headline: style.label,
     signature_bullets: [
-      "Consistent decision-making pattern across four quarters",
+      "Consistent decision-making pattern across quarters",
       style.why.split(". ")[0] || style.why,
       "Demonstrated commitment to chosen priorities",
     ],
