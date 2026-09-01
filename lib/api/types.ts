@@ -443,18 +443,32 @@ export type EndgameDecisionResponse = {
   reasoning: string | null;
 };
 
+/** One row in the cross-user simulation leaderboard. Mirrors LeaderboardEntrySchema. */
 export type LeaderboardEntry = {
-  company_id: string;
-  quarter_id: string;
-  quarter_number: number;
-  /** Same number `score_trajectory` and `decision_quality.ceo_score` carry. Only quarters that
-   *  have locked appear at all -- an open quarter is absent, not present with a null score. */
-  ceo_score: Money | null;
-  band: string | null;
+  rank: number;
+  user_id: string;
+  /** first_name when set, otherwise the local-part of the email. */
+  user_name: string | null;
+  company_name: string;
+  /** Best per-quarter CEO score (same value as composite_score in the current engine). */
+  ceo_score: Money;
+  /** SimulationScore.final — normalised 0–100, identical to ceo_score today. */
+  composite_score: Money;
+  band: string;
+  /** Company valuation at quarter close (Rs). Null when the engine did not produce one. */
+  valuation_inr: Money | null;
+  /** Net profit/(loss) for that quarter (Rs). Null when absent. */
+  net_profit_inr: Money | null;
+  is_current_user: boolean;
 };
 
 export type LeaderboardResponse = {
-  entries: LeaderboardEntry[];
+  scenario_id: string;
+  total_entries: number;
+  /** Top-3 entries by composite_score, ties broken by valuation_inr desc. */
+  top_entries: LeaderboardEntry[];
+  /** Requesting user's own entry; null if they have no scored run in this scenario. */
+  current_user_entry: LeaderboardEntry | null;
 };
 
 export type QuarterReportPdfResponse = {
