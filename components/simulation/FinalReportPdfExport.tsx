@@ -3,8 +3,7 @@
 import { useState, useSyncExternalStore } from "react";
 import { Check, Download, ExternalLink, Loader2 } from "lucide-react";
 import { api } from "@/lib/api/client";
-// TODO: Migrate to backend PDF generation - see backend/docs/pdf-migration.md
-// import { buildSimulationReportPdf } from "@/lib/pdf/report-pdf-sim";
+import { mapSimulationToReport } from "@/lib/api/report-mapper";
 import { useRun } from "@/components/run/RunProvider";
 import { useAuth } from "@/components/auth/AuthProvider";
 import {
@@ -53,24 +52,17 @@ export function FinalReportPdfExport({
   async function handleDownload() {
     setStatus("working");
     setError(null);
-    
-    // TODO: Migrate to backend PDF generation
-    // See backend/docs/pdf-migration.md for implementation guide
-    // New endpoint: POST /reports/decision-intelligence/pdf
-    setError("PDF generation temporarily disabled during migration to backend");
-    setStatus("error");
-    
-    /* OLD CODE - TO BE REPLACED:
+
     try {
-      const ceoName = user
-        ? displayName(profile, user.email)
-        : "CEO";
+      const ceoName = user ? displayName(profile, user.email) : "CEO";
 
       // Clean company name - remove any email/username suffix after separator
       const rawCompanyName = company?.name ?? "Myelin";
-      const cleanCompanyName = rawCompanyName.split(" · ")[0]?.trim() || rawCompanyName;
+      const cleanCompanyName =
+        rawCompanyName.split(" · ")[0]?.trim() || rawCompanyName;
 
-      const blob = buildSimulationReportPdf(
+      // Map simulation data to backend report schema
+      const reportData = mapSimulationToReport(
         scores,
         history,
         priorities,
@@ -81,7 +73,10 @@ export function FinalReportPdfExport({
         ceoName,
       );
 
-      // Download always works (local only)
+      // Generate PDF via backend API
+      const blob = await api.generateDecisionIntelligencePdf(reportData);
+
+      // Download the PDF
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -100,11 +95,11 @@ export function FinalReportPdfExport({
       }
 
       setStatus("done");
-    } catch {
+    } catch (err) {
       setError("Could not generate the PDF");
       setStatus("error");
+      console.error("PDF generation failed:", err);
     }
-    */
   }
 
   return (
