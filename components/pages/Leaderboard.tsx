@@ -105,6 +105,7 @@ export function Leaderboard() {
     return [...grouped.entries()]
       .map(([scenarioId, group]) => ({
         scenarioId,
+        // Sort descending by composite score (latest_ceo_score == composite_score in current engine)
         runs: [...group].sort(
           (a, b) => asNumber(b.latest_ceo_score) - asNumber(a.latest_ceo_score),
         ),
@@ -148,6 +149,19 @@ export function Leaderboard() {
           )}
 
           {user && loading && <InlineLoading label="Loading standings…" sub="Reading every run on the board." />}
+
+          {/* Show auth wall instead of raw API error for 401 */}
+          {!user && error && (
+            <Panel className="p-8 text-center">
+              <p className="text-[15px] text-dim">
+                Please log in to see your standings.
+              </p>
+              <div className="mt-5 flex justify-center gap-3">
+                <Action href="/login?next=/leaderboard">Log in</Action>
+                <Action href="/simulations" variant="outline">Simulations</Action>
+              </div>
+            </Panel>
+          )}
 
           {user && error && (
             <p className="rounded-xl border border-rose/30 bg-rose/[0.07] px-4 py-3 text-[13px] text-rose">
@@ -201,7 +215,7 @@ function StorylineBoard({ storyline, index }: { storyline: Storyline; index: num
         <p className="num text-[12px] text-faint">
           {storyline.runs.length} run{storyline.runs.length === 1 ? "" : "s"}
           {best?.latest_ceo_score != null && (
-            <> · best {asNumber(best.latest_ceo_score).toFixed(1)}</>
+            <> · best score {asNumber(best.latest_ceo_score).toFixed(1)}</>
           )}
         </p>
       </div>
@@ -212,7 +226,7 @@ function StorylineBoard({ storyline, index }: { storyline: Storyline; index: num
           <span>Run</span>
           <span className="hidden sm:block">Progress</span>
           <span>Status</span>
-          <span className="text-right">Score</span>
+          <span className="text-right">Composite Score</span>
         </div>
         {storyline.runs.map((run, i) => (
           <RunRow key={run.id} run={run} rank={i} />
@@ -293,6 +307,7 @@ function RunRow({ run, rank }: { run: CompanyListItem; rank: number }) {
         <span className="num text-right text-[15px] font-semibold text-ink">
           {run.latest_ceo_score != null ? asNumber(run.latest_ceo_score).toFixed(1) : "—"}
         </span>
+        {/* Note: latest_ceo_score == composite_score in the current engine (SimulationScore.final) */}
       </button>
 
       {open && (

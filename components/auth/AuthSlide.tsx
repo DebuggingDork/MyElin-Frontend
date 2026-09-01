@@ -94,6 +94,19 @@ export function AuthSlide({ initialMode }: { initialMode: Mode }) {
         setError(
           "Too many attempts right now. Wait a minute and try again — if you already registered, log in instead.",
         );
+      } else if (
+        mode === "signup" &&
+        err instanceof ApiError &&
+        (err.message?.toLowerCase().includes("already registered") ||
+          err.message?.toLowerCase().includes("already been registered") ||
+          err.message?.toLowerCase().includes("email address already") ||
+          err.message?.toLowerCase().includes("user already exists") ||
+          (err.body as Record<string, unknown>)?.error === "user_already_exists")
+      ) {
+        // This email is taken. Guide them to login rather than showing a raw API message.
+        setError(
+          "That email is already registered. Log in instead, or use a different email address.",
+        );
       } else {
         setError(
           err instanceof ApiError

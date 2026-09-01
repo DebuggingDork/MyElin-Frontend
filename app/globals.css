@@ -61,7 +61,10 @@
      chrome. Both now resolve to ember so a warning actually looks like one. */
   --amber: var(--ember);
   --orange: var(--ember-soft);
-  --rose: #e8eef0;
+  /* rose = soft pink-red for error text/borders on dark surfaces.
+     The old value (#e8eef0, near-white) made error banners unreadable –
+     bg-rose/[0.07] was a barely-tinted white wash with no visible colour. */
+  --rose: #fda4af;
   --pink: #8fdada;
 
   /* Real red — deliberately not folded into ember. Reserved for states ember/--rose can't
@@ -657,6 +660,62 @@ body {
 .dept-trigger {
   animation: dept-trigger-in 180ms ease-out both;
 }
+/* ── loading primitives ─────────────────────────────────────── */
+
+/* Hairline arc spinner — used on buttons and inline waits */
+.myelin-spin {
+  animation: myelin-spin 900ms linear infinite;
+}
+@keyframes myelin-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Staggered dot indicator */
+.myelin-dot:nth-child(1) { animation: myelin-dot 1.1s ease-in-out 0ms infinite; }
+.myelin-dot:nth-child(2) { animation: myelin-dot 1.1s ease-in-out 160ms infinite; }
+.myelin-dot:nth-child(3) { animation: myelin-dot 1.1s ease-in-out 320ms infinite; }
+@keyframes myelin-dot {
+  0%, 80%, 100% { opacity: 0.25; transform: scale(0.75); }
+  40% { opacity: 1; transform: scale(1); }
+}
+
+/* Indeterminate progress rail */
+.myelin-rail {
+  animation: myelin-rail 1.6s ease-in-out infinite;
+}
+@keyframes myelin-rail {
+  0%   { left: -40%; width: 40%; }
+  60%  { left: 100%; width: 40%; }
+  100% { left: 100%; width: 40%; }
+}
+
+/* Logo glow — the Myelin glyph pulsing with a teal drop-shadow */
+.myelin-logo-glow {
+  animation: myelin-logo-glow 2s ease-in-out infinite;
+}
+@keyframes myelin-logo-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px rgba(36, 177, 177, 0.3))
+            drop-shadow(0 0 12px rgba(36, 177, 177, 0.15));
+    opacity: 0.75;
+  }
+  50% {
+    filter: drop-shadow(0 0 10px rgba(36, 177, 177, 0.7))
+            drop-shadow(0 0 28px rgba(36, 177, 177, 0.35))
+            drop-shadow(0 0 48px rgba(36, 177, 177, 0.15));
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .myelin-spin,
+  .myelin-dot,
+  .myelin-rail,
+  .myelin-logo-glow {
+    animation: none;
+  }
+}
+
 @keyframes dept-trigger-in {
   from {
     opacity: 0;

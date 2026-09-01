@@ -57,28 +57,63 @@ function bandColor(band: string) {
 // ── rank medal decorations ────────────────────────────────────────────────────
 
 const RANK_META = [
-  { icon: Crown, color: "text-amber-400", bg: "bg-amber-400/10 border-amber-400/30", size: "h-6 w-6" },
-  { icon: Medal, color: "text-zinc-400",  bg: "bg-zinc-400/10  border-zinc-400/30",  size: "h-5 w-5" },
-  { icon: Star,  color: "text-orange-400",bg: "bg-orange-400/10 border-orange-400/30",size: "h-5 w-5" },
+  {
+    icon: Crown,
+    color: "text-amber-400",
+    bg: "bg-amber-400/10 border-amber-400/30",
+    size: "h-6 w-6",
+  },
+  {
+    icon: Medal,
+    color: "text-zinc-400",
+    bg: "bg-zinc-400/10  border-zinc-400/30",
+    size: "h-5 w-5",
+  },
+  {
+    icon: Star,
+    color: "text-orange-400",
+    bg: "bg-orange-400/10 border-orange-400/30",
+    size: "h-5 w-5",
+  },
 ] as const;
 
 // ── sub-components ────────────────────────────────────────────────────────────
 
-function StatCell({ label, value, className }: { label: string; value: string; className?: string }) {
+function StatCell({
+  label,
+  value,
+  className,
+}: {
+  label: string;
+  value: string;
+  className?: string;
+}) {
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-[9.5px] uppercase tracking-widest text-faint">{label}</span>
-      <span className={cn("num text-[13px] font-semibold text-ink", className)}>{value}</span>
+      <span className="text-[9.5px] uppercase tracking-widest text-faint">
+        {label}
+      </span>
+      <span className={cn("num text-[13px] font-semibold text-ink", className)}>
+        {value}
+      </span>
     </div>
   );
 }
 
 /** The centre (1st) podium card is taller and more prominent. */
-function PodiumCard({ entry, position }: { entry: LeaderboardEntry; position: 0 | 1 | 2 }) {
+function PodiumCard({
+  entry,
+  position,
+}: {
+  entry: LeaderboardEntry;
+  position: 0 | 1 | 2;
+}) {
   const meta = RANK_META[position];
   const Icon = meta.icon;
   const isFirst = position === 0;
-  const netPositive = entry.net_profit_inr != null && parseFloat(String(entry.net_profit_inr)) >= 0;
+  const netPositive =
+    entry.net_profit_inr != null &&
+    parseFloat(String(entry.net_profit_inr)) >= 0;
 
   return (
     <motion.div
@@ -100,7 +135,12 @@ function PodiumCard({ entry, position }: { entry: LeaderboardEntry; position: 0 
       )}
 
       {/* rank icon */}
-      <span className={cn("mb-2 flex h-9 w-9 items-center justify-center rounded-full border", meta.bg)}>
+      <span
+        className={cn(
+          "mb-2 flex h-9 w-9 items-center justify-center rounded-full border",
+          meta.bg,
+        )}
+      >
         <Icon className={cn(meta.size, meta.color)} />
       </span>
 
@@ -113,22 +153,37 @@ function PodiumCard({ entry, position }: { entry: LeaderboardEntry; position: 0 
       <p className="mt-1 max-w-[130px] truncate text-[14px] font-semibold text-ink">
         {entry.user_name ?? "—"}
       </p>
-      <p className="max-w-[130px] truncate text-[11px] text-faint">{entry.company_name}</p>
+      <p className="max-w-[130px] truncate text-[11px] text-faint">
+        {entry.company_name}
+      </p>
 
       {/* divider */}
       <div className="my-3 w-full border-t border-line" />
 
       {/* scores */}
       <div className="grid w-full grid-cols-2 gap-x-3 gap-y-2 text-left">
-        <StatCell label="CEO score" value={n(entry.ceo_score)} />
-        <StatCell label="Band" value={entry.band} className={bandColor(entry.band)} />
+        <StatCell label="Composite score" value={n(entry.ceo_score)} />
+        <StatCell
+          label="Band"
+          value={entry.band}
+          className={bandColor(entry.band)}
+        />
         <StatCell label="Valuation" value={inrShort(entry.valuation_inr)} />
         <div className="flex flex-col gap-0.5">
-          <span className="text-[9.5px] uppercase tracking-widest text-faint">Net P&amp;L</span>
-          <span className={cn("num flex items-center gap-1 text-[13px] font-semibold", netPositive ? "text-emerald-500" : "text-rose-500")}>
-            {netPositive
-              ? <TrendingUp className="h-3 w-3 shrink-0" />
-              : <TrendingDown className="h-3 w-3 shrink-0" />}
+          <span className="text-[9.5px] uppercase tracking-widest text-faint">
+            Net P&amp;L
+          </span>
+          <span
+            className={cn(
+              "num flex items-center gap-1 text-[13px] font-semibold",
+              netPositive ? "text-emerald-500" : "text-rose-500",
+            )}
+          >
+            {netPositive ? (
+              <TrendingUp className="h-3 w-3 shrink-0" />
+            ) : (
+              <TrendingDown className="h-3 w-3 shrink-0" />
+            )}
             {inrShort(entry.net_profit_inr)}
           </span>
         </div>
@@ -139,7 +194,9 @@ function PodiumCard({ entry, position }: { entry: LeaderboardEntry; position: 0 
 
 /** Compact row used for rank ≥ 4 and the "your position" callout. */
 function LeaderRow({ entry }: { entry: LeaderboardEntry }) {
-  const netPositive = entry.net_profit_inr != null && parseFloat(String(entry.net_profit_inr)) >= 0;
+  const netPositive =
+    entry.net_profit_inr != null &&
+    parseFloat(String(entry.net_profit_inr)) >= 0;
 
   return (
     <motion.div
@@ -174,27 +231,52 @@ function LeaderRow({ entry }: { entry: LeaderboardEntry }) {
 
       {/* ceo score */}
       <div className="hidden text-right sm:block">
-        <span className="text-[9px] uppercase tracking-widest text-faint block">CEO</span>
-        <span className="num text-[13px] font-semibold text-ink">{n(entry.ceo_score)}</span>
+        <span className="text-[9px] uppercase tracking-widest text-faint block">
+          COMP
+        </span>
+        <span className="num text-[13px] font-semibold text-ink">
+          {n(entry.ceo_score)}
+        </span>
       </div>
 
       {/* band */}
       <div className="hidden text-right sm:block">
-        <span className="text-[9px] uppercase tracking-widest text-faint block">Band</span>
-        <span className={cn("num text-[12px] font-semibold", bandColor(entry.band))}>{entry.band}</span>
+        <span className="text-[9px] uppercase tracking-widest text-faint block">
+          Band
+        </span>
+        <span
+          className={cn("num text-[12px] font-semibold", bandColor(entry.band))}
+        >
+          {entry.band}
+        </span>
       </div>
 
       {/* valuation */}
       <div className="hidden text-right md:block">
-        <span className="text-[9px] uppercase tracking-widest text-faint block">Val.</span>
-        <span className="num text-[12px] text-ink">{inrShort(entry.valuation_inr)}</span>
+        <span className="text-[9px] uppercase tracking-widest text-faint block">
+          Val.
+        </span>
+        <span className="num text-[12px] text-ink">
+          {inrShort(entry.valuation_inr)}
+        </span>
       </div>
 
       {/* net P&L */}
       <div className="text-right">
-        <span className="text-[9px] uppercase tracking-widest text-faint block">P&amp;L</span>
-        <span className={cn("num flex items-center justify-end gap-0.5 text-[12px] font-semibold", netPositive ? "text-emerald-500" : "text-rose-500")}>
-          {netPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+        <span className="text-[9px] uppercase tracking-widest text-faint block">
+          P&amp;L
+        </span>
+        <span
+          className={cn(
+            "num flex items-center justify-end gap-0.5 text-[12px] font-semibold",
+            netPositive ? "text-emerald-500" : "text-rose-500",
+          )}
+        >
+          {netPositive ? (
+            <TrendingUp className="h-3 w-3" />
+          ) : (
+            <TrendingDown className="h-3 w-3" />
+          )}
           {inrShort(entry.net_profit_inr)}
         </span>
       </div>
@@ -220,14 +302,25 @@ export function SimulationLeaderboard({
     setLoading(true);
     api
       .getLeaderboard(scenarioId)
-      .then((res) => { if (!cancelled) { setData(res); setLoading(false); } })
+      .then((res) => {
+        if (!cancelled) {
+          setData(res);
+          setLoading(false);
+        }
+      })
       .catch((err) => {
         if (!cancelled) {
-          setError(err instanceof ApiError ? err.message : "Could not load leaderboard");
+          setError(
+            err instanceof ApiError
+              ? err.message
+              : "Could not load leaderboard",
+          );
           setLoading(false);
         }
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [scenarioId]);
 
   if (loading) {
@@ -256,7 +349,8 @@ export function SimulationLeaderboard({
 
   const top = data.top_entries;
   // Podium order: 2nd (index 1) · 1st (index 0) · 3rd (index 2)
-  const podiumOrder: Array<{ entry: LeaderboardEntry; position: 0 | 1 | 2 }> = [];
+  const podiumOrder: Array<{ entry: LeaderboardEntry; position: 0 | 1 | 2 }> =
+    [];
   if (top[1]) podiumOrder.push({ entry: top[1], position: 1 });
   if (top[0]) podiumOrder.push({ entry: top[0], position: 0 });
   if (top[2]) podiumOrder.push({ entry: top[2], position: 2 });
@@ -270,8 +364,12 @@ export function SimulationLeaderboard({
       {/* header */}
       <div className="flex items-baseline justify-between gap-3">
         <div>
-          <p className="text-[10.5px] uppercase tracking-widest text-faint">Simulation</p>
-          <h3 className="text-[18px] font-semibold text-ink">{scenarioTitle} · Leaderboard</h3>
+          <p className="text-[10.5px] uppercase tracking-widest text-faint">
+            Simulation
+          </p>
+          <h3 className="text-[18px] font-semibold text-ink">
+            {scenarioTitle} · Leaderboard
+          </h3>
         </div>
         <span className="num text-[12px] text-faint">
           {data.total_entries} player{data.total_entries !== 1 ? "s" : ""}
@@ -285,13 +383,19 @@ export function SimulationLeaderboard({
           <div
             className={cn(
               "grid items-end gap-3",
-              top.length === 1 ? "grid-cols-1 justify-items-center" :
-              top.length === 2 ? "grid-cols-2" :
-              "grid-cols-3",
+              top.length === 1
+                ? "grid-cols-1 justify-items-center"
+                : top.length === 2
+                  ? "grid-cols-2"
+                  : "grid-cols-3",
             )}
           >
             {podiumOrder.map(({ entry, position }) => (
-              <PodiumCard key={entry.user_id} entry={entry} position={position} />
+              <PodiumCard
+                key={entry.user_id}
+                entry={entry}
+                position={position}
+              />
             ))}
           </div>
         </>
@@ -300,7 +404,9 @@ export function SimulationLeaderboard({
       {/* ── current user row (outside top 3) ── */}
       {userEntry && (
         <div className="space-y-1.5">
-          <p className="text-[10.5px] uppercase tracking-widest text-faint">Your position</p>
+          <p className="text-[10.5px] uppercase tracking-widest text-faint">
+            Your position
+          </p>
           <LeaderRow entry={userEntry} />
         </div>
       )}
@@ -331,7 +437,9 @@ export function SimulationLeaderboardModal({
   // Close on Escape
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [open, onClose]);
@@ -342,7 +450,9 @@ export function SimulationLeaderboardModal({
     /* backdrop */
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.96, y: 12 }}
@@ -363,7 +473,10 @@ export function SimulationLeaderboardModal({
         </button>
 
         <div className="px-6 pb-8 pt-6">
-          <SimulationLeaderboard scenarioId={scenarioId} scenarioTitle={scenarioTitle} />
+          <SimulationLeaderboard
+            scenarioId={scenarioId}
+            scenarioTitle={scenarioTitle}
+          />
         </div>
       </motion.div>
     </div>

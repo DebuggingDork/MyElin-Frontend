@@ -18,7 +18,11 @@ import {
   headcount,
 } from "@/lib/simulation/constants";
 import { cr, inr, n0, n1, pct } from "@/lib/simulation/format";
-import { formatDisplayText, formatSigned, humanizeId } from "@/lib/format/display";
+import {
+  formatDisplayText,
+  formatSigned,
+  humanizeId,
+} from "@/lib/format/display";
 import { balanceClosing, balanceOpening } from "@/lib/simulation/balance";
 import { lessons } from "@/lib/simulation/insights";
 import {
@@ -31,15 +35,25 @@ import {
   mostImportantDecision,
   traitRollup,
 } from "@/lib/simulation/scoring";
-import { Bar, Eyebrow, LedgerRow, Panel, Stat } from "@/components/simulation/Kit";
+import {
+  Bar,
+  Eyebrow,
+  LedgerRow,
+  Panel,
+  Stat,
+} from "@/components/simulation/Kit";
 import { QuarterCharts } from "@/components/simulation/QuarterCharts";
 import { BalanceSheetDoc } from "@/components/simulation/BalanceSheetDoc";
 import { FinalReportPdfExport } from "@/components/simulation/FinalReportPdfExport";
-import { BAND_STYLES, buildFinalReport, calculateTier, buildAdaptationRecord } from "@/lib/simulation/final-report";
+import {
+  BAND_STYLES,
+  buildFinalReport,
+  calculateTier,
+  buildAdaptationRecord,
+} from "@/lib/simulation/final-report";
 import type { QuarterScore } from "@/lib/simulation/remote";
 import type {
   CompanyState,
-
   PriorityId,
   QuarterResultShape,
   TermSheet,
@@ -47,7 +61,8 @@ import type {
 } from "@/lib/simulation/types";
 
 const v = (r: QuarterResultShape, k: string) => r[k] as number;
-const traitTone = (p: number): Tone => (p >= 70 ? "good" : p >= 45 ? "watch" : "bad");
+const traitTone = (p: number): Tone =>
+  p >= 70 ? "good" : p >= 45 ? "watch" : "bad";
 
 export function FinalScreen({
   ts,
@@ -72,9 +87,19 @@ export function FinalScreen({
   const last = history[history.length - 1];
 
   const finals = scores.map((s) => Number(s.final));
-  const composite = finals.length ? finals.reduce((a, b) => a + b, 0) / finals.length : 0;
+  const composite = finals.length
+    ? finals.reduce((a, b) => a + b, 0) / finals.length
+    : 0;
   const compositeBand =
-    composite >= 90 ? "Exceptional" : composite >= 75 ? "Strong" : composite >= 60 ? "Competent" : composite >= 40 ? "Weak" : "Poor";
+    composite >= 90
+      ? "Exceptional"
+      : composite >= 75
+        ? "Strong"
+        : composite >= 60
+          ? "Competent"
+          : composite >= 40
+            ? "Weak"
+            : "Poor";
 
   const profile = traitRollup(scores);
   const style = managementStyle(history);
@@ -87,13 +112,15 @@ export function FinalScreen({
   const sold = Boolean(eg && eg.path === "B");
 
   // Build final report with tier classification
-  const finalReport = history.length >= 3 
-    ? buildFinalReport(history, scores, s, eg as any, ts || undefined)
-    : null;
+  const finalReport =
+    history.length >= 3
+      ? buildFinalReport(history, scores, s, eg as any, ts || undefined)
+      : null;
 
-  const tierInfo = history.length >= 3 && history[0] && history[1] && history[2]
-    ? calculateTier(history[0], history[1], history[2], s)
-    : null;
+  const tierInfo =
+    history.length >= 3 && history[0] && history[1] && history[2]
+      ? calculateTier(history[0], history[1], history[2], s)
+      : null;
 
   // Build adaptation record
   const adaptationRecord = buildAdaptationRecord(history).map((rec, i) => ({
@@ -102,8 +129,6 @@ export function FinalScreen({
   }));
   const changedCount = adaptationRecord.filter((a) => a.changed).length;
 
-  
-
   return (
     <div className="space-y-6">
       {/* Year-End Scorecard Header with Tier Classification */}
@@ -111,10 +136,14 @@ export function FinalScreen({
         <div className="bg-stone-900 text-white p-6 border-t-4 border-t-amber-500">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <Eyebrow tone="text-amber-400">Year-End Scorecard · Company Classification</Eyebrow>
+              <Eyebrow tone="text-amber-400">
+                Year-End Scorecard · Company Classification
+              </Eyebrow>
               <div className="flex flex-wrap items-baseline gap-4 mt-2">
                 <h2 className="font-serif text-4xl">{tierInfo.tier}</h2>
-                <div className={`inline-block px-4 py-2 font-serif text-xl ${BAND_STYLES[finalReport.ceoBand]}`}>
+                <div
+                  className={`inline-block px-4 py-2 font-serif text-xl ${BAND_STYLES[finalReport.ceoBand]}`}
+                >
                   CEO Rating: {finalReport.ceoBand}
                 </div>
               </div>
@@ -124,12 +153,18 @@ export function FinalScreen({
             </div>
             <div className="flex flex-col gap-2 text-right">
               <div>
-                <div className="text-xs uppercase tracking-widest text-stone-400">Final Score</div>
-                <div className="font-mono text-3xl font-bold text-amber-400">{n1(finalReport.finalScore)}</div>
+                <div className="text-xs uppercase tracking-widest text-stone-400">
+                  Final Score
+                </div>
+                <div className="font-mono text-3xl font-bold text-amber-400">
+                  {n1(finalReport.finalScore)}
+                </div>
               </div>
               <div>
                 <div className="text-xs text-stone-400">Valuation</div>
-                <div className="font-mono text-xl text-stone-200">{cr(finalReport.finalValuation)}</div>
+                <div className="font-mono text-xl text-stone-200">
+                  {cr(finalReport.finalValuation)}
+                </div>
               </div>
             </div>
           </div>
@@ -159,22 +194,38 @@ export function FinalScreen({
           <div className="inline-block border border-line-2 px-3 py-1">
             <Eyebrow tone="text-faint">Composite score</Eyebrow>
             <div className="font-serif text-xl">
-              {n1(composite)} <span className="text-faint text-sm">{compositeBand}</span>
+              {n1(composite)}{" "}
+              <span className="text-faint text-sm">{compositeBand}</span>
             </div>
           </div>
         </div>
       </div>
 
-      <Panel eyebrow="Final company outcome" title="Where twelve months left the business">
+      <Panel
+        eyebrow="Final company outcome"
+        title="Where twelve months left the business"
+      >
         <div className="grid items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          <Stat label="Revenue, final quarter" value={cr(v(last, "revenueT"))} sub={n0(v(last, "unitsSold")) + " units"} />
+          <Stat
+            label="Revenue, final quarter"
+            value={cr(v(last, "revenueT"))}
+            sub={n0(v(last, "unitsSold")) + " units"}
+          />
           <Stat
             label="Net cash flow"
             value={inr(v(last, "netCF"))}
             tone={TONE_TEXT[v(last, "netCF") >= 0 ? "good" : "bad"]}
           />
-          <Stat label="Cash" value={inr(v(last, "cash"))} tone={TONE_TEXT[v(last, "cash") < BUFFER ? "bad" : "flat"]} />
-          <Stat label="Customers" value={n0(v(last, "customers"))} sub={"repeat " + pct(v(last, "repeatRate"))} />
+          <Stat
+            label="Cash"
+            value={inr(v(last, "cash"))}
+            tone={TONE_TEXT[v(last, "cash") < BUFFER ? "bad" : "flat"]}
+          />
+          <Stat
+            label="Customers"
+            value={n0(v(last, "customers"))}
+            sub={"repeat " + pct(v(last, "repeatRate"))}
+          />
           <Stat
             label="Market share"
             value={pct(v(last, "marketShare") * 100)}
@@ -182,9 +233,17 @@ export function FinalScreen({
           />
           <Stat
             label="Valuation"
-            value={cr(eg && eg.finalValuation != null ? Number(eg.finalValuation) : v(last, "valuation"))}
+            value={cr(
+              eg && eg.finalValuation != null
+                ? Number(eg.finalValuation)
+                : v(last, "valuation"),
+            )}
           />
-          <Stat label="Headcount" value={n0(headcount(s.staff))} sub={"morale " + n0(s.empSat)} />
+          <Stat
+            label="Headcount"
+            value={n0(headcount(s.staff))}
+            sub={"morale " + n0(s.empSat)}
+          />
           <Stat
             label="Market position"
             value={pct(v(last, "attractShare") * 100)}
@@ -195,48 +254,84 @@ export function FinalScreen({
 
       {/* Comprehensive Year-End Summary */}
       {finalReport && (
-        <Panel eyebrow="Full-Year Performance" title="Twelve months of Nadi Wear">
+        <Panel
+          eyebrow="Full-Year Performance"
+          title="Twelve months of Nadi Wear"
+        >
           <div className="grid items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            <Stat 
-              label="Total units sold" 
-              value={n0(finalReport.totalUnitsSold)} 
+            <Stat
+              label="Total units sold"
+              value={n0(finalReport.totalUnitsSold)}
               sub="all quarters combined"
             />
-            <Stat 
-              label="Total revenue" 
-              value={cr(finalReport.totalRevenue)} 
+            <Stat
+              label="Total revenue"
+              value={cr(finalReport.totalRevenue)}
               sub="cumulative"
             />
-            <Stat 
-              label="Total net profit" 
-              value={cr(finalReport.totalProfit)} 
+            <Stat
+              label="Total net profit"
+              value={cr(finalReport.totalProfit)}
               tone={TONE_TEXT[finalReport.totalProfit >= 0 ? "good" : "bad"]}
-              sub={finalReport.totalProfit >= 0 ? "profitable year" : "loss-making year"}
+              sub={
+                finalReport.totalProfit >= 0
+                  ? "profitable year"
+                  : "loss-making year"
+              }
             />
-            <Stat 
-              label="Final cash position" 
-              value={inr(finalReport.finalCash)} 
+            <Stat
+              label="Final cash position"
+              value={inr(finalReport.finalCash)}
               tone={TONE_TEXT[finalReport.finalCash < BUFFER ? "bad" : "good"]}
-              sub={finalReport.finalCash >= BUFFER ? "above buffer" : "below buffer"}
+              sub={
+                finalReport.finalCash >= BUFFER
+                  ? "above buffer"
+                  : "below buffer"
+              }
             />
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
-            <div className="border border-stone-200 p-3">
-              <div className="text-xs uppercase tracking-widest text-stone-500">Trait Score</div>
-              <div className="font-mono text-2xl text-stone-900 mt-1">{n1(finalReport.traitTotal)}</div>
-              <div className="text-xs text-stone-600 mt-1">Base performance</div>
-            </div>
-            <div className="border border-stone-200 p-3">
-              <div className="text-xs uppercase tracking-widest text-stone-500">Modifiers</div>
-              <div className={`font-mono text-2xl mt-1 ${finalReport.modTotal >= 0 ? 'text-teal-700' : 'text-rose-700'}`}>
-                {finalReport.modTotal >= 0 ? '+' : ''}{n1(finalReport.modTotal)}
+            <div className="border border-line rounded-lg p-3 bg-[var(--panel)]">
+              <div className="text-xs uppercase tracking-widest text-faint">
+                Trait Score
               </div>
-              <div className="text-xs text-stone-600 mt-1">{finalReport.mods.length} adjustments</div>
+              <div className="font-mono text-2xl text-ink mt-1">
+                {n1(finalReport.traitTotal)}
+              </div>
+              <div className="text-xs text-dim mt-1">Base performance</div>
             </div>
-            <div className="border border-amber-200 bg-amber-50 p-3">
-              <div className="text-xs uppercase tracking-widest text-amber-700">Final CEO Score</div>
-              <div className="font-mono text-2xl text-amber-900 mt-1 font-bold">{n1(finalReport.finalScore)}</div>
-              <div className={`text-sm font-semibold mt-1 ${finalReport.ceoBand === 'Exceptional' ? 'text-emerald-700' : finalReport.ceoBand === 'Strong' ? 'text-teal-700' : finalReport.ceoBand === 'Competent' ? 'text-amber-700' : 'text-rose-700'}`}>
+            <div className="border border-line rounded-lg p-3 bg-[var(--panel)]">
+              <div className="text-xs uppercase tracking-widest text-faint">
+                Modifiers
+              </div>
+              <div
+                className={`font-mono text-2xl mt-1 ${finalReport.modTotal >= 0 ? "text-teal" : "text-rose"}`}
+              >
+                {finalReport.modTotal >= 0 ? "+" : ""}
+                {n1(finalReport.modTotal)}
+              </div>
+              <div className="text-xs text-dim mt-1">
+                {finalReport.mods.length} adjustments
+              </div>
+            </div>
+            <div className="border border-amber/30 rounded-lg bg-amber/10 p-3">
+              <div className="text-xs uppercase tracking-widest text-amber">
+                Final Composite Score
+              </div>
+              <div className="font-mono text-2xl text-amber dark:text-amber-400 mt-1 font-bold">
+                {n1(finalReport.finalScore)}
+              </div>
+              <div
+                className={`text-sm font-semibold mt-1 ${
+                  finalReport.ceoBand === "Exceptional"
+                    ? "text-teal"
+                    : finalReport.ceoBand === "Strong"
+                      ? "text-emerald-500"
+                      : finalReport.ceoBand === "Competent"
+                        ? "text-amber"
+                        : "text-rose"
+                }`}
+              >
                 {finalReport.ceoBand}
               </div>
             </div>
@@ -252,19 +347,24 @@ export function FinalScreen({
               .sort((a, b) => Math.abs(b.d) - Math.abs(a.d))
               .slice(0, 10)
               .map((mod, i) => (
-                <div 
-                  key={i} 
+                <div
+                  key={i}
                   className={`flex items-start justify-between gap-4 p-3 border-l-4 ${
-                    mod.d > 0 
-                      ? 'border-teal-500 bg-teal-50' 
-                      : 'border-rose-500 bg-rose-50'
+                    mod.d > 0
+                      ? "border-teal-500 bg-teal-50"
+                      : "border-rose-500 bg-rose-50"
                   }`}
                 >
-                  <p className="text-sm text-stone-900 flex-1">{formatDisplayText(mod.why)}</p>
-                  <div className={`font-mono text-lg font-semibold shrink-0 ${
-                    mod.d > 0 ? 'text-teal-700' : 'text-rose-700'
-                  }`}>
-                    {mod.d > 0 ? '+' : ''}{n1(mod.d)}
+                  <p className="text-sm text-stone-900 flex-1">
+                    {formatDisplayText(mod.why)}
+                  </p>
+                  <div
+                    className={`font-mono text-lg font-semibold shrink-0 ${
+                      mod.d > 0 ? "text-teal-700" : "text-rose-700"
+                    }`}
+                  >
+                    {mod.d > 0 ? "+" : ""}
+                    {n1(mod.d)}
                   </div>
                 </div>
               ))}
@@ -280,8 +380,8 @@ export function FinalScreen({
       <QuarterCharts history={history} />
 
       {/* Adaptation Table */}
-      <Panel 
-        eyebrow="How you adapted" 
+      <Panel
+        eyebrow="How you adapted"
         title={
           changedCount === 0
             ? "The same lever, every quarter"
@@ -329,15 +429,18 @@ export function FinalScreen({
                         ? "Yes"
                         : "No — repeated"}
                   </td>
-                  <td className="py-3 font-mono text-stone-900">{n1(a.score)}</td>
+                  <td className="py-3 font-mono text-stone-900">
+                    {n1(a.score)}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
         <p className="text-sm text-stone-500 italic mt-5 max-w-2xl leading-relaxed">
-          Changing an allocation is not, by itself, evidence of adaptability — what matters is
-          whether it changed in response to what the results were already showing.
+          Changing an allocation is not, by itself, evidence of adaptability —
+          what matters is whether it changed in response to what the results
+          were already showing.
         </p>
       </Panel>
 
@@ -346,17 +449,26 @@ export function FinalScreen({
           <LedgerRow
             key={h.q}
             label={"Quarter " + h.q}
-            working={n0(v(h, "unitsSold")) + " units of a " + n0(v(h, "mktDemand")) + "-unit category"}
+            working={
+              n0(v(h, "unitsSold")) +
+              " units of a " +
+              n0(v(h, "mktDemand")) +
+              "-unit category"
+            }
             value={pct(v(h, "marketShare") * 100)}
             tone={v(h, "shareDelta") >= 0 ? "text-tone-good" : "text-tone-bad"}
           />
         ))}
       </Panel>
 
-      <Panel eyebrow="Management profile" title="How you ran it, across seven dimensions">
+      <Panel
+        eyebrow="Management profile"
+        title="How you ran it, across seven dimensions"
+      >
         <p className="text-xs text-dim mb-3">
-          Share of each dimension’s available marks, averaged across the quarters played. Every
-          sub-criterion is evaluated from the numbers, and each one names the evidence it read.
+          Share of each dimension’s available marks, averaged across the
+          quarters played. Every sub-criterion is evaluated from the numbers,
+          and each one names the evidence it read.
         </p>
         <div className="space-y-3">
           {profile.map((t) =>
@@ -364,20 +476,33 @@ export function FinalScreen({
               <div key={t.name}>
                 <div className="flex items-baseline justify-between">
                   <span className="text-sm text-dim">{humanizeId(t.name)}</span>
-                  <span className="text-xs uppercase tracking-widest text-faint">Not yet assessed</span>
+                  <span className="text-xs uppercase tracking-widest text-faint">
+                    Not yet assessed
+                  </span>
                 </div>
                 <div className="h-1.5 w-full border-b border-dashed border-line" />
                 <div className="text-xs text-faint mt-1">
-                  Every sub-criterion here is a judgment call the engine does not make.
+                  Every sub-criterion here is a judgment call the engine does
+                  not make.
                 </div>
               </div>
             ) : (
               <div key={t.name}>
                 <div className="flex items-baseline justify-between">
                   <span className="text-sm text-ink">{humanizeId(t.name)}</span>
-                  <span className={"text-xs font-mono " + TONE_TEXT[traitTone(t.pct)]}>{n0(t.pct)}%</span>
+                  <span
+                    className={
+                      "text-xs font-mono " + TONE_TEXT[traitTone(t.pct)]
+                    }
+                  >
+                    {n0(t.pct)}%
+                  </span>
                 </div>
-                <Bar value={t.pct} max={100} tone={TONE_BAR[traitTone(t.pct)]} />
+                <Bar
+                  value={t.pct}
+                  max={100}
+                  tone={TONE_BAR[traitTone(t.pct)]}
+                />
               </div>
             ),
           )}
@@ -393,28 +518,46 @@ export function FinalScreen({
         <Panel eyebrow="Biggest mistake" title={humanizeId(mistake.title)}>
           <p className="text-sm text-ink">{formatDisplayText(mistake.why)}</p>
         </Panel>
-        <Panel eyebrow="Most important decision" title={"Quarter " + decision.q + ": " + decision.label}>
+        <Panel
+          eyebrow="Most important decision"
+          title={"Quarter " + decision.q + ": " + decision.label}
+        >
           <p className="text-sm text-ink">{decision.effect}</p>
         </Panel>
         <Panel eyebrow="Unexpected consequence" title={consequence.title}>
           <p className="text-sm text-ink">{consequence.body}</p>
         </Panel>
-        <Panel eyebrow="Missed opportunity" title={missed.title} className="lg:col-span-2">
+        <Panel
+          eyebrow="Missed opportunity"
+          title={missed.title}
+          className="lg:col-span-2"
+        >
           <p className="text-sm text-ink">{missed.body}</p>
         </Panel>
       </div>
 
-      <Panel eyebrow="Principles this year demonstrated" title="What the company taught you">
+      <Panel
+        eyebrow="Principles this year demonstrated"
+        title="What the company taught you"
+      >
         <div className="space-y-3">
           {history
-            .flatMap((h, i) => lessons(h, history[i - 1]).map((l) => ({ ...l, q: i + 1 })))
-            .filter((l, i, all) => all.findIndex((x) => x.title === l.title) === i)
+            .flatMap((h, i) =>
+              lessons(h, history[i - 1]).map((l) => ({ ...l, q: i + 1 })),
+            )
+            .filter(
+              (l, i, all) => all.findIndex((x) => x.title === l.title) === i,
+            )
             .slice(0, 6)
             .map((l, i) => (
               <div key={i} className="border-l-2 border-line-2 pl-3">
                 <div className="flex flex-wrap items-baseline gap-x-2">
-                  <span className="font-serif text-base text-ink">{l.title}</span>
-                  <span className="text-xs uppercase tracking-widest text-dim">first seen in Q{l.q}</span>
+                  <span className="font-serif text-base text-ink">
+                    {l.title}
+                  </span>
+                  <span className="text-xs uppercase tracking-widest text-dim">
+                    first seen in Q{l.q}
+                  </span>
                 </div>
                 <p className="text-sm text-ink mt-0.5 leading-snug">{l.body}</p>
               </div>
@@ -429,7 +572,9 @@ export function FinalScreen({
               <div className="flex flex-wrap items-baseline gap-x-3">
                 <span className="font-serif text-lg">Quarter {t.q}</span>
                 {t.priority && (
-                  <span className="text-xs uppercase tracking-widest text-dim">said: {t.priority}</span>
+                  <span className="text-xs uppercase tracking-widest text-dim">
+                    said: {t.priority}
+                  </span>
                 )}
               </div>
               <div className="text-sm text-ink mt-1">
@@ -446,8 +591,16 @@ export function FinalScreen({
       </Panel>
 
       {sold && eg && ts && (
-        <Panel eyebrow="The reveal" title="What the business was worth if you had kept it">
-          <LedgerRow label="Offer accepted" working="all cash, signed at the term sheet" value={inr(eg.price as number)} strong />
+        <Panel
+          eyebrow="The reveal"
+          title="What the business was worth if you had kept it"
+        >
+          <LedgerRow
+            label="Offer accepted"
+            working="all cash, signed at the term sheet"
+            value={inr(eg.price as number)}
+            strong
+          />
           <LedgerRow
             label="True continuation value"
             working={"Q3 valuation × (1 + momentum of " + n1(ts.M) + ")"}
@@ -456,7 +609,11 @@ export function FinalScreen({
             tone={(eg.gap as number) > 0 ? "text-tone-bad" : "text-tone-good"}
           />
           <LedgerRow
-            label={(eg.gap as number) > 0 ? "Value left on the table" : "Value captured above continuation"}
+            label={
+              (eg.gap as number) > 0
+                ? "Value left on the table"
+                : "Value captured above continuation"
+            }
             working="difference"
             value={inr(Math.abs(eg.gap as number))}
             strong
@@ -466,11 +623,22 @@ export function FinalScreen({
       )}
 
       {eg && eg.path === "A" && ts && (
-        <Panel eyebrow="Covenant settlement" title={eg.covenantHit ? "Covenant met" : "Covenant missed"}>
+        <Panel
+          eyebrow="Covenant settlement"
+          title={eg.covenantHit ? "Covenant met" : "Covenant missed"}
+        >
           <LedgerRow
             label="Target"
-            working={ts.tier === "DISTRESSED" ? "close the quarter solvent" : "units sold"}
-            value={ts.tier === "DISTRESSED" ? "solvency" : n0(eg.covenant as number) + " units"}
+            working={
+              ts.tier === "DISTRESSED"
+                ? "close the quarter solvent"
+                : "units sold"
+            }
+            value={
+              ts.tier === "DISTRESSED"
+                ? "solvency"
+                : n0(eg.covenant as number) + " units"
+            }
           />
           <LedgerRow
             label="Delivered"
@@ -494,15 +662,19 @@ export function FinalScreen({
       )}
 
       <div className="bg-raise border border-line">
-      <button
+        <button
           onClick={() => setOpenRecord(!openRecord)}
           className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-raise"
         >
           <div>
             <Eyebrow>Facilitator record</Eyebrow>
-            <div className="font-serif text-base text-ink">Full scoring detail, quarter by quarter</div>
+            <div className="font-serif text-base text-ink">
+              Full scoring detail, quarter by quarter
+            </div>
           </div>
-          <span className="font-mono text-sm text-dim">{openRecord ? "−" : "+"}</span>
+          <span className="font-mono text-sm text-dim">
+            {openRecord ? "−" : "+"}
+          </span>
         </button>
 
         {openRecord && (
@@ -525,7 +697,9 @@ export function FinalScreen({
                       (Number(sc.modifierTotal) >= 0 ? "+" : "") +
                       n1(Number(sc.modifierTotal)) +
                       " modifiers · declared: " +
-                      (priorities[i] ? PRIORITY_BY_ID[priorities[i]!].name : "—")
+                      (priorities[i]
+                        ? PRIORITY_BY_ID[priorities[i]!].name
+                        : "—")
                     }
                     value={n1(Number(sc.final)) + " · " + sc.band}
                     strong
@@ -534,7 +708,12 @@ export function FinalScreen({
                     {fired.map((m, j) => (
                       <li
                         key={j}
-                        className={"text-xs font-mono " + (Number(m.points) > 0 ? "text-tone-good" : "text-tone-bad")}
+                        className={
+                          "text-xs font-mono " +
+                          (Number(m.points) > 0
+                            ? "text-tone-good"
+                            : "text-tone-bad")
+                        }
                       >
                         {formatSigned(m.points)} {formatDisplayText(m.why)}
                       </li>
@@ -571,13 +750,15 @@ export function FinalScreen({
         >
           Go to Home
         </Link>
-        
+
         <button
           onClick={onRestart}
           disabled={busy}
           className={
             "flex-1 py-4 font-serif text-xl transition-colors " +
-            (busy ? "bg-raise-2 text-faint" : "bg-chrome text-white hover:bg-danger-deep")
+            (busy
+              ? "bg-raise-2 text-faint"
+              : "bg-chrome text-white hover:bg-danger-deep")
           }
         >
           {busy ? "Starting a new run…" : "Run the year again"}

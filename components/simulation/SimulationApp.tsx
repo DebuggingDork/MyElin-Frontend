@@ -17,7 +17,14 @@
  * engine that grades them afterwards, so the two can never disagree.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { Pause, Play, Clock, AlertTriangle, RotateCcw } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -25,6 +32,7 @@ import { LogOut, PanelLeftOpen, X } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/types";
 import { useRun } from "@/components/run/RunProvider";
+import { SimulationLeaderboardModal } from "@/components/simulation/SimulationLeaderboard";
 import { useRewindSFX } from "@/lib/simulation/use-rewind-sfx";
 import { forgetRunIndex, runHref } from "@/lib/run/ref";
 
@@ -69,7 +77,11 @@ import type {
   QuarterScore,
 } from "@/lib/simulation/remote";
 import { Ticker, TeachingContext } from "@/components/simulation/Kit";
-import { InlineLoading, PageLoading, ProcessingOverlay } from "@/components/ui/Loading";
+import {
+  InlineLoading,
+  PageLoading,
+  ProcessingOverlay,
+} from "@/components/ui/Loading";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { ProfileMenu } from "@/components/layout/ProfileMenu";
 import { Logo } from "@/components/brand/Logo";
@@ -140,7 +152,12 @@ export const SIMULATION_TABS = [
   { id: "review", label: "Close the quarter" },
 ] as const;
 
-const emptyCrisis = (): CrisisInput => ({ diagnosis: null, reasoning: "", strategy: null, commit: "" });
+const emptyCrisis = (): CrisisInput => ({
+  diagnosis: null,
+  reasoning: "",
+  strategy: null,
+  commit: "",
+});
 
 /**
  * Where an in-progress quarter's draft is kept.
@@ -150,7 +167,8 @@ const emptyCrisis = (): CrisisInput => ({ diagnosis: null, reasoning: "", strate
  * the server, which is the record that matters; this is purely so a reload, a sidebar
  * deep-link or a closed laptop does not throw away numbers the CEO has already typed in.
  */
-const draftKey = (companyId: string, quarter: number) => `simulation.draft.${companyId}.q${quarter}`;
+const draftKey = (companyId: string, quarter: number) =>
+  `simulation.draft.${companyId}.q${quarter}`;
 
 type Draft = {
   lines: Alloc;
@@ -295,7 +313,15 @@ function CompanyNameEditor({
 }
 
 const EMPTY_BUDGET: RemoteBudget = {
-  opex: 0, capex: 0, inno: 0, people: 0, repay: 0, drawn: 0, investment: 0, committed: 0, ceiling: 0,
+  opex: 0,
+  capex: 0,
+  inno: 0,
+  people: 0,
+  repay: 0,
+  drawn: 0,
+  investment: 0,
+  committed: 0,
+  ceiling: 0,
 };
 
 export function SimulationApp() {
@@ -319,7 +345,9 @@ export function SimulationApp() {
   const [warranty, setWarranty] = useState<WarrantyId>("6mo");
   const [payTerms, setPayTerms] = useState<PayTermsId>("net30");
   const [startInno, setStartInno] = useState<string[]>([]);
-  const [products, setProducts] = useState<Record<ProductId, ProductState>>(INITIAL_STATE.products);
+  const [products, setProducts] = useState<Record<ProductId, ProductState>>(
+    INITIAL_STATE.products,
+  );
   const [priority, setPriority] = useState<PriorityId | null>(null);
   const [reflection, setReflection] = useState<Reflection>({ sacrifice: [] });
   const [crisis, setCrisis] = useState<CrisisInput>(emptyCrisis);
@@ -329,7 +357,12 @@ export function SimulationApp() {
 
   const [projection, setProjection] = useState<QuarterResultShape | null>(null);
   const [budget, setBudget] = useState<RemoteBudget>(EMPTY_BUDGET);
-  const [commitReading, setCommitReading] = useState<{ band: string; strain: string; line: string; trade: string } | null>(null);
+  const [commitReading, setCommitReading] = useState<{
+    band: string;
+    strain: string;
+    line: string;
+    trade: string;
+  } | null>(null);
 
   /* ── chrome and lifecycle ─────────────────────────────────────── */
 
@@ -340,10 +373,20 @@ export function SimulationApp() {
   // `localStorage` is the store here, not component state: reading it during render would
   // differ between server and client and trip hydration, and mirroring it into `useState`
   // would mean a second render for a value that was already known.
-  const soundOn = useSyncExternalStore(subscribeSound, soundEnabled, soundEnabledOnServer);
+  const soundOn = useSyncExternalStore(
+    subscribeSound,
+    soundEnabled,
+    soundEnabledOnServer,
+  );
   const [ts, setTs] = useState<TermSheet | null>(null);
-  const [endgameOutcome, setEndgameOutcome] = useState<Record<string, unknown> | null>(null);
-  const [closed, setClosed] = useState<{ result: QuarterResultShape; score: QuarterScore } | null>(null);
+  const [endgameOutcome, setEndgameOutcome] = useState<Record<
+    string,
+    unknown
+  > | null>(null);
+  const [closed, setClosed] = useState<{
+    result: QuarterResultShape;
+    score: QuarterScore;
+  } | null>(null);
 
   const [booting, setBooting] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -353,7 +396,8 @@ export function SimulationApp() {
 
   const timer = useSimulationTimer(companyId, state.quarter);
   const readOnly = timer.paused || timer.expired;
-  const timerActive = (phase === "briefing" || phase === "play") && runStatus !== "completed";
+  const timerActive =
+    (phase === "briefing" || phase === "play") && runStatus !== "completed";
 
   /**
    * Whether the user has dismissed the "Time Limit Reached" popup.
@@ -389,18 +433,60 @@ export function SimulationApp() {
    * Drives the RewindPreloader overlay; the actual API call fires when the preloader
    * calls its onComplete callback.
    */
-  const [rewindTargetQuarter, setRewindTargetQuarter] = useState<number | null>(null);
+  const [rewindTargetQuarter, setRewindTargetQuarter] = useState<number | null>(
+    null,
+  );
 
   /* Read-only wrappers: when the simulation is paused or expired, every setter becomes a no-op
      so no value can be changed through any code path. */
-  const guardAlloc = useCallback((a: Alloc) => { if (!readOnly) setAlloc(a); }, [readOnly]);
-  const guardSetWarranty = useCallback((w: WarrantyId) => { if (!readOnly) setWarranty(w); }, [readOnly]);
-  const guardSetPayTerms = useCallback((p: PayTermsId) => { if (!readOnly) setPayTerms(p); }, [readOnly]);
-  const guardSetStartInno = useCallback((s: string[]) => { if (!readOnly) setStartInno(s); }, [readOnly]);
-  const guardSetProducts = useCallback((p: Record<ProductId, ProductState>) => { if (!readOnly) setProducts(p); }, [readOnly]);
-  const guardSetPriority = useCallback((p: PriorityId | null) => { if (!readOnly) setPriority(p); }, [readOnly]);
-  const guardSetReflection = useCallback((r: Reflection) => { if (!readOnly) setReflection(r); }, [readOnly]);
-  const guardSetCrisis = useCallback((c: CrisisInput) => { if (!readOnly) setCrisis(c); }, [readOnly]);
+  const guardAlloc = useCallback(
+    (a: Alloc) => {
+      if (!readOnly) setAlloc(a);
+    },
+    [readOnly],
+  );
+  const guardSetWarranty = useCallback(
+    (w: WarrantyId) => {
+      if (!readOnly) setWarranty(w);
+    },
+    [readOnly],
+  );
+  const guardSetPayTerms = useCallback(
+    (p: PayTermsId) => {
+      if (!readOnly) setPayTerms(p);
+    },
+    [readOnly],
+  );
+  const guardSetStartInno = useCallback(
+    (s: string[]) => {
+      if (!readOnly) setStartInno(s);
+    },
+    [readOnly],
+  );
+  const guardSetProducts = useCallback(
+    (p: Record<ProductId, ProductState>) => {
+      if (!readOnly) setProducts(p);
+    },
+    [readOnly],
+  );
+  const guardSetPriority = useCallback(
+    (p: PriorityId | null) => {
+      if (!readOnly) setPriority(p);
+    },
+    [readOnly],
+  );
+  const guardSetReflection = useCallback(
+    (r: Reflection) => {
+      if (!readOnly) setReflection(r);
+    },
+    [readOnly],
+  );
+  const guardSetCrisis = useCallback(
+    (c: CrisisInput) => {
+      if (!readOnly) setCrisis(c);
+    },
+    [readOnly],
+  );
 
   /**
    * The named wait, when there is one.
@@ -432,6 +518,7 @@ export function SimulationApp() {
      mobile drawer must start closed or it would cover the screen on every load. */
   const navOpen = useSyncExternalStore(subscribeNav, readNavOpen, () => true);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [leaderboardOpen, setLeaderboardOpen] = useState(false);
 
   /* The rail's own state is the only thing that decides whether the header's trigger is on
      screen, so the two directions are separate calls rather than one toggle: the trigger
@@ -464,7 +551,10 @@ export function SimulationApp() {
   }, [mobileNavOpen]);
 
   const urlTab = searchParams.get("tab");
-  const tab = urlTab && SIMULATION_TABS.some((t) => t.id === urlTab) ? urlTab : "dashboard";
+  const tab =
+    urlTab && SIMULATION_TABS.some((t) => t.id === urlTab)
+      ? urlTab
+      : "dashboard";
 
   const setTab = useCallback(
     (id: string) => {
@@ -505,7 +595,11 @@ export function SimulationApp() {
       const mergedProducts = Object.fromEntries(
         Object.entries(draftProducts).map(([id, p]) => [
           id,
-          { ...p, live: next.products[id as keyof typeof next.products]?.live ?? p.live },
+          {
+            ...p,
+            live:
+              next.products[id as keyof typeof next.products]?.live ?? p.live,
+          },
         ]),
       ) as typeof draftProducts;
       setProducts(mergedProducts);
@@ -538,12 +632,17 @@ export function SimulationApp() {
     setRunStatus(run.runStatus);
     setRewindsUsed(run.rewindsUsed);
     setPriorities(
-      run.history.map((h) => ((h as Record<string, unknown>).priority as PriorityId | null) ?? null),
+      run.history.map(
+        (h) =>
+          ((h as Record<string, unknown>).priority as PriorityId | null) ??
+          null,
+      ),
     );
     // A reopen of a completed run carries the settled term-sheet outcome from the server so the
     // final report renders exactly as it did the moment the year closed, instead of rebuilding
     // it from nothing (which produced a materially different report on every reopen).
-    if (run.settlement) setEndgameOutcome(run.settlement as unknown as Record<string, unknown>);
+    if (run.settlement)
+      setEndgameOutcome(run.settlement as unknown as Record<string, unknown>);
 
     if (run.quartersLocked >= 3 && run.history.length >= 3) {
       try {
@@ -588,7 +687,9 @@ export function SimulationApp() {
         // A saved draft that already names a priority means this quarter was started, so
         // resume on the decision screens rather than sending the CEO back through the
         // briefing to re-declare something they have already committed to.
-        const started = Boolean(readDraft(companyId, run.state.quarter)?.priority);
+        const started = Boolean(
+          readDraft(companyId, run.state.quarter)?.priority,
+        );
 
         setPhase(
           run.runStatus === "completed"
@@ -598,15 +699,18 @@ export function SimulationApp() {
               : // Q3 closed and path C chosen: run is complete, go to final
                 run.quartersLocked === 3 && run.endgamePath === "C"
                 ? "final"
-              : // Q3 closed and nothing signed: the term sheet is owed before Q4 can be run.
-                run.quartersLocked === 3 && !run.endgamePath
-                ? "termsheet"
-                : started
-                  ? "play"
-                  : "briefing",
+                : // Q3 closed and nothing signed: the term sheet is owed before Q4 can be run.
+                  run.quartersLocked === 3 && !run.endgamePath
+                  ? "termsheet"
+                  : started
+                    ? "play"
+                    : "briefing",
         );
       } catch (err) {
-        if (!cancelled) setError(err instanceof ApiError ? err.message : "Could not load this run.");
+        if (!cancelled)
+          setError(
+            err instanceof ApiError ? err.message : "Could not load this run.",
+          );
       } finally {
         if (!cancelled) setBooting(false);
       }
@@ -624,8 +728,26 @@ export function SimulationApp() {
   /* ── the live projection, from the server ─────────────────────── */
 
   const plan: QuarterPlan = useMemo(
-    () => ({ lines: alloc, warranty, payTerms, startInno, products, priority, reflection, crisis }),
-    [alloc, warranty, payTerms, startInno, products, priority, reflection, crisis],
+    () => ({
+      lines: alloc,
+      warranty,
+      payTerms,
+      startInno,
+      products,
+      priority,
+      reflection,
+      crisis,
+    }),
+    [
+      alloc,
+      warranty,
+      payTerms,
+      startInno,
+      products,
+      priority,
+      reflection,
+      crisis,
+    ],
   );
 
   /**
@@ -639,7 +761,10 @@ export function SimulationApp() {
     if (booting || typeof window === "undefined") return;
     if (phase !== "play" && phase !== "briefing") return;
     try {
-      window.localStorage.setItem(draftKey(companyId, state.quarter), JSON.stringify(plan));
+      window.localStorage.setItem(
+        draftKey(companyId, state.quarter),
+        JSON.stringify(plan),
+      );
     } catch {
       /* A full or blocked localStorage must never break the run. */
     }
@@ -671,10 +796,15 @@ export function SimulationApp() {
           if (pv.crisis) setBriefing(pv.crisis);
           // A plan ran successfully: whichever transient preview failure (a dropped/aborted
           // request during a pause or tab transition) put the banner up no longer applies.
-          setError((cur) => (cur && cur.endsWith("Could not run the plan.") ? null : cur));
+          setError((cur) =>
+            cur && cur.endsWith("Could not run the plan.") ? null : cur,
+          );
         })
         .catch((err) => {
-          if (!cancelled) setError(err instanceof ApiError ? err.message : "Could not run the plan.");
+          if (!cancelled)
+            setError(
+              err instanceof ApiError ? err.message : "Could not run the plan.",
+            );
         });
     }, 350);
 
@@ -693,9 +823,18 @@ export function SimulationApp() {
 
   const health = useMemo(() => companyHealth(state, last), [state, last]);
   const changes = useMemo(() => changesSince(prior, last), [prior, last]);
-  const openingConstraint = useMemo(() => bindingConstraint(last ?? null, state), [last, state]);
-  const liveConstraint = useMemo(() => bindingConstraint(projection, state), [projection, state]);
-  const board = useMemo(() => boardAsks(state, last, history), [state, last, history]);
+  const openingConstraint = useMemo(
+    () => bindingConstraint(last ?? null, state),
+    [last, state],
+  );
+  const liveConstraint = useMemo(
+    () => bindingConstraint(projection, state),
+    [projection, state],
+  );
+  const board = useMemo(
+    () => boardAsks(state, last, history),
+    [state, last, history],
+  );
   const dirs = useMemo(() => readiness(projection, state), [projection, state]);
   /* The report's readiness is read from the *closed* result, never from `dirs` above: that one
      belongs to the preview of a plan which stopped existing the moment the quarter locked.
@@ -704,7 +843,10 @@ export function SimulationApp() {
     () => (closed ? readiness(closed.result, state) : []),
     [closed, state],
   );
-  const messages = useMemo(() => buildInbox(projection, state, history), [projection, state, history]);
+  const messages = useMemo(
+    () => buildInbox(projection, state, history),
+    [projection, state, history],
+  );
   const ticker = useMemo(
     () => tickerItems(state, projection, history, liveConstraint),
     [state, projection, history, liveConstraint],
@@ -716,12 +858,24 @@ export function SimulationApp() {
       s: state,
       A,
       alloc,
-      mk: projection ? (projection.staffing as Record<string, number>).marketing : 1,
-      sl: projection ? (projection.staffing as Record<string, number>).sales : 1,
-      en: projection ? (projection.staffing as Record<string, number>).engineering : 1,
-      op: projection ? (projection.staffing as Record<string, number>).operations : 1,
-      sp: projection ? (projection.staffing as Record<string, number>).support : 1,
-      ad: projection ? (projection.staffing as Record<string, number>).admin : 1,
+      mk: projection
+        ? (projection.staffing as Record<string, number>).marketing
+        : 1,
+      sl: projection
+        ? (projection.staffing as Record<string, number>).sales
+        : 1,
+      en: projection
+        ? (projection.staffing as Record<string, number>).engineering
+        : 1,
+      op: projection
+        ? (projection.staffing as Record<string, number>).operations
+        : 1,
+      sp: projection
+        ? (projection.staffing as Record<string, number>).support
+        : 1,
+      ad: projection
+        ? (projection.staffing as Record<string, number>).admin
+        : 1,
     }),
     [state, A, alloc, projection],
   );
@@ -746,18 +900,21 @@ export function SimulationApp() {
    * The inFlight guard is set here (synchronously) so a second click arriving
    * in the same event loop tick is ignored by every other action too.
    */
-  const handleRewind = useCallback((targetQuarter: number) => {
-    if (inFlight.current || rewindBusy) return;
-    inFlight.current = true;
-    setRewindBusy(true);
-    setError(null);
-    setRewindModalOpen(false);
-    // Start SFX here — synchronously inside the click handler (user-gesture task),
-    // before React re-renders. This is the earliest possible moment and avoids the
-    // post-paint delay that useEffect inside the preloader would cause.
-    rewindSFXRef.current.start();
-    setRewindTargetQuarter(targetQuarter);
-  }, [rewindBusy]);
+  const handleRewind = useCallback(
+    (targetQuarter: number) => {
+      if (inFlight.current || rewindBusy) return;
+      inFlight.current = true;
+      setRewindBusy(true);
+      setError(null);
+      setRewindModalOpen(false);
+      // Start SFX here — synchronously inside the click handler (user-gesture task),
+      // before React re-renders. This is the earliest possible moment and avoids the
+      // post-paint delay that useEffect inside the preloader would cause.
+      rewindSFXRef.current.start();
+      setRewindTargetQuarter(targetQuarter);
+    },
+    [rewindBusy],
+  );
 
   /**
    * Phase 2 — called by RewindPreloader exactly once, after its 3-second countdown.
@@ -766,33 +923,38 @@ export function SimulationApp() {
    * On failure the preloader is dismissed, the error banner is shown, and the guard
    * is released so the CEO can try again.
    */
-  const executeRewind = useCallback(async (targetQuarter: number) => {
-    try {
-      const result = await simulationApi.rewind(companyId, targetQuarter);
-      // Clear localStorage drafts for all deleted quarters
-      for (const q of result.deletedQuarters) {
-        try {
-          window.localStorage.removeItem(draftKey(companyId, q));
-        } catch { /* nothing to recover from */ }
+  const executeRewind = useCallback(
+    async (targetQuarter: number) => {
+      try {
+        const result = await simulationApi.rewind(companyId, targetQuarter);
+        // Clear localStorage drafts for all deleted quarters
+        for (const q of result.deletedQuarters) {
+          try {
+            window.localStorage.removeItem(draftKey(companyId, q));
+          } catch {
+            /* nothing to recover from */
+          }
+        }
+        // Reload full state from server — replay architecture handles restoration
+        await loadRun();
+        setPhase("briefing");
+      } catch (err) {
+        // Stop audio immediately if the API call fails — the preloader is gone but the
+        // sound could still be mid-loop since onStop wasn't called via the normal path.
+        rewindSFXRef.current.stop();
+        setError(
+          err instanceof ApiError
+            ? ((err.body as { reason?: string })?.reason ?? err.message)
+            : "Rewind failed",
+        );
+      } finally {
+        setRewindTargetQuarter(null);
+        setRewindBusy(false);
+        inFlight.current = false;
       }
-      // Reload full state from server — replay architecture handles restoration
-      await loadRun();
-      setPhase("briefing");
-    } catch (err) {
-      // Stop audio immediately if the API call fails — the preloader is gone but the
-      // sound could still be mid-loop since onStop wasn't called via the normal path.
-      rewindSFXRef.current.stop();
-      setError(
-        err instanceof ApiError
-          ? (err.body as { reason?: string })?.reason ?? err.message
-          : "Rewind failed",
-      );
-    } finally {
-      setRewindTargetQuarter(null);
-      setRewindBusy(false);
-      inFlight.current = false;
-    }
-  }, [companyId, loadRun]);
+    },
+    [companyId, loadRun],
+  );
 
   const closeQuarter = useCallback(async () => {
     if (inFlight.current) return;
@@ -824,7 +986,10 @@ export function SimulationApp() {
       setScores((s) => [...s, locked.score]);
       setPriorities((p) => [...p, priority]);
       setState(locked.nextState);
-      if (locked.settlement) setEndgameOutcome(locked.settlement as unknown as Record<string, unknown>);
+      if (locked.settlement)
+        setEndgameOutcome(
+          locked.settlement as unknown as Record<string, unknown>,
+        );
       if (locked.quarter >= 4) setRunStatus("completed");
       // Phase must change in the same batch as setState so the auto-save effect sees
       // phase="closed" immediately and does NOT write the old alloc to the next
@@ -883,7 +1048,11 @@ export function SimulationApp() {
       // Timer continues running across quarters - don't reset
       setWorking(null);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Could not open the next quarter.");
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "Could not open the next quarter.",
+      );
     } finally {
       inFlight.current = false;
       setBusy(false);
@@ -898,21 +1067,31 @@ export function SimulationApp() {
       setError(null);
       setWorking({
         title: "Recording the board's decision",
-        message: path === "B" || path === "C"
-          ? "Signing the term sheet and finalizing the run…"
-          : "Signing the term sheet and reopening the company for quarter 4…",
+        message:
+          path === "B" || path === "C"
+            ? "Signing the term sheet and finalizing the run…"
+            : "Signing the term sheet and reopening the company for quarter 4…",
         dismiss: "Back to the term sheet",
       });
       try {
-        const response: { path: string; termSheetName: string; tier: string; endsEarly?: boolean } = 
-          await simulationApi.signTermSheet(companyId, path, termSheetName, reasoning);
+        const response: {
+          path: string;
+          termSheetName: string;
+          tier: string;
+          endsEarly?: boolean;
+        } = await simulationApi.signTermSheet(
+          companyId,
+          path,
+          termSheetName,
+          reasoning,
+        );
         // Re-read the run rather than walking straight into Q4 on the state we already had.
         // Signing Path A puts the cheque on Q4's opening state as `pendingInvestment`, which
         // is what raises the ceiling and what every cash figure has to say is coming -- and
         // it is the server that decides that, so the client has to ask.
         const run = await loadRun();
         resetPlan(run.state);
-        
+
         // Path B (acquisitions) and some Path C options end the simulation immediately.
         // The backend returns endsEarly: true for these cases.
         if (response.endsEarly || run.runStatus === "completed") {
@@ -925,7 +1104,11 @@ export function SimulationApp() {
         // Timer continues running across quarters - don't reset
         setWorking(null);
       } catch (err) {
-        setError(err instanceof ApiError ? err.message : "Could not record that decision.");
+        setError(
+          err instanceof ApiError
+            ? err.message
+            : "Could not record that decision.",
+        );
       } finally {
         inFlight.current = false;
         setBusy(false);
@@ -945,12 +1128,16 @@ export function SimulationApp() {
       dismiss: "Back to the year end",
     });
     try {
-      const created = await api.createCompany({ name: (company?.name ?? "Nadi Wear") + " (rerun)" });
+      const created = await api.createCompany({
+        name: (company?.name ?? "Nadi Wear") + " (rerun)",
+      });
       // The cached run list is what `/run/<n>` resolves against; the new run is not in it yet.
       forgetRunIndex();
       window.location.href = runHref(created.seq, "/simulation");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Could not start a new run.");
+      setError(
+        err instanceof ApiError ? err.message : "Could not start a new run.",
+      );
       inFlight.current = false;
       setBusy(false);
     }
@@ -959,9 +1146,21 @@ export function SimulationApp() {
   /* ── chrome ───────────────────────────────────────────────────── */
 
   const tabs = [
-    { id: "dashboard", label: "Company", badge: messages.filter((m) => m.tone === "critical").length, hot: false },
-    ...(crisisLive ? [{ id: "crisis", label: "Market event", badge: 0, hot: true }] : []),
-    ...Object.keys(SCREEN_META).map((id) => ({ id, label: SCREEN_META[id].label, badge: 0, hot: false })),
+    {
+      id: "dashboard",
+      label: "Company",
+      badge: messages.filter((m) => m.tone === "critical").length,
+      hot: false,
+    },
+    ...(crisisLive
+      ? [{ id: "crisis", label: "Market event", badge: 0, hot: true }]
+      : []),
+    ...Object.keys(SCREEN_META).map((id) => ({
+      id,
+      label: SCREEN_META[id].label,
+      badge: 0,
+      hot: false,
+    })),
     { id: "balance", label: "Balance sheet", badge: 0, hot: false },
     { id: "learning", label: "Principles", badge: 0, hot: false },
     { id: "review", label: "Close the quarter", badge: 0, hot: false },
@@ -1010,7 +1209,9 @@ export function SimulationApp() {
           >
             {t.label}
             {t.badge > 0 && (
-              <span className="rounded-full bg-danger px-1.5 text-xs font-mono text-white">{t.badge}</span>
+              <span className="rounded-full bg-danger px-1.5 text-xs font-mono text-white">
+                {t.badge}
+              </span>
             )}
             {t.hot && (
               <span className="flex h-2 w-2">
@@ -1061,22 +1262,31 @@ export function SimulationApp() {
             Lifting the bar to its own layer is the whole fix; the menu keeps the component,
             the state and the markup it has on every other page. */}
         <div className="relative z-50 shrink-0 border-b border-line bg-base">
-          <div className={SHELL + " flex items-center justify-between gap-3 px-4 py-2 sm:px-6 lg:px-8"}>
-          {/* Account chrome only. The department toggle used to sit here, which put the
+          <div
+            className={
+              SHELL +
+              " flex items-center justify-between gap-3 px-4 py-2 sm:px-6 lg:px-8"
+            }
+          >
+            {/* Account chrome only. The department toggle used to sit here, which put the
               control for a panel inside the simulation on the bar that carries "log out" --
               two different scopes on one rule. It now lives in the simulation's own header
               below, beside the quarter it belongs to. */}
-          {/* The full lockup, as everywhere else. The glyph alone read as a missing asset here
+            {/* The full lockup, as everywhere else. The glyph alone read as a missing asset here
               rather than as a deliberate mark -- this bar has the room the run's own header
               does not. */}
-          <Link href="/" aria-label="Myelin home" className="flex shrink-0 items-center">
-            <Logo />
-          </Link>
-          <div className="flex shrink-0 items-center gap-3">
-            <ThemeToggle />
-            <div className="h-5 w-px bg-line" aria-hidden />
-            <ProfileMenu />
-          </div>
+            <Link
+              href="/"
+              aria-label="Myelin home"
+              className="flex shrink-0 items-center"
+            >
+              <Logo />
+            </Link>
+            <div className="flex shrink-0 items-center gap-3">
+              <ThemeToggle />
+              <div className="h-5 w-px bg-line" aria-hidden />
+              <ProfileMenu />
+            </div>
           </div>
         </div>
 
@@ -1089,203 +1299,472 @@ export function SimulationApp() {
           {/* Anchored to the simulation surface rather than the viewport: the account bar
               above stays live and legible, so a quarter being scored reads as this workspace
               being busy rather than the whole app having locked up. */}
-          {processingOverlay && (() => {
-            /* ── Cinematic quarter-close loader ──────────────────────────────
+          {processingOverlay &&
+            (() => {
+              /* ── Cinematic quarter-close loader ──────────────────────────────
                Quarter-specific copy mirrors the two screenshot designs exactly:
                - Q1–Q3: "THE MARKET HAS RESPONDED." / 5-step market pipeline
                - Q4   : "THE DECISIONS ARE MADE."   / 5-step reveal pipeline   */
-            const qNum = closingQuarter;
-            const isFinal = qNum >= 4;
-            const headline = isFinal
-              ? "THE DECISIONS ARE MADE."
-              : "THE MARKET HAS RESPONDED.";
-            const subA = isFinal
-              ? "Every choice had a consequence."
-              : "New signals are emerging.";
-            const subB = isFinal
-              ? "Now we reveal what you've created."
-              : "Your next move matters.";
-            const statusLabel = isFinal ? "REVEALING YOUR OUTCOME" : "SITUATION EVOLVING";
-            const statusSub = isFinal
-              ? "Almost there..."
-              : "Processing outcomes and updating the world...";
-            const steps = isFinal
-              ? [
-                  { icon: "📋", label: "DECISIONS\nRECORDED",  active: false, done: true  },
-                  { icon: "📊", label: "MARKET\nRESPONDED",   active: false, done: true  },
-                  { icon: "📈", label: "TRENDS\nEMERGED",     active: false, done: true  },
-                  { icon: "⚙️",  label: "SYSTEMS\nADJUSTED",   active: false, done: true  },
-                  { icon: "🎯", label: "OUTCOME\nREVEALING",  active: true,  done: false },
-                ]
-              : [
-                  { icon: "📋", label: "DECISIONS\nRECORDED",    active: false, done: true  },
-                  { icon: "⚙️",  label: "MARKET\nRESPONDED",     active: true,  done: false },
-                  { icon: "📦", label: "IMPACTS\nCALCULATING",  active: false, done: false },
-                  { icon: "📈", label: "OUTCOMES\nEMERGING",    active: false, done: false },
-                  { icon: "👁️", label: "NEXT QUARTER\nLOADING", active: false, done: false },
-                ];
-            const quote = isFinal
-              ? "You faced uncertainty. You made trade-offs.\nNow see the full picture."
-              : "Every quarter is a test of judgment under uncertainty.\nThe numbers will tell their story.";
-            return (
-              <div className="absolute inset-0 z-[60] overflow-hidden" style={{ background: "radial-gradient(ellipse at 60% 40%, #0d1f2d 0%, #050c12 60%, #000 100%)" }}>
-                {/* ── Atmospheric background layers ─────────────────── */}
-                {/* City skyline silhouette — lower-left */}
-                <div className="absolute bottom-0 left-0 w-1/2 h-2/3 opacity-20 pointer-events-none"
-                  style={{ background: "linear-gradient(to top, rgba(0,200,170,0.08) 0%, transparent 100%)" }}>
-                  <svg viewBox="0 0 400 300" className="w-full h-full" preserveAspectRatio="xMinYMax meet">
-                    <rect x="10"  y="180" width="30" height="120" fill="#14b8a6" opacity="0.3"/>
-                    <rect x="50"  y="140" width="20" height="160" fill="#14b8a6" opacity="0.25"/>
-                    <rect x="80"  y="160" width="40" height="140" fill="#14b8a6" opacity="0.2"/>
-                    <rect x="130" y="120" width="25" height="180" fill="#14b8a6" opacity="0.3"/>
-                    <rect x="165" y="150" width="35" height="150" fill="#14b8a6" opacity="0.2"/>
-                    <rect x="210" y="100" width="20" height="200" fill="#14b8a6" opacity="0.25"/>
-                    <rect x="240" y="130" width="45" height="170" fill="#14b8a6" opacity="0.15"/>
-                    <rect x="295" y="160" width="30" height="140" fill="#14b8a6" opacity="0.2"/>
-                    <rect x="335" y="110" width="25" height="190" fill="#14b8a6" opacity="0.25"/>
-                    <rect x="370" y="145" width="30" height="155" fill="#14b8a6" opacity="0.2"/>
-                    {/* Windows */}
-                    {[10,50,80,130,165,210,240,295,335,370].map((x, i) => (
-                      Array.from({length: 6}).map((_, j) => (
-                        <rect key={`${i}-${j}`} x={x+4} y={310-j*22-20} width="4" height="3" fill="#14b8a6" opacity={Math.random() > 0.4 ? 0.6 : 0.1}/>
-                      ))
-                    ))}
-                  </svg>
-                </div>
-                {/* Galaxy / particle cluster — upper-right */}
-                <div className="absolute top-0 right-0 w-1/2 h-full opacity-25 pointer-events-none">
-                  <svg viewBox="0 0 400 400" className="w-full h-full">
-                    <defs>
-                      <radialGradient id="gx" cx="70%" cy="30%" r="50%">
-                        <stop offset="0%" stopColor="#14b8a6" stopOpacity="0.4"/>
-                        <stop offset="100%" stopColor="#14b8a6" stopOpacity="0"/>
-                      </radialGradient>
-                    </defs>
-                    <ellipse cx="280" cy="120" rx="180" ry="100" fill="url(#gx)" transform="rotate(-30 280 120)"/>
-                    {Array.from({length: 60}).map((_, i) => (
-                      <circle key={i} cx={200+Math.cos(i*0.7)*150+i*2} cy={80+Math.sin(i*0.5)*100+i*1.5}
-                        r={Math.random()*1.5+0.5} fill="#14b8a6" opacity={Math.random()*0.8+0.2}/>
-                    ))}
-                  </svg>
-                </div>
-                {/* Teal road / light trail leading to center */}
-                <div className="absolute bottom-0 left-1/4 w-1/2 h-2/3 pointer-events-none opacity-15"
-                  style={{ background: "linear-gradient(to top, rgba(20,184,166,0.6) 0%, transparent 80%)" }}>
-                </div>
-                {/* Top and bottom edge vignettes */}
-                <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 20%, transparent 75%, rgba(0,0,0,0.7) 100%)" }}/>
-
-                {/* ── Error state ───────────────────────────────────── */}
-                {error ? (
-                  <div className="absolute inset-0 flex items-center justify-center px-6">
-                    <div className="max-w-md w-full border border-red-500/30 bg-red-900/20 backdrop-blur-md px-8 py-6 text-center">
-                      <h2 className="font-serif text-3xl text-white mb-3">Processing Error</h2>
-                      <p className="text-white/60 mb-8">{error}</p>
-                      <button onClick={() => setWorking(null)} className="px-6 py-2.5 border border-white/20 text-white/80 text-sm uppercase tracking-widest hover:bg-white/10 transition-colors">
-                        {working?.dismiss ?? "Dismiss"}
-                      </button>
-                    </div>
+              const qNum = closingQuarter;
+              const isFinal = qNum >= 4;
+              const headline = isFinal
+                ? "THE DECISIONS ARE MADE."
+                : "THE MARKET HAS RESPONDED.";
+              const subA = isFinal
+                ? "Every choice had a consequence."
+                : "New signals are emerging.";
+              const subB = isFinal
+                ? "Now we reveal what you've created."
+                : "Your next move matters.";
+              const statusLabel = isFinal
+                ? "REVEALING YOUR OUTCOME"
+                : "SITUATION EVOLVING";
+              const statusSub = isFinal
+                ? "Almost there..."
+                : "Processing outcomes and updating the world...";
+              const steps = isFinal
+                ? [
+                    {
+                      icon: "📋",
+                      label: "DECISIONS\nRECORDED",
+                      active: false,
+                      done: true,
+                    },
+                    {
+                      icon: "📊",
+                      label: "MARKET\nRESPONDED",
+                      active: false,
+                      done: true,
+                    },
+                    {
+                      icon: "📈",
+                      label: "TRENDS\nEMERGED",
+                      active: false,
+                      done: true,
+                    },
+                    {
+                      icon: "⚙️",
+                      label: "SYSTEMS\nADJUSTED",
+                      active: false,
+                      done: true,
+                    },
+                    {
+                      icon: "🎯",
+                      label: "OUTCOME\nREVEALING",
+                      active: true,
+                      done: false,
+                    },
+                  ]
+                : [
+                    {
+                      icon: "📋",
+                      label: "DECISIONS\nRECORDED",
+                      active: false,
+                      done: true,
+                    },
+                    {
+                      icon: "⚙️",
+                      label: "MARKET\nRESPONDED",
+                      active: true,
+                      done: false,
+                    },
+                    {
+                      icon: "📦",
+                      label: "IMPACTS\nCALCULATING",
+                      active: false,
+                      done: false,
+                    },
+                    {
+                      icon: "📈",
+                      label: "OUTCOMES\nEMERGING",
+                      active: false,
+                      done: false,
+                    },
+                    {
+                      icon: "👁️",
+                      label: "NEXT QUARTER\nLOADING",
+                      active: false,
+                      done: false,
+                    },
+                  ];
+              const quote = isFinal
+                ? "You faced uncertainty. You made trade-offs.\nNow see the full picture."
+                : "Every quarter is a test of judgment under uncertainty.\nThe numbers will tell their story.";
+              return (
+                <div
+                  className="absolute inset-0 z-[60] overflow-hidden"
+                  style={{
+                    background:
+                      "radial-gradient(ellipse at 60% 40%, #0d1f2d 0%, #050c12 60%, #000 100%)",
+                  }}
+                >
+                  {/* ── Atmospheric background layers ─────────────────── */}
+                  {/* City skyline silhouette — lower-left */}
+                  <div
+                    className="absolute bottom-0 left-0 w-1/2 h-2/3 opacity-20 pointer-events-none"
+                    style={{
+                      background:
+                        "linear-gradient(to top, rgba(0,200,170,0.08) 0%, transparent 100%)",
+                    }}
+                  >
+                    <svg
+                      viewBox="0 0 400 300"
+                      className="w-full h-full"
+                      preserveAspectRatio="xMinYMax meet"
+                    >
+                      <rect
+                        x="10"
+                        y="180"
+                        width="30"
+                        height="120"
+                        fill="#14b8a6"
+                        opacity="0.3"
+                      />
+                      <rect
+                        x="50"
+                        y="140"
+                        width="20"
+                        height="160"
+                        fill="#14b8a6"
+                        opacity="0.25"
+                      />
+                      <rect
+                        x="80"
+                        y="160"
+                        width="40"
+                        height="140"
+                        fill="#14b8a6"
+                        opacity="0.2"
+                      />
+                      <rect
+                        x="130"
+                        y="120"
+                        width="25"
+                        height="180"
+                        fill="#14b8a6"
+                        opacity="0.3"
+                      />
+                      <rect
+                        x="165"
+                        y="150"
+                        width="35"
+                        height="150"
+                        fill="#14b8a6"
+                        opacity="0.2"
+                      />
+                      <rect
+                        x="210"
+                        y="100"
+                        width="20"
+                        height="200"
+                        fill="#14b8a6"
+                        opacity="0.25"
+                      />
+                      <rect
+                        x="240"
+                        y="130"
+                        width="45"
+                        height="170"
+                        fill="#14b8a6"
+                        opacity="0.15"
+                      />
+                      <rect
+                        x="295"
+                        y="160"
+                        width="30"
+                        height="140"
+                        fill="#14b8a6"
+                        opacity="0.2"
+                      />
+                      <rect
+                        x="335"
+                        y="110"
+                        width="25"
+                        height="190"
+                        fill="#14b8a6"
+                        opacity="0.25"
+                      />
+                      <rect
+                        x="370"
+                        y="145"
+                        width="30"
+                        height="155"
+                        fill="#14b8a6"
+                        opacity="0.2"
+                      />
+                      {/* Windows */}
+                      {[10, 50, 80, 130, 165, 210, 240, 295, 335, 370].map(
+                        (x, i) =>
+                          Array.from({ length: 6 }).map((_, j) => (
+                            <rect
+                              key={`${i}-${j}`}
+                              x={x + 4}
+                              y={310 - j * 22 - 20}
+                              width="4"
+                              height="3"
+                              fill="#14b8a6"
+                              opacity={Math.random() > 0.4 ? 0.6 : 0.1}
+                            />
+                          )),
+                      )}
+                    </svg>
                   </div>
-                ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center gap-0">
-                    {/* ── Animated logo ring ─────────────────────────── */}
-                    <div className="relative w-24 h-24 mb-6 flex items-center justify-center shrink-0">
-                      {/* Outer arc ring — teal partial circle */}
-                      <svg className="absolute inset-0 w-full h-full animate-spin" style={{ animationDuration: "4s", animationTimingFunction: "linear" }} viewBox="0 0 96 96">
-                        <circle cx="48" cy="48" r="44" fill="none" stroke="#14b8a6" strokeWidth="2.5" strokeDasharray="180 100" strokeLinecap="round" opacity="0.8"/>
-                      </svg>
-                      {/* Inner pulsing dot on ring */}
-                      <svg className="absolute inset-0 w-full h-full animate-spin" style={{ animationDuration: "4s", animationTimingFunction: "linear" }} viewBox="0 0 96 96">
-                        <circle cx="48" cy="4" r="4" fill="#14b8a6"/>
-                      </svg>
-                      {/* Static base ring */}
-                      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 96 96">
-                        <circle cx="48" cy="48" r="44" fill="none" stroke="#14b8a6" strokeWidth="0.5" opacity="0.2"/>
-                      </svg>
-                      {/* M logo in center */}
-                      <div className="relative w-12 h-12 rounded-full bg-[#0a1a24] border border-[#14b8a6]/30 flex items-center justify-center">
-                        <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none">
-                          <path d="M3 18V6l4.5 6 4.5-6 4.5 6 4.5-6v12" stroke="#14b8a6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
+                  {/* Galaxy / particle cluster — upper-right */}
+                  <div className="absolute top-0 right-0 w-1/2 h-full opacity-25 pointer-events-none">
+                    <svg viewBox="0 0 400 400" className="w-full h-full">
+                      <defs>
+                        <radialGradient id="gx" cx="70%" cy="30%" r="50%">
+                          <stop
+                            offset="0%"
+                            stopColor="#14b8a6"
+                            stopOpacity="0.4"
+                          />
+                          <stop
+                            offset="100%"
+                            stopColor="#14b8a6"
+                            stopOpacity="0"
+                          />
+                        </radialGradient>
+                      </defs>
+                      <ellipse
+                        cx="280"
+                        cy="120"
+                        rx="180"
+                        ry="100"
+                        fill="url(#gx)"
+                        transform="rotate(-30 280 120)"
+                      />
+                      {Array.from({ length: 60 }).map((_, i) => (
+                        <circle
+                          key={i}
+                          cx={200 + Math.cos(i * 0.7) * 150 + i * 2}
+                          cy={80 + Math.sin(i * 0.5) * 100 + i * 1.5}
+                          r={Math.random() * 1.5 + 0.5}
+                          fill="#14b8a6"
+                          opacity={Math.random() * 0.8 + 0.2}
+                        />
+                      ))}
+                    </svg>
+                  </div>
+                  {/* Teal road / light trail leading to center */}
+                  <div
+                    className="absolute bottom-0 left-1/4 w-1/2 h-2/3 pointer-events-none opacity-15"
+                    style={{
+                      background:
+                        "linear-gradient(to top, rgba(20,184,166,0.6) 0%, transparent 80%)",
+                    }}
+                  ></div>
+                  {/* Top and bottom edge vignettes */}
+                  <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      background:
+                        "linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 20%, transparent 75%, rgba(0,0,0,0.7) 100%)",
+                    }}
+                  />
+
+                  {/* ── Error state ───────────────────────────────────── */}
+                  {error ? (
+                    <div className="absolute inset-0 flex items-center justify-center px-6">
+                      <div className="max-w-md w-full border border-red-500/30 bg-red-900/20 backdrop-blur-md px-8 py-6 text-center">
+                        <h2 className="font-serif text-3xl text-white mb-3">
+                          Processing Error
+                        </h2>
+                        <p className="text-white/60 mb-8">{error}</p>
+                        <button
+                          onClick={() => setWorking(null)}
+                          className="px-6 py-2.5 border border-white/20 text-white/80 text-sm uppercase tracking-widest hover:bg-white/10 transition-colors"
+                        >
+                          {working?.dismiss ?? "Dismiss"}
+                        </button>
                       </div>
                     </div>
-
-                    {/* ── Quarter label ──────────────────────────────── */}
-                    <div className="flex items-center gap-3 mb-2 shrink-0">
-                      <div className="h-px w-10 bg-[#14b8a6]/50"/>
-                      <span className="text-[#14b8a6] text-xs uppercase tracking-[0.25em] font-mono">Quarter {qNum} Closed.</span>
-                      <div className="h-px w-10 bg-[#14b8a6]/50"/>
-                    </div>
-
-                    {/* ── Main headline ──────────────────────────────── */}
-                    <h1 className="text-white font-bold text-3xl sm:text-4xl md:text-5xl tracking-wide mb-4 leading-tight shrink-0" style={{ fontFamily: "system-ui, sans-serif", letterSpacing: "0.05em" }}>
-                      {headline}
-                    </h1>
-
-                    {/* ── Subtitle pair ──────────────────────────────── */}
-                    <p className="text-[#14b8a6] text-sm mb-1 shrink-0">{subA}</p>
-                    <p className="text-white/70 text-sm mb-5 shrink-0">{subB}</p>
-
-                    {/* ── Divider dot ────────────────────────────────── */}
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#14b8a6] mb-5 animate-pulse shrink-0"/>
-
-                    {/* ── Status icon + label ────────────────────────── */}
-                    {isFinal ? (
-                      /* Hourglass icon for revealing */
-                      <svg viewBox="0 0 24 24" className="w-7 h-7 text-[#14b8a6] mb-2 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                        <path d="M5 3h14M5 21h14M7 3v5l5 4-5 4v5M17 3v5l-5 4 5 4v5"/>
-                      </svg>
-                    ) : (
-                      /* Refresh / evolving icon */
-                      <svg viewBox="0 0 24 24" className="w-7 h-7 text-[#14b8a6] mb-2 shrink-0 animate-spin" style={{ animationDuration: "2s" }} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                        <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
-                      </svg>
-                    )}
-                    <p className="text-[#14b8a6] text-xs font-bold uppercase tracking-[0.2em] mb-1 shrink-0">{statusLabel}</p>
-                    <p className="text-white/50 text-xs mb-6 shrink-0">{statusSub}</p>
-
-                    {/* ── 5-step progress pipeline ───────────────────── */}
-                    <div className="flex items-start justify-center gap-0 mb-7 w-full max-w-xl shrink-0">
-                      {steps.map((step, i) => (
-                        <div key={i} className="flex items-center">
-                          <div className="flex flex-col items-center gap-2">
-                            {/* Icon circle */}
-                            <div className={[
-                              "w-11 h-11 rounded-full border-2 flex items-center justify-center text-base transition-all",
-                              step.active
-                                ? "border-[#14b8a6] bg-transparent shadow-[0_0_16px_rgba(20,184,166,0.5)]"
-                                : step.done
-                                  ? "border-[#14b8a6]/40 bg-transparent opacity-70"
-                                  : "border-white/10 bg-transparent opacity-30",
-                            ].join(" ")}>
-                              <span>{step.icon}</span>
-                            </div>
-                            {/* Label */}
-                            <p className={[
-                              "text-[9px] uppercase tracking-widest text-center leading-tight w-16 whitespace-pre-line",
-                              step.active ? "text-[#14b8a6] font-bold" : "text-white/40",
-                            ].join(" ")}>
-                              {step.label}
-                            </p>
-                          </div>
-                          {/* Dashed connector */}
-                          {i < steps.length - 1 && (
-                            <div className="w-8 sm:w-12 h-px border-t border-dashed border-white/20 mb-6 mx-1"/>
-                          )}
+                  ) : (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center gap-0">
+                      {/* ── Animated logo ring ─────────────────────────── */}
+                      <div className="relative w-24 h-24 mb-6 flex items-center justify-center shrink-0">
+                        {/* Outer arc ring — teal partial circle */}
+                        <svg
+                          className="absolute inset-0 w-full h-full animate-spin"
+                          style={{
+                            animationDuration: "4s",
+                            animationTimingFunction: "linear",
+                          }}
+                          viewBox="0 0 96 96"
+                        >
+                          <circle
+                            cx="48"
+                            cy="48"
+                            r="44"
+                            fill="none"
+                            stroke="#14b8a6"
+                            strokeWidth="2.5"
+                            strokeDasharray="180 100"
+                            strokeLinecap="round"
+                            opacity="0.8"
+                          />
+                        </svg>
+                        {/* Inner pulsing dot on ring */}
+                        <svg
+                          className="absolute inset-0 w-full h-full animate-spin"
+                          style={{
+                            animationDuration: "4s",
+                            animationTimingFunction: "linear",
+                          }}
+                          viewBox="0 0 96 96"
+                        >
+                          <circle cx="48" cy="4" r="4" fill="#14b8a6" />
+                        </svg>
+                        {/* Static base ring */}
+                        <svg
+                          className="absolute inset-0 w-full h-full"
+                          viewBox="0 0 96 96"
+                        >
+                          <circle
+                            cx="48"
+                            cy="48"
+                            r="44"
+                            fill="none"
+                            stroke="#14b8a6"
+                            strokeWidth="0.5"
+                            opacity="0.2"
+                          />
+                        </svg>
+                        {/* M logo in center */}
+                        <div className="relative w-12 h-12 rounded-full bg-[#0a1a24] border border-[#14b8a6]/30 flex items-center justify-center">
+                          <svg
+                            viewBox="0 0 24 24"
+                            className="w-7 h-7"
+                            fill="none"
+                          >
+                            <path
+                              d="M3 18V6l4.5 6 4.5-6 4.5 6 4.5-6v12"
+                              stroke="#14b8a6"
+                              strokeWidth="1.8"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
                         </div>
-                      ))}
-                    </div>
+                      </div>
 
-                    {/* ── Quote card ─────────────────────────────────── */}
-                    <div className="max-w-sm w-full border border-[#14b8a6]/20 bg-[#14b8a6]/5 backdrop-blur-sm px-5 py-3 flex items-start gap-3 shrink-0">
-                      <span className="text-[#14b8a6] text-2xl leading-none mt-0.5 shrink-0">&ldquo;</span>
-                      <p className="text-white/70 text-xs leading-relaxed text-left whitespace-pre-line">{quote}</p>
+                      {/* ── Quarter label ──────────────────────────────── */}
+                      <div className="flex items-center gap-3 mb-2 shrink-0">
+                        <div className="h-px w-10 bg-[#14b8a6]/50" />
+                        <span className="text-[#14b8a6] text-xs uppercase tracking-[0.25em] font-mono">
+                          Quarter {qNum} Closed.
+                        </span>
+                        <div className="h-px w-10 bg-[#14b8a6]/50" />
+                      </div>
+
+                      {/* ── Main headline ──────────────────────────────── */}
+                      <h1
+                        className="text-white font-bold text-3xl sm:text-4xl md:text-5xl tracking-wide mb-4 leading-tight shrink-0"
+                        style={{
+                          fontFamily: "system-ui, sans-serif",
+                          letterSpacing: "0.05em",
+                        }}
+                      >
+                        {headline}
+                      </h1>
+
+                      {/* ── Subtitle pair ──────────────────────────────── */}
+                      <p className="text-[#14b8a6] text-sm mb-1 shrink-0">
+                        {subA}
+                      </p>
+                      <p className="text-white/70 text-sm mb-5 shrink-0">
+                        {subB}
+                      </p>
+
+                      {/* ── Divider dot ────────────────────────────────── */}
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#14b8a6] mb-5 animate-pulse shrink-0" />
+
+                      {/* ── Status icon + label ────────────────────────── */}
+                      {isFinal ? (
+                        /* Hourglass icon for revealing */
+                        <svg
+                          viewBox="0 0 24 24"
+                          className="w-7 h-7 text-[#14b8a6] mb-2 shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                        >
+                          <path d="M5 3h14M5 21h14M7 3v5l5 4-5 4v5M17 3v5l-5 4 5 4v5" />
+                        </svg>
+                      ) : (
+                        /* Refresh / evolving icon */
+                        <svg
+                          viewBox="0 0 24 24"
+                          className="w-7 h-7 text-[#14b8a6] mb-2 shrink-0 animate-spin"
+                          style={{ animationDuration: "2s" }}
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                        >
+                          <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                        </svg>
+                      )}
+                      <p className="text-[#14b8a6] text-xs font-bold uppercase tracking-[0.2em] mb-1 shrink-0">
+                        {statusLabel}
+                      </p>
+                      <p className="text-white/50 text-xs mb-6 shrink-0">
+                        {statusSub}
+                      </p>
+
+                      {/* ── 5-step progress pipeline ───────────────────── */}
+                      <div className="flex items-start justify-center gap-0 mb-7 w-full max-w-xl shrink-0">
+                        {steps.map((step, i) => (
+                          <div key={i} className="flex items-center">
+                            <div className="flex flex-col items-center gap-2">
+                              {/* Icon circle */}
+                              <div
+                                className={[
+                                  "w-11 h-11 rounded-full border-2 flex items-center justify-center text-base transition-all",
+                                  step.active
+                                    ? "border-[#14b8a6] bg-transparent shadow-[0_0_16px_rgba(20,184,166,0.5)]"
+                                    : step.done
+                                      ? "border-[#14b8a6]/40 bg-transparent opacity-70"
+                                      : "border-white/10 bg-transparent opacity-30",
+                                ].join(" ")}
+                              >
+                                <span>{step.icon}</span>
+                              </div>
+                              {/* Label */}
+                              <p
+                                className={[
+                                  "text-[9px] uppercase tracking-widest text-center leading-tight w-16 whitespace-pre-line",
+                                  step.active
+                                    ? "text-[#14b8a6] font-bold"
+                                    : "text-white/40",
+                                ].join(" ")}
+                              >
+                                {step.label}
+                              </p>
+                            </div>
+                            {/* Dashed connector */}
+                            {i < steps.length - 1 && (
+                              <div className="w-8 sm:w-12 h-px border-t border-dashed border-white/20 mb-6 mx-1" />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* ── Quote card ─────────────────────────────────── */}
+                      <div className="max-w-sm w-full border border-[#14b8a6]/20 bg-[#14b8a6]/5 backdrop-blur-sm px-5 py-3 flex items-start gap-3 shrink-0">
+                        <span className="text-[#14b8a6] text-2xl leading-none mt-0.5 shrink-0">
+                          &ldquo;
+                        </span>
+                        <p className="text-white/70 text-xs leading-relaxed text-left whitespace-pre-line">
+                          {quote}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
-            );
-          })()}
+                  )}
+                </div>
+              );
+            })()}
           {/* Rewind preloader — 3-second immersive transition between Confirm Rewind and
               the actual API call. Sits at the same z-level as the working overlay but uses
               amber theming and a countdown rather than the teal spinner, making it feel
@@ -1301,8 +1780,12 @@ export function SimulationApp() {
             <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-amber/40 bg-amber/10 px-6 py-3 backdrop-blur-sm">
               <Pause className="h-4 w-4 shrink-0 text-amber" />
               <div className="min-w-0 flex-1">
-                <span className="font-serif text-sm text-ink">Simulation paused</span>
-                <span className="ml-2 text-xs text-dim">All inputs are read-only while paused.</span>
+                <span className="font-serif text-sm text-ink">
+                  Simulation paused
+                </span>
+                <span className="ml-2 text-xs text-dim">
+                  All inputs are read-only while paused.
+                </span>
               </div>
               <button
                 onClick={timer.unpause}
@@ -1313,43 +1796,50 @@ export function SimulationApp() {
               </button>
             </div>
           )}
-          {timerActive && timer.expired && !working && !timerExpiredDismissed && (
-            <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-              <div className="relative max-w-md rounded-lg border border-danger/40 bg-danger/10 px-8 py-6 backdrop-blur-sm shadow-2xl">
-                {/* Dismiss button — closes the popup but keeps simulation read-only */}
-                <button
-                  onClick={() => setTimerExpiredDismissed(true)}
-                  aria-label="Close notification"
-                  className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded text-ink/50 transition-colors hover:bg-danger/20 hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-danger/60"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-                <div className="flex items-start gap-4">
-                  <AlertTriangle className="h-6 w-6 shrink-0 text-danger-soft mt-1" />
-                  <div>
-                    <div className="font-serif text-2xl text-ink mb-2">Time Limit Reached</div>
-                    <div className="text-sm text-ink/90 leading-relaxed space-y-2">
-                      <p>
-                        The 50-minute timer for this simulation has expired. All inputs are now read-only
-                        and you can no longer make changes or close quarters.
-                      </p>
-                      <p>
-                        You can review your decisions and progress, but no further actions are allowed.
-                      </p>
+          {timerActive &&
+            timer.expired &&
+            !working &&
+            !timerExpiredDismissed && (
+              <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                <div className="relative max-w-md rounded-lg border border-danger/40 bg-danger/10 px-8 py-6 backdrop-blur-sm shadow-2xl">
+                  {/* Dismiss button — closes the popup but keeps simulation read-only */}
+                  <button
+                    onClick={() => setTimerExpiredDismissed(true)}
+                    aria-label="Close notification"
+                    className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded text-ink/50 transition-colors hover:bg-danger/20 hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-danger/60"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                  <div className="flex items-start gap-4">
+                    <AlertTriangle className="h-6 w-6 shrink-0 text-danger-soft mt-1" />
+                    <div>
+                      <div className="font-serif text-2xl text-ink mb-2">
+                        Time Limit Reached
+                      </div>
+                      <div className="text-sm text-ink/90 leading-relaxed space-y-2">
+                        <p>
+                          The 50-minute timer for this simulation has expired.
+                          All inputs are now read-only and you can no longer
+                          make changes or close quarters.
+                        </p>
+                        <p>
+                          You can review your decisions and progress, but no
+                          further actions are allowed.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setTimerExpiredDismissed(true)}
+                        className="mt-5 flex items-center gap-2 border border-danger/40 px-4 py-2 text-xs uppercase tracking-widest text-ink/80 transition-colors hover:border-danger/70 hover:bg-danger/10 hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-danger/60"
+                      >
+                        Review my simulation
+                      </button>
                     </div>
-                    <button
-                      onClick={() => setTimerExpiredDismissed(true)}
-                      className="mt-5 flex items-center gap-2 border border-danger/40 px-4 py-2 text-xs uppercase tracking-widest text-ink/80 transition-colors hover:border-danger/70 hover:bg-danger/10 hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-danger/60"
-                    >
-                      Review my simulation
-                    </button>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
           <div className={SHELL + " flex h-full"}>
-          {/* Always mounted while there is a rail to show, and collapsed by animating its
+            {/* Always mounted while there is a rail to show, and collapsed by animating its
               width to zero rather than by unmounting.
 
               Mounting and unmounting could not be transitioned -- the panel and the document
@@ -1357,51 +1847,59 @@ export function SimulationApp() {
               time it was closed. The outer element is the only thing that changes size; the
               inner one keeps the full rail width throughout, so the nav labels slide out of
               view intact instead of reflowing to nothing on the way. */}
-          {showNav && (
-            <aside
-              inert={!navOpen ? true : undefined}
-              className={cn(
-                "hidden shrink-0 overflow-hidden bg-sim-surface transition-[width] duration-300 ease-out motion-reduce:transition-none lg:block",
-                navOpen ? "border-r border-sim-line" : "border-r-0",
-              )}
-              style={{ width: navOpen ? RAIL_W : 0 }}
-            >
-              <div
+            {showNav && (
+              <aside
+                inert={!navOpen ? true : undefined}
                 className={cn(
-                  "flex h-full flex-col px-5 py-4 transition-opacity duration-200 ease-out motion-reduce:transition-none",
-                  navOpen ? "opacity-100" : "opacity-0",
+                  "hidden shrink-0 overflow-hidden bg-sim-surface transition-[width] duration-300 ease-out motion-reduce:transition-none lg:block",
+                  navOpen ? "border-r border-sim-line" : "border-r-0",
                 )}
-                style={{ width: RAIL_W }}
+                style={{ width: navOpen ? RAIL_W : 0 }}
               >
-                {navBody(closeNav)}
-              </div>
-            </aside>
-          )}
-
-          {showNav && mobileNavOpen && (
-            <>
-              <button
-                type="button"
-                onClick={() => setMobileNavOpen(false)}
-                aria-label="Close navigation"
-                className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-              />
-              <aside className="fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col border-r border-sim-line bg-sim-surface px-3 py-4 shadow-xl lg:hidden">
-                {navBody(() => setMobileNavOpen(false))}
+                <div
+                  className={cn(
+                    "flex h-full flex-col px-5 py-4 transition-opacity duration-200 ease-out motion-reduce:transition-none",
+                    navOpen ? "opacity-100" : "opacity-0",
+                  )}
+                  style={{ width: RAIL_W }}
+                >
+                  {navBody(closeNav)}
+                </div>
               </aside>
-            </>
-          )}
+            )}
 
-          <div ref={scrollerRef} className="flex min-w-0 flex-1 flex-col overflow-y-auto">
-          {/* Sticky: quarter, cash and what is left to commit are the figures you are deciding
+            {showNav && mobileNavOpen && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setMobileNavOpen(false)}
+                  aria-label="Close navigation"
+                  className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+                />
+                <aside className="fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col border-r border-sim-line bg-sim-surface px-3 py-4 shadow-xl lg:hidden">
+                  {navBody(() => setMobileNavOpen(false))}
+                </aside>
+              </>
+            )}
+
+            <div
+              ref={scrollerRef}
+              className="flex min-w-0 flex-1 flex-col overflow-y-auto"
+            >
+              {/* Sticky: quarter, cash and what is left to commit are the figures you are deciding
               against, so they stay on screen while the document scrolls under them. */}
-          <header className="sticky top-0 z-20 shrink-0 bg-chrome text-white">
-            {/* `min-w-0` on both halves and `flex-wrap` on the row: the status cluster is the
+              <header className="sticky top-0 z-20 shrink-0 bg-chrome text-white">
+                {/* `min-w-0` on both halves and `flex-wrap` on the row: the status cluster is the
                 widest thing in the simulation and it has to be allowed to drop to its own line
                 rather than push the title off the left edge. Nothing here is `nowrap`. */}
-            <div className={COLUMN + " py-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2"}>
-              <div className="flex min-w-0 items-center gap-3">
-                {/* The department trigger, in the workspace it belongs to.
+                <div
+                  className={
+                    COLUMN +
+                    " py-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2"
+                  }
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    {/* The department trigger, in the workspace it belongs to.
 
                     It is only here while the panel is shut. An open panel already names
                     itself and carries its own close control, so a second control up here
@@ -1417,162 +1915,216 @@ export function SimulationApp() {
                     and nothing is holding space for a button that is not there. That is also
                     why the fade is an entry animation and not a transition -- there is no
                     element left to transition once it is gone. */}
-                {showNav && !navOpen && (
-                  <button
-                    type="button"
-                    onClick={openNav}
-                    aria-expanded={false}
-                    aria-label="Open departments"
-                    className="dept-trigger hidden shrink-0 items-center gap-1.5 border border-line-2 px-2 py-1 text-xs uppercase tracking-widest text-dim transition-colors hover:text-white lg:inline-flex"
-                  >
-                    <PanelLeftOpen className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">Departments</span>
-                  </button>
-                )}
-                {showNav && !mobileNavOpen && (
-                  <button
-                    type="button"
-                    onClick={() => setMobileNavOpen(true)}
-                    aria-expanded={false}
-                    aria-label="Open departments"
-                    className="dept-trigger inline-flex shrink-0 items-center gap-1.5 border border-line-2 px-2 py-1 text-xs uppercase tracking-widest text-dim transition-colors hover:text-white lg:hidden"
-                  >
-                    <PanelLeftOpen className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">Departments</span>
-                  </button>
-                )}
-                <CompanyNameEditor
-                  name={cleanCompanyName(companyName)}
-                  onSave={async (newName) => {
-                    setCompanyName(newName);
-                    try {
-                      await api.updateCompany(companyId, { name: newName });
-                    } catch {
-                      /* name persists locally even if server update fails */
-                    }
-                  }}
-                />
-                <span className="hidden text-xs uppercase tracking-widest text-dim md:inline">
-                  Chief Executive
-                </span>
-              </div>
-
-              {showNav && (
-                <div className="flex min-w-0 flex-wrap items-center gap-x-5 gap-y-1 font-mono text-sm">
-                  {timerActive && (
-                    <span className={cn(
-                      "flex items-center gap-2 border px-3 py-1.5 text-sm font-mono",
-                      timer.expired
-                        ? "border-danger/60 bg-danger/10 text-danger-soft"
-                        : timer.paused
-                          ? "border-amber/60 bg-amber/10 text-amber"
-                          : timer.remaining <= 300
-                            ? "border-danger/60 bg-danger/10 text-danger-soft"
-                            : "border-line-2 bg-transparent text-white",
-                    )}>
-                      <Clock className="h-3.5 w-3.5" />
-                      {timer.formatTime()}
-                    </span>
-                  )}
-                  {timerActive && !timer.expired && (
-                    <button
-                      onClick={() => timer.paused ? timer.unpause() : timer.pause()}
-                      className={cn(
-                        "flex items-center gap-1.5 border px-2 py-1 text-xs uppercase tracking-widest transition-colors",
-                        timer.paused
-                          ? "border-amber/60 text-amber hover:bg-amber/10"
-                          : "border-line-2 text-dim hover:text-white",
-                      )}
-                      title={timer.paused ? "Resume simulation" : "Pause simulation"}
-                    >
-                      {timer.paused ? (
-                        <>
-                          <Play className="h-3 w-3" />
-                          <span className="hidden sm:inline">Resume</span>
-                        </>
-                      ) : (
-                        <>
-                          <Pause className="h-3 w-3" />
-                          <span className="hidden sm:inline">Pause</span>
-                        </>
-                      )}
-                    </button>
-                  )}
-                  {rewindsRemaining > 0 && history.length > 0 && phase !== "final" && !timer.expired && (
-                    <button
-                      onClick={() => setRewindModalOpen(true)}
-                      disabled={rewindBusy}
-                      className="flex items-center gap-1.5 border border-line-2 px-2 py-1 text-xs uppercase tracking-widest text-dim transition-colors hover:text-white disabled:opacity-50"
-                      title="Rewind to a previous quarter"
-                    >
-                      <RotateCcw className="h-3 w-3" />
-                      <span className="hidden sm:inline">Rewind</span>
-                      <span className="text-[10px] ml-0.5">({rewindsRemaining})</span>
-                    </button>
-                  )}
-                  <span>
-                    <span className="text-dim text-xs uppercase tracking-widest mr-2">Quarter</span>
-                    {state.quarter}/4
-                  </span>
-                  <span>
-                    <span className="text-dim text-xs uppercase tracking-widest mr-2">Cash</span>
-                    {inr(state.cash)}
-                    {state.pendingInvestment > 0 && (
-                      <span className="text-teal-bright ml-1">+{inr(state.pendingInvestment)} pending</span>
+                    {showNav && !navOpen && (
+                      <button
+                        type="button"
+                        onClick={openNav}
+                        aria-expanded={false}
+                        aria-label="Open departments"
+                        className="dept-trigger hidden shrink-0 items-center gap-1.5 border border-line-2 px-2 py-1 text-xs uppercase tracking-widest text-dim transition-colors hover:text-white lg:inline-flex"
+                      >
+                        <PanelLeftOpen className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline">Departments</span>
+                      </button>
                     )}
-                  </span>
-                  {priority && (
-                    <span className="text-teal-bright">
-                      <span className="text-dim text-xs uppercase tracking-widest mr-2">Priority</span>
-                      {PRIORITY_BY_ID[priority].name}
+                    {showNav && !mobileNavOpen && (
+                      <button
+                        type="button"
+                        onClick={() => setMobileNavOpen(true)}
+                        aria-expanded={false}
+                        aria-label="Open departments"
+                        className="dept-trigger inline-flex shrink-0 items-center gap-1.5 border border-line-2 px-2 py-1 text-xs uppercase tracking-widest text-dim transition-colors hover:text-white lg:hidden"
+                      >
+                        <PanelLeftOpen className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline">Departments</span>
+                      </button>
+                    )}
+                    <CompanyNameEditor
+                      name={cleanCompanyName(companyName)}
+                      onSave={async (newName) => {
+                        setCompanyName(newName);
+                        try {
+                          await api.updateCompany(companyId, { name: newName });
+                        } catch {
+                          /* name persists locally even if server update fails */
+                        }
+                      }}
+                    />
+                    <span className="hidden text-xs uppercase tracking-widest text-dim md:inline">
+                      Chief Executive
                     </span>
-                  )}
-                  <span className={budget.committed > budget.ceiling ? "text-danger-soft" : "text-faint"}>
-                    <span className="text-dim text-xs uppercase tracking-widest mr-2">Left</span>
-                    {inr(budget.ceiling - budget.committed)}
-                  </span>
-                  <button
-                    onClick={() => setNotesOn(!notesOn)}
-                    className={
-                      "px-2 py-1 text-xs uppercase tracking-widest border transition-colors " +
-                      (notesOn ? "border-teal text-teal-bright" : "border-line-2 text-dim")
-                    }
-                  >
-                    Notes {notesOn ? "on" : "off"}
-                  </button>
-                  {/* The chime that marks a closed quarter, and the only way to silence it.
+                  </div>
+
+                  {showNav && (
+                    <div className="flex min-w-0 flex-wrap items-center gap-x-5 gap-y-1 font-mono text-sm">
+                      {timerActive && (
+                        <span
+                          className={cn(
+                            "flex items-center gap-2 border px-3 py-1.5 text-sm font-mono",
+                            timer.expired
+                              ? "border-danger/60 bg-danger/10 text-danger-soft"
+                              : timer.paused
+                                ? "border-amber/60 bg-amber/10 text-amber"
+                                : timer.remaining <= 300
+                                  ? "border-danger/60 bg-danger/10 text-danger-soft"
+                                  : "border-line-2 bg-transparent text-white",
+                          )}
+                        >
+                          <Clock className="h-3.5 w-3.5" />
+                          {timer.formatTime()}
+                        </span>
+                      )}
+                      {timerActive && !timer.expired && (
+                        <button
+                          onClick={() =>
+                            timer.paused ? timer.unpause() : timer.pause()
+                          }
+                          className={cn(
+                            "flex items-center gap-1.5 border px-2 py-1 text-xs uppercase tracking-widest transition-colors",
+                            timer.paused
+                              ? "border-amber/60 text-amber hover:bg-amber/10"
+                              : "border-line-2 text-dim hover:text-white",
+                          )}
+                          title={
+                            timer.paused
+                              ? "Resume simulation"
+                              : "Pause simulation"
+                          }
+                        >
+                          {timer.paused ? (
+                            <>
+                              <Play className="h-3 w-3" />
+                              <span className="hidden sm:inline">Resume</span>
+                            </>
+                          ) : (
+                            <>
+                              <Pause className="h-3 w-3" />
+                              <span className="hidden sm:inline">Pause</span>
+                            </>
+                          )}
+                        </button>
+                      )}
+                      {rewindsRemaining > 0 &&
+                        history.length > 0 &&
+                        phase !== "final" &&
+                        !timer.expired && (
+                          <button
+                            onClick={() => setRewindModalOpen(true)}
+                            disabled={rewindBusy}
+                            className="flex items-center gap-1.5 border border-line-2 px-2 py-1 text-xs uppercase tracking-widest text-dim transition-colors hover:text-white disabled:opacity-50"
+                            title="Rewind to a previous quarter"
+                          >
+                            <RotateCcw className="h-3 w-3" />
+                            <span className="hidden sm:inline">Rewind</span>
+                            <span className="text-[10px] ml-0.5">
+                              ({rewindsRemaining})
+                            </span>
+                          </button>
+                        )}
+                      <span>
+                        <span className="text-dim text-xs uppercase tracking-widest mr-2">
+                          Quarter
+                        </span>
+                        {state.quarter}/4
+                      </span>
+                      <span>
+                        <span className="text-dim text-xs uppercase tracking-widest mr-2">
+                          Cash
+                        </span>
+                        {inr(state.cash)}
+                        {state.pendingInvestment > 0 && (
+                          <span className="text-teal-bright ml-1">
+                            +{inr(state.pendingInvestment)} pending
+                          </span>
+                        )}
+                      </span>
+                      {priority && (
+                        <span className="text-teal-bright">
+                          <span className="text-dim text-xs uppercase tracking-widest mr-2">
+                            Priority
+                          </span>
+                          {PRIORITY_BY_ID[priority].name}
+                        </span>
+                      )}
+                      <span
+                        className={
+                          budget.committed > budget.ceiling
+                            ? "text-danger-soft"
+                            : "text-faint"
+                        }
+                      >
+                        <span className="text-dim text-xs uppercase tracking-widest mr-2">
+                          Left
+                        </span>
+                        {inr(budget.ceiling - budget.committed)}
+                      </span>
+                      <button
+                        onClick={() => setNotesOn(!notesOn)}
+                        className={
+                          "px-2 py-1 text-xs uppercase tracking-widest border transition-colors " +
+                          (notesOn
+                            ? "border-teal text-teal-bright"
+                            : "border-line-2 text-dim")
+                        }
+                      >
+                        Notes {notesOn ? "on" : "off"}
+                      </button>
+                      {/* The chime that marks a closed quarter, and the only way to silence it.
                       A sound with no visible switch is a sound people mute the whole tab for. */}
-                  <button
-                    onClick={() => {
-                      setSoundEnabled(!soundOn);
-                      // Play it on the way on, so the switch demonstrates what it controls.
-                      if (!soundOn) playQuarterClosed();
-                    }}
-                    aria-pressed={soundOn}
-                    title={soundOn ? "Mute the quarter-close chime" : "Play a chime when a quarter closes"}
-                    className={
-                      "px-2 py-1 text-xs uppercase tracking-widest border transition-colors " +
-                      (soundOn ? "border-teal text-teal-bright" : "border-line-2 text-dim")
-                    }
-                  >
-                    Sound {soundOn ? "on" : "off"}
-                  </button>
+                      <button
+                        onClick={() => {
+                          setSoundEnabled(!soundOn);
+                          // Play it on the way on, so the switch demonstrates what it controls.
+                          if (!soundOn) playQuarterClosed();
+                        }}
+                        aria-pressed={soundOn}
+                        title={
+                          soundOn
+                            ? "Mute the quarter-close chime"
+                            : "Play a chime when a quarter closes"
+                        }
+                        className={
+                          "px-2 py-1 text-xs uppercase tracking-widest border transition-colors " +
+                          (soundOn
+                            ? "border-teal text-teal-bright"
+                            : "border-line-2 text-dim")
+                        }
+                      >
+                        Sound {soundOn ? "on" : "off"}
+                      </button>
+                      {/* Quick link to standings — opens the leaderboard overlay over the simulation. */}
+                      <button
+                        onClick={() => setLeaderboardOpen(true)}
+                        title="View your standings"
+                        className="px-2 py-1 text-xs uppercase tracking-widest border border-line-2 text-dim transition-colors hover:border-teal hover:text-teal-bright"
+                      >
+                        Leaderboard
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
+
+                {showNav && <Ticker items={ticker} />}
+              </header>
+
+              <main className={COLUMN + " py-6"}>{body}</main>
+
+              <footer
+                className={COLUMN + " pb-10 pt-2 text-xs text-faint font-mono"}
+              >
+                Teaching simulation. All figures fictional. Every number is
+                computed by the MyElin engine.
+              </footer>
             </div>
-
-            {showNav && <Ticker items={ticker} />}
-          </header>
-
-          <main className={COLUMN + " py-6"}>{body}</main>
-
-          <footer className={COLUMN + " pb-10 pt-2 text-xs text-faint font-mono"}>
-            Teaching simulation. All figures fictional. Every number is computed by the MyElin engine.
-          </footer>
-          </div>
           </div>
         </div>
       </div>
+      <SimulationLeaderboardModal
+        open={leaderboardOpen}
+        scenarioId={company?.scenario_id}
+        scenarioTitle={company?.scenario.display_name}
+        onClose={() => setLeaderboardOpen(false)}
+      />
       <RewindModal
         open={rewindModalOpen}
         onClose={() => setRewindModalOpen(false)}
@@ -1585,7 +2137,9 @@ export function SimulationApp() {
   );
 
   const errorBanner = error && (
-    <div className="border-l-4 border-danger bg-danger/10 px-4 py-3 text-sm text-tone-bad">{error}</div>
+    <div className="border-l-4 border-danger bg-danger/10 px-4 py-3 text-sm text-tone-bad">
+      {error}
+    </div>
   );
 
   /* ── render ───────────────────────────────────────────────────── */
@@ -1593,7 +2147,10 @@ export function SimulationApp() {
   if (booting) {
     return (
       <div className="simulation flex min-h-full items-center justify-center bg-base text-ink">
-        <PageLoading label="Loading your company…" sub="Reading the run's closed quarters." />
+        <PageLoading
+          label="Loading your company…"
+          sub="Reading the run's closed quarters."
+        />
       </div>
     );
   }
@@ -1659,13 +2216,19 @@ export function SimulationApp() {
     // the term sheet look like a dead end before.
     return chrome(
       ts ? (
-        <TermSheetScreen ts={ts} onAccept={acceptDeal} busy={busy} error={error} />
+        <TermSheetScreen
+          ts={ts}
+          onAccept={acceptDeal}
+          busy={busy}
+          error={error}
+        />
       ) : (
         <div className="space-y-4">
           {errorBanner}
           <div className="border-l-4 border-ember bg-ember/10 px-4 py-3 text-sm text-ink">
-            The board&apos;s term sheet could not be loaded. Reload the page to try again — your three
-            closed quarters are safe, and nothing is lost.
+            The board&apos;s term sheet could not be loaded. Reload the page to
+            try again — your three closed quarters are safe, and nothing is
+            lost.
           </div>
         </div>
       ),
@@ -1696,7 +2259,10 @@ export function SimulationApp() {
      `SectionNav` promotes it. */
   const sectionIndex = tabs.findIndex((t) => t.id === tab);
   const after = sectionIndex >= 0 ? tabs[sectionIndex + 1] : undefined;
-  const nextSection = after && after.id !== CLOSURE_TAB ? { id: after.id, label: after.label } : null;
+  const nextSection =
+    after && after.id !== CLOSURE_TAB
+      ? { id: after.id, label: after.label }
+      : null;
 
   let body: React.ReactNode;
 
@@ -1776,18 +2342,47 @@ export function SimulationApp() {
         extraTop={
           tab === "rnd" ? (
             <>
-              <ProductFocus s={state} p={projection} last={last} startInno={startInno} alloc={alloc} />
-              <ProductPortfolio s={state} products={products} setProducts={guardSetProducts} p={projection} readOnly={readOnly} />
+              <ProductFocus
+                s={state}
+                p={projection}
+                last={last}
+                startInno={startInno}
+                alloc={alloc}
+              />
+              <ProductPortfolio
+                s={state}
+                products={products}
+                setProducts={guardSetProducts}
+                p={projection}
+                readOnly={readOnly}
+              />
             </>
           ) : tab === "hr" ? (
-            <PeoplePanel s={state} alloc={alloc} setAlloc={guardAlloc} p={projection} readOnly={readOnly} />
+            <PeoplePanel
+              s={state}
+              alloc={alloc}
+              setAlloc={guardAlloc}
+              p={projection}
+              readOnly={readOnly}
+            />
           ) : null
         }
         extra={
           tab === "rnd" ? (
             <>
-              <InnovationBoard s={state} startInno={startInno} setStartInno={guardSetStartInno} p={projection} readOnly={readOnly} />
-              <WarrantyPanel warranty={warranty} setWarranty={guardSetWarranty} p={projection} readOnly={readOnly} />
+              <InnovationBoard
+                s={state}
+                startInno={startInno}
+                setStartInno={guardSetStartInno}
+                p={projection}
+                readOnly={readOnly}
+              />
+              <WarrantyPanel
+                warranty={warranty}
+                setWarranty={guardSetWarranty}
+                p={projection}
+                readOnly={readOnly}
+              />
             </>
           ) : tab === "finance" ? (
             <FinancePanel

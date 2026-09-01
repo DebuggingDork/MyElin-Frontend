@@ -4,24 +4,20 @@
  * The one loading vocabulary for the whole app.
  *
  * Every asynchronous wait -- signing in, resolving a run, closing a quarter -- draws from
- * these four primitives so a wait never looks like it belongs to a different product. They are
- * deliberately quiet: a hairline ring, three dots, a 2px rail. Nothing spins at 40px, nothing
- * pulses a whole card, because the point is to say "this is working" without redrawing the
- * screen the reader was already looking at.
+ * these four primitives so a wait never looks like it belongs to a different product.
  *
- * Colour is always `currentColor` or `--teal`, so a loader placed on the app's dark chrome,
- * on the simulation's cream surface, or inside a `bg-chrome` banner picks up the right ink
- * without a variant prop. The keyframes live in `globals.css` next to the rest of the motion,
- * and all of them are neutralised under `prefers-reduced-motion`.
+ * `LogoGlow` is the full-page and overlay spinner: the Myelin glyph with a teal pulse glow.
+ * `Spinner` is a quiet hairline arc used inline and on buttons.
+ * The keyframes live in `globals.css` next to the rest of the motion.
  */
 
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 const RING_SIZE = { sm: 14, md: 18, lg: 26 } as const;
 
 /**
- * A hairline ring. Rendered as an SVG arc rather than a bordered box so the stroke stays
- * exactly 1.5px at every size and never picks up the simulation's global border-colour rule.
+ * A hairline arc ring — used inline and inside buttons where the glyph would be too heavy.
  */
 export function Spinner({
   size = "md",
@@ -30,7 +26,6 @@ export function Spinner({
 }: {
   size?: keyof typeof RING_SIZE;
   className?: string;
-  /** Only pass this when the spinner is the sole thing announcing the wait. */
   label?: string;
 }) {
   const px = RING_SIZE[size];
@@ -53,6 +48,40 @@ export function Spinner({
         strokeLinecap="round"
       />
     </svg>
+  );
+}
+
+/**
+ * The Myelin glyph with a pulsing teal glow — used wherever a wait owns its own space
+ * (page loads, overlays, processing panels). More on-brand than a spinning ring.
+ */
+export function LogoGlow({
+  size = "md",
+  className,
+  label,
+}: {
+  size?: "sm" | "md" | "lg";
+  className?: string;
+  label?: string;
+}) {
+  const px = size === "sm" ? 28 : size === "md" ? 40 : 56;
+  return (
+    <span
+      role={label ? "status" : "presentation"}
+      aria-label={label}
+      aria-hidden={label ? undefined : true}
+      className={cn("myelin-logo-glow inline-flex items-center justify-center shrink-0", className)}
+    >
+      <Image
+        src="/brand/myelin-glyph.png"
+        alt=""
+        width={685}
+        height={340}
+        aria-hidden
+        className="h-auto w-auto object-contain"
+        style={{ width: px, height: "auto" }}
+      />
+    </span>
   );
 }
 
@@ -131,7 +160,7 @@ export function PageLoading({
       role="status"
       aria-live="polite"
     >
-      <Spinner size="lg" className="text-teal" />
+      <LogoGlow size="lg" label={label} />
       <div className="space-y-1.5">
         <p className="text-[14.5px] text-ink">{label}</p>
         {sub && <p className="text-[12.5px] text-faint">{sub}</p>}
@@ -189,7 +218,7 @@ export function ProcessingPanel({
         </>
       ) : (
         <>
-          <Spinner size="lg" className="mx-auto text-teal" />
+          <LogoGlow size="lg" className="mx-auto" />
           <h2 className="mt-4 font-serif text-2xl text-ink">{title}</h2>
           <p className="mx-auto mt-2 max-w-sm text-[13px] leading-relaxed text-dim">{message}</p>
           <ProgressRail className="mx-auto mt-5 max-w-[12rem] text-teal" />
