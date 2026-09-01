@@ -147,7 +147,7 @@ export function Privacy() {
             Yes. Learners may request access, correction, or deletion of their personal information, subject to applicable legal, contractual, and institutional requirements.
           </p>
           <p className="text-sm text-dim">
-            Privacy contact: <a href="mailto:privacy@myelinsimulations.com" className="text-teal hover:underline">privacy@myelinsimulations.com</a>
+            Privacy contact: <a href="mailto:myelinworks@gmail.com" className="text-teal hover:underline">myelinworks@gmail.com</a>
           </p>
         </div>
 
@@ -225,8 +225,8 @@ export function Privacy() {
           <p className="text-sm text-dim mb-4">
             For privacy, data access, deletion, or institutional data-governance questions, contact:
           </p>
-          <a href="mailto:privacy@myelinsimulations.com" className="text-lg font-mono text-teal hover:underline tracking-wide">
-            privacy@myelinsimulations.com
+          <a href="mailto:myelinworks@gmail.com" className="text-lg font-mono text-teal hover:underline tracking-wide">
+            myelinworks@gmail.com
           </a>
         </div>
 

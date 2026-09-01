@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Action, Container } from "@/components/ui/Kit";
 import { LedgerHead } from "@/components/home/LedgerHead";
 
-const CONTACT_EMAIL = "myelindi@gmail.com";
+const CONTACT_EMAIL = "myelinworks@gmail.com";
 
 const requestTypes = [
   { value: "Pilot Request", label: "Pilot Request" },
