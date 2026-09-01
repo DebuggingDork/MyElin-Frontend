@@ -365,7 +365,7 @@ function buildRiskPage(scores: QuarterScore[]): RiskPage {
 
   return {
     risk_dimension: mistake.title,
-    risk_score: 100 - (mistake.pct ?? 50), // Invert since this is a risk/weakness
+    risk_score: 100 - ((mistake as any).pct ?? 50), // Invert since this is a risk/weakness
     headline: mistake.title,
     evidence_bullets: evidenceBullets,
     narrative: String(mistake.why),
