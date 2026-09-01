@@ -312,6 +312,29 @@ export type EndgameOutcome = {
   gameOver?: boolean;
 };
 
+export type CEOBand = "Exceptional" | "Strong" | "Competent" | "Weak" | "Poor";
+
+export type FinalReport = {
+  tier: "THRIVING" | "STABLE" | "DISTRESSED";
+  tierReason: string;
+  ceoBand: CEOBand;
+  finalScore: number;
+  traitTotal: number;
+  modTotal: number;
+  traits: ScoreTrait[];
+  mods: Modifier[];
+  finalValuation: number;
+  totalUnitsSold: number;
+  totalRevenue: number;
+  totalProfit: number;
+  finalCash: number;
+  finalMarketShare: number;
+  quarterScores: QuarterScore[];
+  endgameOutcome?: EndgameOutcome;
+  termSheet?: TermSheet;
+  gameOver: boolean;
+};
+
 /** One quarter's committed decisions, replayable end-to-end. */
 export type QuarterLogEntry = {
   q: number;
