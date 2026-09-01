@@ -35,7 +35,7 @@ import { Bar, Eyebrow, LedgerRow, Panel, Stat } from "@/components/simulation/Ki
 import { QuarterCharts } from "@/components/simulation/QuarterCharts";
 import { BalanceSheetDoc } from "@/components/simulation/BalanceSheetDoc";
 import { FinalReportPdfExport } from "@/components/simulation/FinalReportPdfExport";
-import { BAND_STYLES, buildFinalReport, calculateTier } from "@/lib/simulation/final-report";
+import { BAND_STYLES, buildFinalReport, calculateTier, buildAdaptationRecord } from "@/lib/simulation/final-report";
 import type { QuarterScore } from "@/lib/simulation/remote";
 import type {
   CompanyState,
@@ -94,6 +94,13 @@ export function FinalScreen({
   const tierInfo = history.length >= 3 && history[0] && history[1] && history[2]
     ? calculateTier(history[0], history[1], history[2], s)
     : null;
+
+  // Build adaptation record
+  const adaptationRecord = buildAdaptationRecord(history).map((rec, i) => ({
+    ...rec,
+    score: scores[i]?.final || 0,
+  }));
+  const changedCount = adaptationRecord.filter((a) => a.changed).length;
 
   
 
@@ -271,6 +278,68 @@ export function FinalScreen({
       )}
 
       <QuarterCharts history={history} />
+
+      {/* Adaptation Table */}
+      <Panel 
+        eyebrow="How you adapted" 
+        title={
+          changedCount === 0
+            ? "The same lever, every quarter"
+            : changedCount === 1
+              ? "One real change, in four quarters"
+              : `${changedCount} changes across the year`
+        }
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="border-b-2 border-stone-800">
+                <th className="text-left py-3 pr-4 text-xs uppercase tracking-widest text-stone-500 font-semibold">
+                  Quarter
+                </th>
+                <th className="text-left py-3 pr-4 text-xs uppercase tracking-widest text-stone-500 font-semibold">
+                  Leading Category
+                </th>
+                <th className="text-left py-3 pr-4 text-xs uppercase tracking-widest text-stone-500 font-semibold">
+                  Changed?
+                </th>
+                <th className="text-left py-3 text-xs uppercase tracking-widest text-stone-500 font-semibold">
+                  Score
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {adaptationRecord.map((a) => (
+                <tr key={a.q} className="border-b border-stone-200">
+                  <td className="py-3 pr-4 font-mono text-stone-900">Q{a.q}</td>
+                  <td className="py-3 pr-4 text-stone-700">{a.category}</td>
+                  <td
+                    className={
+                      "py-3 pr-4 " +
+                      (a.changed === null
+                        ? "text-stone-400"
+                        : a.changed
+                          ? "text-teal-700 font-semibold"
+                          : "text-rose-700")
+                    }
+                  >
+                    {a.changed === null
+                      ? "— (opening quarter)"
+                      : a.changed
+                        ? "Yes"
+                        : "No — repeated"}
+                  </td>
+                  <td className="py-3 font-mono text-stone-900">{n1(a.score)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="text-sm text-stone-500 italic mt-5 max-w-2xl leading-relaxed">
+          Changing an allocation is not, by itself, evidence of adaptability — what matters is
+          whether it changed in response to what the results were already showing.
+        </p>
+      </Panel>
 
       <Panel eyebrow="Market share" title="Across the year">
         {history.map((h) => (

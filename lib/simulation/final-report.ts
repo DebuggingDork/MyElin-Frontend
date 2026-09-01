@@ -385,3 +385,47 @@ export const BAND_STYLES: Record<CEOBand, string> = {
   Weak: "bg-orange-700 text-orange-50",
   Poor: "bg-rose-800 text-rose-50",
 };
+
+/**
+ * Build adaptation record showing which allocation category led each quarter
+ * and whether it changed from the previous quarter.
+ */
+export function buildAdaptationRecord(history: QuarterResultShape[]): Array<{
+  q: number;
+  category: string;
+  changed: boolean | null;
+  score: number;
+}> {
+  // Find the leading allocation category for each quarter
+  const records = history.map((r, i) => {
+    const alloc = r.A as Record<string, number>;
+    
+    // Group allocations by category and sum them
+    const categories: Record<string, number> = {
+      Marketing: (alloc.social || 0) + (alloc.events || 0) + (alloc.ads || 0) + (alloc.influencer || 0),
+      Sales: (alloc.hire_sales || 0) + (alloc.sales_training || 0) + (alloc.sales_tools || 0),
+      Product: (alloc.quality || 0) + (alloc.supplier || 0) + (alloc.warranty_ext || 0),
+      Operations: (alloc.hire_ops || 0) + (alloc.capacity || 0) + (alloc.logistics || 0),
+      Engineering: (alloc.hire_eng || 0) + (alloc.innovation_team || 0),
+      Support: (alloc.hire_support || 0) + (alloc.cx_tools || 0),
+    };
+
+    // Find the category with highest spend
+    const entries = Object.entries(categories);
+    const topEntry = entries.reduce((max, entry) => 
+      entry[1] > max[1] ? entry : max
+    , entries[0] || ["No clear lead", 0]);
+
+    return {
+      q: i + 1,
+      category: topEntry[1] > 0 ? topEntry[0] : "No clear lead",
+      score: 0, // Will be filled from scores array
+    };
+  });
+
+  // Mark changes from previous quarter
+  return records.map((row, i) => ({
+    ...row,
+    changed: i === 0 ? null : row.category !== records[i - 1].category,
+  }));
+}
