@@ -8,7 +8,7 @@ import { easeOut } from "@/lib/media";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { api } from "@/lib/api/client";
 import { asNumber } from "@/lib/api/catalog";
-import type { CompanyListItem, LeaderboardEntry } from "@/lib/api/types";
+import type { CompanyListItem } from "@/lib/api/types";
 import { runHref } from "@/lib/run/ref";
 import { ApiError } from "@/lib/api/types";
 import { Masthead } from "@/components/layout/PageChrome";
@@ -224,22 +224,30 @@ function StorylineBoard({ storyline, index }: { storyline: Storyline; index: num
 
 function RunRow({ run, rank }: { run: CompanyListItem; rank: number }) {
   const [open, setOpen] = useState(false);
-  const [quarters, setQuarters] = useState<LeaderboardEntry[] | null>(null);
+  const [scoreLoaded, setScoreLoaded] = useState(false);
+  const [bestScore, setBestScore] = useState<number | null>(null);
+  const [bestBand, setBestBand] = useState<string | null>(null);
   const [qError, setQError] = useState<string | null>(null);
 
-  const loadQuarters = useCallback(async () => {
+  const loadScore = useCallback(async () => {
+    if (scoreLoaded) return;
+    setScoreLoaded(true);
     try {
-      const res = await api.getLeaderboard(run.id);
-      setQuarters(res.entries);
+      const res = await api.getLeaderboard(run.scenario_id ?? "nadi_wear_standard");
+      const mine = res.current_user_entry;
+      if (mine) {
+        setBestScore(asNumber(mine.composite_score));
+        setBestBand(mine.band);
+      }
     } catch (err) {
-      setQError(err instanceof ApiError ? err.message : "Could not load quarters");
+      setQError(err instanceof ApiError ? err.message : "Could not load score");
     }
-  }, [run.id]);
+  }, [scoreLoaded, run.scenario_id]);
 
   function toggle() {
     const next = !open;
     setOpen(next);
-    if (next && quarters === null && qError === null) void loadQuarters();
+    if (next && !scoreLoaded) void loadScore();
   }
 
   return (
@@ -290,26 +298,20 @@ function RunRow({ run, rank }: { run: CompanyListItem; rank: number }) {
       {open && (
         <div className="border-t border-line bg-[var(--panel)] px-4 py-3 sm:px-5">
           {qError && <p className="text-[12px] text-rose">{qError}</p>}
-          {!qError && quarters === null && (
-            <p className="text-[12px] text-faint">Loading quarters…</p>
+          {!qError && !scoreLoaded && (
+            <p className="text-[12px] text-faint">Loading…</p>
           )}
-          {quarters?.length === 0 && (
-            <p className="text-[12px] text-faint">No quarters locked on this run yet.</p>
-          )}
-          {quarters && quarters.length > 0 && (
+          {scoreLoaded && !qError && (
             <div className="flex flex-wrap gap-2">
-              {quarters.map((q) => (
-                <span
-                  key={q.quarter_id}
-                  className="glass-card-flat px-3 py-1.5 text-[12px] text-dim"
-                >
-                  <span className="text-faint">Q{q.quarter_number}</span>{" "}
-                  <span className="num font-semibold text-ink">
-                    {q.ceo_score != null ? asNumber(q.ceo_score).toFixed(1) : "—"}
-                  </span>
-                  {q.band && <span className="text-faint"> · {q.band}</span>}
+              {bestScore !== null ? (
+                <span className="glass-card-flat px-3 py-1.5 text-[12px] text-dim">
+                  <span className="text-faint">Best score </span>
+                  <span className="num font-semibold text-ink">{bestScore.toFixed(1)}</span>
+                  {bestBand && <span className="text-faint"> · {bestBand}</span>}
                 </span>
-              ))}
+              ) : (
+                <p className="text-[12px] text-faint">No scored quarters yet.</p>
+              )}
             </div>
           )}
           <Link
