@@ -376,10 +376,10 @@ export const simulationApi = {
     ),
 
   signTermSheet: (companyId: string, path: "A" | "B" | "C", termSheetName: string, reasoning: string) =>
-    request<{ path: string; term_sheet_name: string; tier: string }>(
+    request<{ path: string; term_sheet_name: string; tier: string; ends_early: boolean }>(
       `/companies/${companyId}/simulation/endgame`,
       { method: "POST", body: JSON.stringify({ path, term_sheet_name: termSheetName, reasoning }) },
-    ),
+    ).then((raw) => adaptKeys(raw) as unknown as { path: string; termSheetName: string; tier: string; endsEarly: boolean }),
 
   rewind: (companyId: string, targetQuarter: number): Promise<RewindResponse> =>
     request<Record<string, unknown>>(
