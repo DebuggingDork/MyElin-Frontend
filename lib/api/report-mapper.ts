@@ -36,6 +36,7 @@ import type {
   QuarterResultShape,
   TermSheet,
 } from "@/lib/simulation/types";
+import type { QuarterReportResponse } from "./types";
 import {
   traitRollup,
   managementStyle,
@@ -48,7 +49,94 @@ import { PRIORITY_BY_ID, headcount } from "@/lib/simulation/constants";
 import { cr, inr, n0, n1, pct } from "@/lib/simulation/format";
 
 /**
- * Main mapping function: transforms simulation data into Decision Intelligence Report.
+ * Map quarterly report data to DecisionIntelligenceReport schema for a single quarter.
+ * This is used by ReportPdfExport.tsx for individual quarter reports.
+ */
+export function mapQuarterlyReport(
+  report: QuarterReportResponse,
+  companyName: string,
+  ceoName: string
+): DecisionIntelligenceReport {
+  // Wrap single quarter data in array format for compatibility with the 12-page report
+  const scores: QuarterScore[] = [
+    {
+      quarter: report.quarter_number,
+      score: Number(report.decision_quality.ceo_score),
+      band: report.decision_quality.band,
+      final: Number(report.decision_quality.ceo_score),
+      modifiers: report.decision_quality.modifiers.map((m) => ({
+        id: m.id,
+        points: m.applied_points,
+        why: m.detail,
+      })),
+    } as QuarterScore,
+  ];
+
+  // Build minimal history from single quarter outcome
+  const history: QuarterResultShape[] = [
+    {
+      quarter: report.quarter_number,
+      cash: Number(report.outcome.closing_cash_inr.value),
+      revenue: Number(report.outcome.revenue_inr.value),
+      revenueT: Number(report.outcome.revenue_inr.value),
+      units: Number(report.outcome.units_sold.value),
+      cogs: Number(report.outcome.cogs_inr.value),
+      grossProfit: Number(report.outcome.gross_profit_inr.value),
+      netCF: Number(report.outcome.net_cash_flow_inr.value),
+      netCashFlow: Number(report.outcome.net_cash_flow_inr.value),
+      valuation: report.outcome.valuation_inr?.value
+        ? Number(report.outcome.valuation_inr.value)
+        : null,
+      marketShare: null,
+      customers: null,
+    } as QuarterResultShape,
+  ];
+
+  // Single quarter has no priority data, use nulls
+  const priorities: (PriorityId | null)[] = [null];
+
+  // Build minimal company state from quarter outcome
+  const state: CompanyState = {
+    cash: Number(report.outcome.closing_cash_inr.value),
+    revenue: Number(report.outcome.revenue_inr.value),
+    unitsSold: Number(report.outcome.units_sold.value),
+    valuation: report.outcome.valuation_inr?.value
+      ? Number(report.outcome.valuation_inr.value)
+      : 0,
+    runway: report.outcome.cash_runway_quarters?.value
+      ? Number(report.outcome.cash_runway_quarters.value)
+      : null,
+    // Default values for fields not in quarterly report
+    demand: 0,
+    price: 0,
+    quality: 0,
+    innovation: 0,
+    brand: 0,
+    cx: 0,
+    rivalStrength: 0,
+    staff: 0,
+  } as CompanyState;
+
+  // No endgame data for single quarter
+  const endgame = null;
+  const termSheet = null;
+
+  // Reuse the simulation mapper with adapted data
+  return mapSimulationToReport(
+    scores,
+    history,
+    priorities,
+    state,
+    termSheet,
+    endgame,
+    companyName,
+    ceoName
+  );
+}
+
+/**
+ * Main mapping function: transforms full simulation data into Decision Intelligence Report.
+ * This is used by FinalReportPdfExport.tsx for the complete simulation report.
  */
 export function mapSimulationToReport(
   scores: QuarterScore[],

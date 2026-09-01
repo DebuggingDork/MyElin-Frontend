@@ -5,18 +5,31 @@ import { Check, Download, ExternalLink, Loader2 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/types";
 import type { QuarterReportResponse } from "@/lib/api/types";
-// TODO: Migrate to backend PDF generation - see backend/docs/pdf-migration.md
-// import { buildReportPdf } from "@/lib/pdf/report-pdf";
+import { mapQuarterlyReport } from "@/lib/api/report-mapper";
 import { Action } from "@/components/ui/Kit";
 import { useRun } from "@/components/run/RunProvider";
+import { useAuth } from "@/components/auth/AuthProvider";
+import {
+  displayName,
+  identitySnapshot,
+  identityServerSnapshot,
+  subscribeIdentity,
+} from "@/lib/identity";
+import { useSyncExternalStore } from "react";
 
 type Status = "idle" | "working" | "done" | "error";
 
-/** Renders the PDF client-side (buildReportPdf), triggers a normal browser download, and uploads
- *  the same bytes to the backend for storage in Supabase Storage -- one click does both, since a
- *  report a CEO bothers to download is exactly the one worth keeping a durable copy of. */
+/** Generates PDF via backend API, triggers a browser download, and uploads the same bytes to
+ *  Supabase Storage for durable storage -- one click does both. */
 export function ReportPdfExport({ report }: { report: QuarterReportResponse }) {
   const { companyId, company } = useRun();
+  const { user } = useAuth();
+  const profile = useSyncExternalStore(
+    subscribeIdentity,
+    identitySnapshot,
+    identityServerSnapshot,
+  );
+
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const [storedUrl, setStoredUrl] = useState<string | null>(null);
@@ -37,17 +50,26 @@ export function ReportPdfExport({ report }: { report: QuarterReportResponse }) {
   async function handleDownload() {
     setStatus("working");
     setError(null);
-    
-    // TODO: Migrate to backend PDF generation
-    // See backend/docs/pdf-migration.md for implementation guide
-    // New endpoint: POST /reports/decision-intelligence/pdf
-    setError("PDF generation temporarily disabled during migration to backend");
-    setStatus("error");
-    
-    /* OLD CODE - TO BE REPLACED:
-    try {
-      const blob = buildReportPdf(report, company?.name ?? "Myelin");
 
+    try {
+      const ceoName = user ? displayName(profile, user.email) : "CEO";
+
+      // Clean company name - remove any email/username suffix after separator
+      const rawCompanyName = company?.name ?? "Myelin";
+      const cleanCompanyName =
+        rawCompanyName.split(" · ")[0]?.trim() || rawCompanyName;
+
+      // Map quarterly report data to backend report schema
+      const reportData = mapQuarterlyReport(
+        report,
+        cleanCompanyName,
+        ceoName
+      );
+
+      // Generate PDF via backend API
+      const blob = await api.generateDecisionIntelligencePdf(reportData);
+
+      // Download the PDF
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -57,14 +79,15 @@ export function ReportPdfExport({ report }: { report: QuarterReportResponse }) {
       a.remove();
       URL.revokeObjectURL(url);
 
+      // Upload to storage for durable copy
       const stored = await api.storeReportPdf(companyId, report.quarter_id, blob);
       setStoredUrl(stored.signed_url);
       setStatus("done");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not save a copy to storage");
       setStatus("error");
+      console.error("PDF generation failed:", err);
     }
-    */
   }
 
   return (
