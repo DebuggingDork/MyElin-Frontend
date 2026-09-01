@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight, BarChart2, Play } from "lucide-react";
 import { duration, easeOut } from "@/lib/media";
 import { api, getToken } from "@/lib/api/client";
 import { runHref } from "@/lib/run/ref";
@@ -13,6 +13,7 @@ import { useSimulationHref } from "@/components/play/entry";
 import { Figures, Masthead } from "@/components/layout/PageChrome";
 import { LedgerHead } from "@/components/home/LedgerHead";
 import { Action, Container } from "@/components/ui/Kit";
+import { SimulationLeaderboardModal } from "@/components/simulation/SimulationLeaderboard";
 
 type Status = "LIVE" | "BETA" | "COMING SOON";
 
@@ -390,67 +391,96 @@ function ScenarioCard({ scenario, delay }: { scenario: Scenario; delay: number }
   const isLive = scenario.status === "LIVE";
   const isBeta = scenario.status === "BETA";
 
+  const [lbOpen, setLbOpen] = useState(false);
+
   return (
-    <motion.article
-      initial={{ opacity: 0, y: 12 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-60px" }}
-      transition={{ duration: duration.reveal, delay, ease: easeOut }}
-      className={cn(
-        "flex flex-col border-b border-r border-line transition-colors duration-300",
-        isLive ? "bg-teal/[0.06]" : "hover:bg-[var(--panel)]",
-      )}
-    >
-      <div className="flex items-baseline justify-between gap-4 border-b border-line px-5 py-3">
-        <span className="num text-[11px] text-faint">{scenario.index}</span>
-        <span className={cn("tick-label flex items-center gap-2", statusTone[scenario.status])}>
-          {isLive && <span className="live-dot h-1.5 w-1.5 rounded-full bg-teal" />}
-          {isBeta && <span className="h-1.5 w-1.5 rounded-full bg-ember" />}
-          {!isLive && !isBeta && <span className="h-1.5 w-1.5 rounded-full bg-faint" />}
-          {scenario.status}
-        </span>
-      </div>
-
-      {/* `flex-1` on the copy block, not on the footer: the cards stretch to the tallest in
-          their row, so absorbing the slack here is what lines the intensity reading, the
-          duration/level pair and the action up across all six. */}
-      <div className="flex-1 px-5 pt-6">
-        <p className="tick-label">{scenario.category}</p>
-        <h3 className="ledger-display mt-3 text-[clamp(1.25rem,2vw,1.6rem)] text-ink">
-          {scenario.title}
-        </h3>
-        <p className="mt-3 text-[14.5px] leading-[1.65] text-dim">{scenario.copy}</p>
-      </div>
-
-      <div className="mt-6 flex items-center justify-between gap-4 px-5">
-        <span className="tick-label">Intensity</span>
-        <span className="flex items-center gap-3">
-          <TickBar value={scenario.intensity} lit={isLive} />
-          <span className="num text-[11.5px] text-dim">{scenario.intensity}/100</span>
-        </span>
-      </div>
-
-      <dl className="mt-6 grid grid-cols-2 border-y border-line">
-        <div className="border-r border-line px-5 py-4">
-          <dt className="tick-label">Duration</dt>
-          <dd className="num mt-2 text-[13.5px] text-ink">{scenario.duration}</dd>
-        </div>
-        <div className="px-5 py-4">
-          <dt className="tick-label">Level</dt>
-          <dd className="mt-2 text-[13.5px] text-ink">{scenario.level}</dd>
-        </div>
-      </dl>
-
-      <div className="mt-auto px-5 py-5">
-        {isLive ? (
-          <Action href={simulationHref} className="w-full">
-            Play
-            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-          </Action>
-        ) : (
-          <p className="tick-label py-3 text-center">In the build queue</p>
+    <>
+      <motion.article
+        initial={{ opacity: 0, y: 12 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-60px" }}
+        transition={{ duration: duration.reveal, delay, ease: easeOut }}
+        className={cn(
+          "flex flex-col border-b border-r border-line transition-colors duration-300",
+          isLive ? "bg-teal/[0.06]" : "hover:bg-[var(--panel)]",
         )}
-      </div>
-    </motion.article>
+      >
+        <div className="flex items-baseline justify-between gap-4 border-b border-line px-5 py-3">
+          <span className="num text-[11px] text-faint">{scenario.index}</span>
+          <div className="flex items-center gap-3">
+            {/* Leaderboard icon — only on LIVE scenarios */}
+            {isLive && (
+              <button
+                type="button"
+                onClick={() => setLbOpen(true)}
+                title="View leaderboard"
+                aria-label={`${scenario.title} leaderboard`}
+                className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] uppercase tracking-widest text-teal transition-colors hover:bg-teal/10"
+              >
+                <BarChart2 className="h-3 w-3 shrink-0" />
+                <span className="hidden sm:inline">Leaderboard</span>
+              </button>
+            )}
+            <span className={cn("tick-label flex items-center gap-2", statusTone[scenario.status])}>
+              {isLive && <span className="live-dot h-1.5 w-1.5 rounded-full bg-teal" />}
+              {isBeta && <span className="h-1.5 w-1.5 rounded-full bg-ember" />}
+              {!isLive && !isBeta && <span className="h-1.5 w-1.5 rounded-full bg-faint" />}
+              {scenario.status}
+            </span>
+          </div>
+        </div>
+
+        {/* `flex-1` on the copy block, not on the footer: the cards stretch to the tallest in
+            their row, so absorbing the slack here is what lines the intensity reading, the
+            duration/level pair and the action up across all six. */}
+        <div className="flex-1 px-5 pt-6">
+          <p className="tick-label">{scenario.category}</p>
+          <h3 className="ledger-display mt-3 text-[clamp(1.25rem,2vw,1.6rem)] text-ink">
+            {scenario.title}
+          </h3>
+          <p className="mt-3 text-[14.5px] leading-[1.65] text-dim">{scenario.copy}</p>
+        </div>
+
+        <div className="mt-6 flex items-center justify-between gap-4 px-5">
+          <span className="tick-label">Intensity</span>
+          <span className="flex items-center gap-3">
+            <TickBar value={scenario.intensity} lit={isLive} />
+            <span className="num text-[11.5px] text-dim">{scenario.intensity}/100</span>
+          </span>
+        </div>
+
+        <dl className="mt-6 grid grid-cols-2 border-y border-line">
+          <div className="border-r border-line px-5 py-4">
+            <dt className="tick-label">Duration</dt>
+            <dd className="num mt-2 text-[13.5px] text-ink">{scenario.duration}</dd>
+          </div>
+          <div className="px-5 py-4">
+            <dt className="tick-label">Level</dt>
+            <dd className="mt-2 text-[13.5px] text-ink">{scenario.level}</dd>
+          </div>
+        </dl>
+
+        <div className="mt-auto px-5 py-5">
+          {isLive ? (
+            <Action href={simulationHref} className="w-full">
+              Play
+              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+            </Action>
+          ) : (
+            <p className="tick-label py-3 text-center">In the build queue</p>
+          )}
+        </div>
+      </motion.article>
+
+      {/* Leaderboard modal — mounted outside the article so it overlays the whole page */}
+      {isLive && (
+        <SimulationLeaderboardModal
+          open={lbOpen}
+          onClose={() => setLbOpen(false)}
+          scenarioId="nadi_wear_standard"
+          scenarioTitle={scenario.title}
+        />
+      )}
+    </>
   );
 }
