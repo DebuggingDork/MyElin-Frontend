@@ -464,8 +464,8 @@ export const api = {
       `/companies/${companyId}/quarters/${quarterId}/crisis`,
     ),
 
-  getLeaderboard: (companyId: string) =>
-    request<LeaderboardResponse>(`/companies/${companyId}/leaderboard`),
+  getLeaderboard: (scenarioId = "nadi_wear_standard") =>
+    request<LeaderboardResponse>(`/leaderboard?scenario_id=${encodeURIComponent(scenarioId)}`),
 
   getEndgame: (companyId: string, quarterId: string) =>
     request<EndgamePreviewResponse>(
@@ -511,4 +511,29 @@ export const api = {
       "/api/demand/detailed",
       { method: "POST", body: JSON.stringify(body) },
     ),
+
+  /* ── PDF Reports ───────────────────────────────────────────── */
+
+  /** Generate Decision Intelligence report PDF using backend Playwright renderer.
+   *  Returns a Blob that can be downloaded or previewed. */
+  generateDecisionIntelligencePdf: async (body: import("@/lib/api/report-types").DecisionIntelligenceReport): Promise<Blob> => {
+    const res = await authorizedFetch("/reports/decision-intelligence/pdf", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      let errorBody: unknown = null;
+      try {
+        errorBody = JSON.parse(text);
+      } catch {
+        errorBody = { detail: text };
+      }
+      throw new ApiError(res.status, (errorBody ?? {}) as ApiErrorBody);
+    }
+
+    return await res.blob();
+  },
 };
