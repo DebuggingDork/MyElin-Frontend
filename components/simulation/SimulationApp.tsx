@@ -334,7 +334,7 @@ export function SimulationApp() {
   /* ── chrome and lifecycle ─────────────────────────────────────── */
 
   const [phase, setPhase] = useState<Phase>("intro");
-  const [advanced, setAdvanced] = useState(false);
+  const [advanced, setAdvanced] = useState(true);
   const [notesOn, setNotesOn] = useState(true);
   const [companyName, setCompanyName] = useState<string>("Nadi Wear");
   // `localStorage` is the store here, not component state: reading it during render would
@@ -509,7 +509,7 @@ export function SimulationApp() {
       setPriority(draft?.priority ?? null);
       setReflection(draft?.reflection ?? { sacrifice: [] });
       setCrisis(draft?.crisis ?? emptyCrisis());
-      setAdvanced(false);
+      setAdvanced(true);
       setProjection(null);
     },
     [companyId],
