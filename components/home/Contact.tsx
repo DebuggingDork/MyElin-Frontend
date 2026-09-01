@@ -58,13 +58,14 @@ export function Contact() {
       .filter((l): l is string => l !== null)
       .join("\n");
 
-    const href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines)}`;
+    // Use Gmail compose URL instead of mailto: to avoid browser app selection prompt
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(CONTACT_EMAIL)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines)}`;
 
     try {
-      window.location.href = href;
+      window.open(gmailUrl, "_blank");
       setSent(true);
     } catch {
-      setError("We couldn't open your email app. Please email us directly at " + CONTACT_EMAIL + ".");
+      setError("We couldn't open Gmail. Please email us directly at " + CONTACT_EMAIL + ".");
     }
   }
 
@@ -81,7 +82,7 @@ export function Contact() {
             <p>
               Tell us what you&apos;re trying to do — a classroom pilot, a
               procurement question, or something else entirely. Submitting opens
-              your email app, addressed to us with your details filled in.
+              Gmail with your details pre-filled and ready to send.
             </p>
           }
         />
@@ -95,8 +96,8 @@ export function Contact() {
                 detail: "Pick a request type, tell us who you are and what you need.",
               },
               {
-                title: "It opens in your email app",
-                detail: `The message is pre-addressed to ${CONTACT_EMAIL} with everything you entered, ready to send.`,
+                title: "It opens in Gmail",
+                detail: `The message opens in Gmail compose, pre-addressed to ${CONTACT_EMAIL} with everything you entered, ready to send.`,
               },
               {
                 title: "We get back to you",
@@ -120,7 +121,7 @@ export function Contact() {
                   Thanks! Your request has been received.
                 </p>
                 <p className="max-w-md text-[14.5px] leading-relaxed text-dim">
-                  Your email app should have opened with your message ready to
+                  Gmail should have opened in a new tab with your message ready to
                   send — hit send there and we&apos;ll get back to you soon.
                 </p>
               </div>
