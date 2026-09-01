@@ -122,6 +122,7 @@ export function mapQuarterlyReport(
   const priorities: (PriorityId | null)[] = [null];
 
   // Build minimal company state from quarter outcome
+  // Cast through unknown since we're providing minimal stub data for single-quarter reports
   const state: CompanyState = {
     cash: Number(report.outcome.closing_cash_inr.value),
     revenue: Number(report.outcome.revenue_inr.value),
@@ -132,16 +133,7 @@ export function mapQuarterlyReport(
     runway: report.outcome.cash_runway_quarters?.value
       ? Number(report.outcome.cash_runway_quarters.value)
       : null,
-    // Default values for fields not in quarterly report
-    demand: 0,
-    price: 0,
-    quality: 0,
-    innovation: 0,
-    brand: 0,
-    cx: 0,
-    rivalStrength: 0,
-    staff: 0,
-  } as CompanyState;
+  } as unknown as CompanyState;
 
   // No endgame data for single quarter
   const endgame = null;
