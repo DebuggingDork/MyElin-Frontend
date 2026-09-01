@@ -894,13 +894,14 @@ export function SimulationApp() {
       setError(null);
       setWorking({
         title: "Recording the board's decision",
-        message: path === "C" 
+        message: path === "B" || path === "C"
           ? "Signing the term sheet and finalizing the run…"
           : "Signing the term sheet and reopening the company for quarter 4…",
         dismiss: "Back to the term sheet",
       });
       try {
-        await simulationApi.signTermSheet(companyId, path, termSheetName, reasoning);
+        const response: { path: string; termSheetName: string; tier: string; endsEarly?: boolean } = 
+          await simulationApi.signTermSheet(companyId, path, termSheetName, reasoning);
         // Re-read the run rather than walking straight into Q4 on the state we already had.
         // Signing Path A puts the cheque on Q4's opening state as `pendingInvestment`, which
         // is what raises the ceiling and what every cash figure has to say is coming -- and
@@ -908,11 +909,12 @@ export function SimulationApp() {
         const run = await loadRun();
         resetPlan(run.state);
         
-        // Path C means "stay independent" - run ends without Q4
-        if (path === "C") {
+        // Path B (acquisitions) and some Path C options end the simulation immediately.
+        // The backend returns endsEarly: true for these cases.
+        if (response.endsEarly || run.runStatus === "completed") {
           setPhase("final");
         } else {
-          // Paths A & B continue to Q4
+          // Path A and some Path C options continue to Q4
           setPhase("briefing");
           setTab("dashboard");
         }
