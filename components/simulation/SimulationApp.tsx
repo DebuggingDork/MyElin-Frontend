@@ -591,6 +591,9 @@ export function SimulationApp() {
             ? "final"
             : run.quartersLocked === 0 && !started
               ? "intro"
+              : // Q3 closed and path C chosen: run is complete, go to final
+                run.quartersLocked === 3 && run.endgamePath === "C"
+                ? "final"
               : // Q3 closed and nothing signed: the term sheet is owed before Q4 can be run.
                 run.quartersLocked === 3 && !run.endgamePath
                 ? "termsheet"
