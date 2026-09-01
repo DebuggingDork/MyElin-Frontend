@@ -891,7 +891,9 @@ export function SimulationApp() {
       setError(null);
       setWorking({
         title: "Recording the board's decision",
-        message: "Signing the term sheet and reopening the company for quarter 4…",
+        message: path === "C" 
+          ? "Signing the term sheet and finalizing the run…"
+          : "Signing the term sheet and reopening the company for quarter 4…",
         dismiss: "Back to the term sheet",
       });
       try {
