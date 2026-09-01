@@ -3,7 +3,8 @@
 import { useState, useSyncExternalStore } from "react";
 import { Check, Download, ExternalLink, Loader2 } from "lucide-react";
 import { api } from "@/lib/api/client";
-import { buildSimulationReportPdf } from "@/lib/pdf/report-pdf-sim";
+// TODO: Migrate to backend PDF generation - see backend/docs/pdf-migration.md
+// import { buildSimulationReportPdf } from "@/lib/pdf/report-pdf-sim";
 import { useRun } from "@/components/run/RunProvider";
 import { useAuth } from "@/components/auth/AuthProvider";
 import {
@@ -52,6 +53,14 @@ export function FinalReportPdfExport({
   async function handleDownload() {
     setStatus("working");
     setError(null);
+    
+    // TODO: Migrate to backend PDF generation
+    // See backend/docs/pdf-migration.md for implementation guide
+    // New endpoint: POST /reports/decision-intelligence/pdf
+    setError("PDF generation temporarily disabled during migration to backend");
+    setStatus("error");
+    
+    /* OLD CODE - TO BE REPLACED:
     try {
       const ceoName = user
         ? displayName(profile, user.email)
@@ -95,6 +104,7 @@ export function FinalReportPdfExport({
       setError("Could not generate the PDF");
       setStatus("error");
     }
+    */
   }
 
   return (

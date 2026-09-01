@@ -5,7 +5,8 @@ import { Check, Download, ExternalLink, Loader2 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/types";
 import type { QuarterReportResponse } from "@/lib/api/types";
-import { buildReportPdf } from "@/lib/pdf/report-pdf";
+// TODO: Migrate to backend PDF generation - see backend/docs/pdf-migration.md
+// import { buildReportPdf } from "@/lib/pdf/report-pdf";
 import { Action } from "@/components/ui/Kit";
 import { useRun } from "@/components/run/RunProvider";
 
@@ -36,6 +37,14 @@ export function ReportPdfExport({ report }: { report: QuarterReportResponse }) {
   async function handleDownload() {
     setStatus("working");
     setError(null);
+    
+    // TODO: Migrate to backend PDF generation
+    // See backend/docs/pdf-migration.md for implementation guide
+    // New endpoint: POST /reports/decision-intelligence/pdf
+    setError("PDF generation temporarily disabled during migration to backend");
+    setStatus("error");
+    
+    /* OLD CODE - TO BE REPLACED:
     try {
       const blob = buildReportPdf(report, company?.name ?? "Myelin");
 
@@ -55,6 +64,7 @@ export function ReportPdfExport({ report }: { report: QuarterReportResponse }) {
       setError(err instanceof ApiError ? err.message : "Could not save a copy to storage");
       setStatus("error");
     }
+    */
   }
 
   return (
