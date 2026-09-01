@@ -20,8 +20,9 @@ export const playHref = (slug: string = LIVE_SCENARIO) => `/play/${slug}`;
  * click made in the first tick after paint.
  */
 export function useSimulationHref(slug: string = LIVE_SCENARIO) {
-  // Routes traffic tracking to /pricing as we are not giving anything free directly to students
-  return "/pricing";
+  const { user, ready } = useAuth();
+  const target = playHref(slug);
+  return ready && !user ? `/login?next=${encodeURIComponent(target)}` : target;
 }
 
 /**

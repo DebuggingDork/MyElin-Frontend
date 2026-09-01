@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, BarChart2, Play } from "lucide-react";
@@ -94,6 +95,10 @@ const scenarios: Scenario[] = [
 
 const filters = ["All", "Founder", "Strategy", "Leadership", "Operator", "PM"] as const;
 
+/** Stable id on the Startup Survival card, used as the auto-scroll target when arriving from
+ *  the Pricing page's "Start a Simulation" CTA (`/simulations?focus=startup-survival`). */
+const STARTUP_SURVIVAL_CARD_ID = "startup-survival";
+
 const figures = [
   { value: "1", label: "Live now" },
   { value: "1", label: "In beta" },
@@ -172,6 +177,35 @@ export function Simulations() {
       cancelled = true;
     };
   }, []);
+
+  /**
+   * Arrive at the Startup Survival card when the visitor came through the Pricing page's
+   * "Start a Simulation" CTA (`?focus=startup-survival`). The CTA is the gateway into the
+   * flow, so landing at the top would send the visitor hunting for the one live case -- this
+   * drops them straight onto it instead. Direct visits to /simulations don't carry the query
+   * param and keep the normal top-of-page behaviour.
+   *
+   * `scrollIntoView(block: "center")` zeroes in on the card rather than its offset position,
+   * leaving it comfortably centred in the viewport -- clear of the fixed 68px header -- and
+   * the timeout lets the fade/rise reveal settle so the target is measured at rest.
+   */
+  const query = useSearchParams();
+  const focused = query.get("focus") === "startup-survival";
+
+  useEffect(() => {
+    if (!focused) return;
+    const card = document.getElementById(STARTUP_SURVIVAL_CARD_ID);
+    if (!card) return;
+    // The timeout lets the reveal animation settle so the card is at its resting height and
+    // position before the scroll target is measured.
+    const id = window.setTimeout(() => {
+      card.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }, 350);
+    return () => window.clearTimeout(id);
+  }, [focused]);
 
   const resumeQuarter = resumable
     ? (resumable.current_quarter_number ?? resumable.quarters_locked + 1)
@@ -319,7 +353,12 @@ export function Simulations() {
               behind them flashed a solid block wherever a card had not arrived yet. */}
           <div className="mt-8 grid border-l border-t border-line md:grid-cols-2 xl:grid-cols-3">
             {visible.map((s, i) => (
-              <ScenarioCard key={s.index} scenario={s} delay={i * 0.05} />
+              <ScenarioCard
+                key={s.index}
+                scenario={s}
+                delay={i * 0.05}
+                targetId={s.title === "Startup Survival" ? STARTUP_SURVIVAL_CARD_ID : undefined}
+              />
             ))}
           </div>
 
@@ -386,7 +425,15 @@ export function Simulations() {
  * *are* the rules -- the catalogue reads as one divided sheet rather than six floating cards,
  * and no card needs a border of its own to be separated from its neighbour.
  */
-function ScenarioCard({ scenario, delay }: { scenario: Scenario; delay: number }) {
+function ScenarioCard({
+  scenario,
+  delay,
+  targetId,
+}: {
+  scenario: Scenario;
+  delay: number;
+  targetId?: string;
+}) {
   const simulationHref = useSimulationHref();
   const isLive = scenario.status === "LIVE";
   const isBeta = scenario.status === "BETA";
@@ -396,6 +443,7 @@ function ScenarioCard({ scenario, delay }: { scenario: Scenario; delay: number }
   return (
     <>
       <motion.article
+        id={targetId}
         initial={{ opacity: 0, y: 12 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-60px" }}

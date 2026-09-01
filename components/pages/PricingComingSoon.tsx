@@ -15,7 +15,7 @@ import { easeOut } from "@/lib/media";
 import { Masthead } from "@/components/layout/PageChrome";
 import { Action, Container } from "@/components/ui/Kit";
 import { cn } from "@/lib/utils";
-import { usePlaySimulationHref } from "@/components/play/entry";
+
 
 const pilotFeatures = [
   { icon: User, title: "Student access", copy: "Access to the selected simulation for your cohort." },
@@ -79,7 +79,7 @@ function TierCard({
 }
 
 export function PricingComingSoon() {
-  const simulationHref = usePlaySimulationHref();
+  const simulationHref = "/simulations?focus=startup-survival";
 
   return (
     <section className="relative flex flex-col pt-[68px]">
