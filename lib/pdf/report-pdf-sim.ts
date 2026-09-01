@@ -1,3 +1,18 @@
+/**
+ * @deprecated This file is deprecated as of September 2026.
+ * 
+ * PDF generation has been migrated to the backend (Jinja2 + Playwright).
+ * The new 12-page Decision Intelligence report provides richer insights than
+ * this legacy simulation report.
+ * 
+ * See backend/docs/pdf-migration.md for migration instructions.
+ * 
+ * New endpoint: POST /reports/decision-intelligence/pdf
+ * New schema: DecisionIntelligenceReport (12 pages, dark theme, CSS-driven layout)
+ * 
+ * This file will be removed in Q1 2027 after frontend migration is complete.
+ */
+
 import { jsPDF } from "jspdf";
 import { cr, inr, n0, n1, pct } from "@/lib/simulation/format";
 import { humanizeId } from "@/lib/format/display";

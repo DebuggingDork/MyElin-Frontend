@@ -1,3 +1,14 @@
+/**
+ * @deprecated This file is deprecated as of September 2026.
+ * 
+ * PDF generation has been migrated to the backend (Jinja2 + Playwright).
+ * See backend/docs/pdf-migration.md for migration instructions.
+ * 
+ * New endpoint: POST /reports/decision-intelligence/pdf
+ * 
+ * This file will be removed in Q1 2027 after frontend migration is complete.
+ */
+
 import { jsPDF } from "jspdf";
 import { asNumber, formatInr } from "@/lib/api/catalog";
 import {
