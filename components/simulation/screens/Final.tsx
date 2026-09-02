@@ -349,18 +349,18 @@ export function FinalScreen({
               .map((mod, i) => (
                 <div
                   key={i}
-                  className={`flex items-start justify-between gap-4 p-3 border-l-4 ${
+                  className={`flex items-start justify-between gap-4 p-3 rounded border-l-4 ${
                     mod.d > 0
-                      ? "border-teal-500 bg-teal-50"
-                      : "border-rose-500 bg-rose-50"
+                      ? "border-teal bg-teal/10"
+                      : "border-rose bg-rose/10"
                   }`}
                 >
-                  <p className="text-sm text-stone-900 flex-1">
+                  <p className="text-sm text-ink flex-1">
                     {formatDisplayText(mod.why)}
                   </p>
                   <div
                     className={`font-mono text-lg font-semibold shrink-0 ${
-                      mod.d > 0 ? "text-teal-700" : "text-rose-700"
+                      mod.d > 0 ? "text-teal" : "text-rose"
                     }`}
                   >
                     {mod.d > 0 ? "+" : ""}
@@ -369,7 +369,7 @@ export function FinalScreen({
                 </div>
               ))}
             {finalReport.mods.length > 10 && (
-              <p className="text-xs text-stone-500 text-center pt-2">
+              <p className="text-xs text-dim text-center pt-2">
                 Showing top 10 of {finalReport.mods.length} total modifiers
               </p>
             )}
