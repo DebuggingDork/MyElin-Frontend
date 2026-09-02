@@ -86,16 +86,32 @@ export function InnovationBoard({
   startInno,
   setStartInno,
   p,
+  budget,
+  budgetExhausted,
+  onBudgetExceeded,
   readOnly,
 }: {
   s: CompanyState;
   startInno: string[];
   setStartInno: (ids: string[]) => void;
   p: QuarterResultShape | null;
+  budget: Budget;
+  budgetExhausted: boolean;
+  onBudgetExceeded: () => void;
   readOnly?: boolean;
 }) {
-  const toggle = (id: string) =>
-    setStartInno(startInno.indexOf(id) >= 0 ? startInno.filter((x) => x !== id) : startInno.concat(id));
+  const toggle = (id: string) => {
+    if (startInno.indexOf(id) === -1) {
+      // Block adding new cards when budget is exhausted
+      if (budgetExhausted) {
+        onBudgetExceeded();
+        return;
+      }
+      setStartInno(startInno.concat(id));
+    } else {
+      setStartInno(startInno.filter((x) => x !== id));
+    }
+  };
   const committed = startInno.reduce((sum, id) => sum + INNOVATION_BY_ID[id].cost, 0);
 
   return (
@@ -391,12 +407,18 @@ export function PeoplePanel({
   alloc,
   setAlloc,
   p,
+  budget,
+  budgetExhausted,
+  onBudgetExceeded,
   readOnly,
 }: {
   s: CompanyState;
   alloc: Alloc;
   setAlloc: (a: Alloc) => void;
   p: QuarterResultShape | null;
+  budget: Budget;
+  budgetExhausted: boolean;
+  onBudgetExceeded: () => void;
   readOnly?: boolean;
 }) {
   const set = (key: string, val: string) => setAlloc({ ...alloc, [key]: val.replace(/^-/, "") });
@@ -453,9 +475,26 @@ export function PeoplePanel({
                     value={alloc["hire_" + d.id]}
                     placeholder="0"
                     readOnly={readOnly}
-                    onChange={(e) => set("hire_" + d.id, e.target.value)}
-                    onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, onChange: (v) => set("hire_" + d.id, v) })}
-                    className="w-20 border border-line-2 px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink"
+                    disabled={budgetExhausted && num(alloc["hire_" + d.id]) === 0}
+                    onChange={(e) => {
+                      const newVal = e.target.value;
+                      if (num(newVal) > num(alloc["hire_" + d.id]) && budgetExhausted) {
+                        onBudgetExceeded();
+                        return;
+                      }
+                      set("hire_" + d.id, newVal);
+                    }}
+                    onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, onChange: (v) => {
+                      if (num(v) > num(alloc["hire_" + d.id]) && budgetExhausted) {
+                        onBudgetExceeded();
+                        return;
+                      }
+                      set("hire_" + d.id, v);
+                    }})}
+                    className={cn(
+                      "w-20 border border-line-2 px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink",
+                      (readOnly || (budgetExhausted && num(alloc["hire_" + d.id]) === 0)) && "opacity-60 cursor-not-allowed",
+                    )}
                   />
                   <span className="text-xs font-mono text-dim">
                     {hire > 0
@@ -474,9 +513,26 @@ export function PeoplePanel({
                     value={alloc["fire_" + d.id]}
                     placeholder="0"
                     readOnly={readOnly}
-                    onChange={(e) => set("fire_" + d.id, e.target.value)}
-                    onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, max: Math.max(0, now - d.base), onChange: (v) => set("fire_" + d.id, v) })}
-                    className="w-20 border border-line-2 px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink"
+                    disabled={budgetExhausted && num(alloc["fire_" + d.id]) === 0}
+                    onChange={(e) => {
+                      const newVal = e.target.value;
+                      if (num(newVal) > num(alloc["fire_" + d.id]) && budgetExhausted) {
+                        onBudgetExceeded();
+                        return;
+                      }
+                      set("fire_" + d.id, newVal);
+                    }}
+                    onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, max: Math.max(0, now - d.base), onChange: (v) => {
+                      if (num(v) > num(alloc["fire_" + d.id]) && budgetExhausted) {
+                        onBudgetExceeded();
+                        return;
+                      }
+                      set("fire_" + d.id, v);
+                    }})}
+                    className={cn(
+                      "w-20 border border-line-2 px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink",
+                      (readOnly || (budgetExhausted && num(alloc["fire_" + d.id]) === 0)) && "opacity-60 cursor-not-allowed",
+                    )}
                   />
                   <span className="text-xs font-mono text-dim">
                     {cut > 0
@@ -506,6 +562,9 @@ export function FinancePanel({
   payTerms,
   setPayTerms,
   p,
+  budget,
+  budgetExhausted,
+  onBudgetExceeded,
   readOnly,
 }: {
   s: CompanyState;
@@ -514,6 +573,9 @@ export function FinancePanel({
   payTerms: PayTermsId;
   setPayTerms: (v: PayTermsId) => void;
   p: QuarterResultShape | null;
+  budget: Budget;
+  budgetExhausted: boolean;
+  onBudgetExceeded: () => void;
   readOnly?: boolean;
 }) {
   const limit = p ? v(p, "debtLimit") : 0;
@@ -570,9 +632,26 @@ export function FinancePanel({
                 value={alloc.repay}
                 placeholder="0"
                 readOnly={readOnly}
-                onChange={(e) => setAlloc({ ...alloc, repay: e.target.value.replace(/^-/, "") })}
-                onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, onChange: (v) => setAlloc({ ...alloc, repay: v }) })}
-                className="w-28 border border-line-2 px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink"
+                disabled={budgetExhausted && num(alloc.repay) === 0}
+                onChange={(e) => {
+                  const newVal = e.target.value;
+                  if (num(newVal) > num(alloc.repay) && budgetExhausted) {
+                    onBudgetExceeded();
+                    return;
+                  }
+                  setAlloc({ ...alloc, repay: newVal.replace(/^-/, "") });
+                }}
+                onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, onChange: (v) => {
+                  if (num(v) > num(alloc.repay) && budgetExhausted) {
+                    onBudgetExceeded();
+                    return;
+                  }
+                  setAlloc({ ...alloc, repay: v });
+                }})}
+                className={cn(
+                  "w-28 border border-line-2 px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink",
+                  (readOnly || (budgetExhausted && num(alloc.repay) === 0)) && "opacity-60 cursor-not-allowed",
+                )}
               />
               <span className="text-xs uppercase tracking-widest text-dim">lakh</span>
             </div>

@@ -108,6 +108,7 @@ import { PrinciplesScreen } from "@/components/simulation/screens/Principles";
 import { BalanceSheetScreen } from "@/components/simulation/screens/BalanceSheetScreen";
 import { SectionNav } from "@/components/simulation/SectionNav";
 import { RewindModal } from "@/components/simulation/RewindModal";
+import { BudgetExhaustedModal } from "@/components/simulation/BudgetExhaustedModal";
 import { RewindPreloader } from "@/components/simulation/RewindPreloader";
 import type {
   Alloc,
@@ -437,6 +438,11 @@ export function SimulationApp() {
     null,
   );
 
+  const [budgetExhaustedModalOpen, setBudgetExhaustedModalOpen] = useState(false);
+  const handleBudgetExceeded = useCallback(() => {
+    setBudgetExhaustedModalOpen(true);
+  }, []);
+
   /* Read-only wrappers: when the simulation is paused or expired, every setter becomes a no-op
      so no value can be changed through any code path. */
   const guardAlloc = useCallback(
@@ -486,6 +492,12 @@ export function SimulationApp() {
       if (!readOnly) setCrisis(c);
     },
     [readOnly],
+  );
+
+  // Budget exhaustion check: when ceiling - committed <= 0, all inputs are blocked
+  const budgetExhausted = useMemo(
+    () => budget.ceiling - budget.committed <= 0,
+    [budget.ceiling, budget.committed],
   );
 
   /**
@@ -2076,6 +2088,12 @@ export function SimulationApp() {
         scenarioTitle={company?.scenario.display_name}
         onClose={() => setLeaderboardOpen(false)}
       />
+      <BudgetExhaustedModal
+        open={budgetExhaustedModalOpen}
+        onClose={() => setBudgetExhaustedModalOpen(false)}
+        budgetRemaining={budget.ceiling - budget.committed}
+      />
+
       <RewindModal
         open={rewindModalOpen}
         onClose={() => setRewindModalOpen(false)}
@@ -2278,13 +2296,15 @@ export function SimulationApp() {
     );
   } else if (DECISION_GROUPS[tab]) {
     body = (
-      <DepartmentScreen
+    <DepartmentScreen
         id={tab}
         s={state}
         alloc={alloc}
         setAlloc={guardAlloc}
         ctx={ctx}
         budget={budget}
+        budgetExhausted={budgetExhausted}
+        onBudgetExceeded={handleBudgetExceeded}
         dirs={dirs}
         inbox={messages}
         advanced={advanced}
@@ -2314,6 +2334,9 @@ export function SimulationApp() {
               alloc={alloc}
               setAlloc={guardAlloc}
               p={projection}
+              budget={budget}
+              budgetExhausted={budgetExhausted}
+              onBudgetExceeded={handleBudgetExceeded}
               readOnly={readOnly}
             />
           ) : null
@@ -2326,6 +2349,9 @@ export function SimulationApp() {
                 startInno={startInno}
                 setStartInno={guardSetStartInno}
                 p={projection}
+                budget={budget}
+                budgetExhausted={budgetExhausted}
+                onBudgetExceeded={handleBudgetExceeded}
                 readOnly={readOnly}
               />
               <WarrantyPanel
@@ -2343,6 +2369,9 @@ export function SimulationApp() {
               payTerms={payTerms}
               setPayTerms={guardSetPayTerms}
               p={projection}
+              budget={budget}
+              budgetExhausted={budgetExhausted}
+              onBudgetExceeded={handleBudgetExceeded}
               readOnly={readOnly}
             />
           ) : null

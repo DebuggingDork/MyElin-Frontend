@@ -30,12 +30,18 @@ function DecisionCard({
   alloc,
   setAlloc,
   cash,
+  budget,
+  budgetExhausted,
+  onBudgetExceeded,
   readOnly,
 }: {
   item: DecisionItem;
   alloc: Alloc;
   setAlloc: (a: Alloc) => void;
   cash: number;
+  budget: Budget;
+  budgetExhausted: boolean;
+  onBudgetExceeded: () => void;
   readOnly?: boolean;
 }) {
   const A = numericAlloc(alloc);
@@ -72,11 +78,25 @@ function DecisionCard({
               value={total === 0 ? "" : total}
               placeholder="0"
               readOnly={readOnly}
-              onChange={(e) => setAlloc(spreadGroup(alloc, item, e.target.value.replace(/^-/, "")))}
-              onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, onChange: (v) => setAlloc(spreadGroup(alloc, item, v)) })}
+              disabled={budgetExhausted && num(total) === 0}
+              onChange={(e) => {
+                const newVal = e.target.value.replace(/^-/, "");
+                if (num(newVal) > total && budget.committed >= budget.ceiling) {
+                  onBudgetExceeded();
+                  return;
+                }
+                setAlloc(spreadGroup(alloc, item, newVal));
+              }}
+              onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, onChange: (v) => {
+                if (num(v) > total && budget.committed >= budget.ceiling) {
+                  onBudgetExceeded();
+                  return;
+                }
+                setAlloc(spreadGroup(alloc, item, v));
+              }})}
               className={cn(
                 "w-24 border border-line-2 px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink",
-                readOnly && "opacity-60 cursor-not-allowed",
+                (readOnly || (budgetExhausted && num(total) === 0)) && "opacity-60 cursor-not-allowed",
               )}
             />
             <span className="text-xs uppercase tracking-widest text-dim">lakh</span>
@@ -106,12 +126,18 @@ function DetailLineRow({
   value,
   onChange,
   ctx,
+  budget,
+  budgetExhausted,
+  onBudgetExceeded,
   readOnly,
 }: {
   line: DetailLine;
   value: string;
   onChange: (v: string) => void;
   ctx: PreviewCtx;
+  budget: Budget;
+  budgetExhausted: boolean;
+  onBudgetExceeded: () => void;
   readOnly?: boolean;
 }) {
   const amount = num(value);
@@ -135,12 +161,26 @@ function DetailLineRow({
             value={value}
             placeholder="0"
             readOnly={readOnly}
-            onChange={(e) => onChange(e.target.value.replace(/^-/, ""))}
-            onKeyDown={(e) => spinnerKeyDown(e, { step: 0.5, min: 0, onChange })}
+            disabled={budgetExhausted && num(value) === 0}
+            onChange={(e) => {
+              const newVal = e.target.value.replace(/^-/, "");
+              if (num(newVal) > num(value) && budget.committed >= budget.ceiling) {
+                onBudgetExceeded();
+                return;
+              }
+              onChange(newVal);
+            }}
+            onKeyDown={(e) => spinnerKeyDown(e, { step: 0.5, min: 0, onChange: (v) => {
+              if (num(v) > num(value) && budget.committed >= budget.ceiling) {
+                onBudgetExceeded();
+                return;
+              }
+              onChange(v);
+            }})}
             className={
               "w-24 border px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink " +
               (overCap ? "border-danger text-tone-bad" : "border-line-2") +
-              (readOnly ? " opacity-60 cursor-not-allowed" : "")
+              ((readOnly || (budgetExhausted && num(value) === 0)) ? " opacity-60 cursor-not-allowed" : "")
             }
           />
           <span className="text-xs uppercase tracking-widest text-dim w-10">lakh</span>
@@ -166,6 +206,8 @@ export function DepartmentScreen({
   setAlloc,
   ctx,
   budget,
+  budgetExhausted,
+  onBudgetExceeded,
   dirs,
   inbox,
   advanced,
@@ -180,6 +222,8 @@ export function DepartmentScreen({
   setAlloc: (a: Alloc) => void;
   ctx: PreviewCtx;
   budget: Budget;
+  budgetExhausted: boolean;
+  onBudgetExceeded: () => void;
   dirs: Readiness[];
   inbox: InboxMessage[];
   advanced: boolean;
@@ -219,7 +263,7 @@ export function DepartmentScreen({
 
       <div className="space-y-3">
         {group.items.map((item) => (
-          <DecisionCard key={item.id} item={item} alloc={alloc} setAlloc={setAlloc} cash={s.cash} readOnly={readOnly} />
+          <DecisionCard key={item.id} item={item} alloc={alloc} setAlloc={setAlloc} cash={s.cash} budget={budget} budgetExhausted={budgetExhausted} onBudgetExceeded={onBudgetExceeded} readOnly={readOnly} />
         ))}
       </div>
 
@@ -249,6 +293,9 @@ export function DepartmentScreen({
                 line={line}
                 value={alloc[line.key]}
                 ctx={ctx}
+                budget={budget}
+                budgetExhausted={budgetExhausted}
+                onBudgetExceeded={onBudgetExceeded}
                 readOnly={readOnly}
                 onChange={(val) => setAlloc({ ...alloc, [line.key]: val })}
               />
