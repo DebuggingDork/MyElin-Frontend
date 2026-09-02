@@ -39,6 +39,8 @@ export function CrisisScreen({
   setCrisis,
   locked,
   budget,
+  budgetRemaining,
+  onBudgetExceeded,
   briefing,
   commitReading,
   readOnly,
@@ -47,8 +49,10 @@ export function CrisisScreen({
   archId: ArchetypeId;
   crisis: CrisisInput;
   setCrisis: (c: CrisisInput) => void;
-  locked: boolean;
+  locked?: boolean;
   budget: Budget;
+  budgetRemaining?: number;
+  onBudgetExceeded?: () => void;
   briefing: CrisisBriefing | null;
   commitReading: { band: string; strain: string; line: string; trade: string } | null;
   readOnly?: boolean;
@@ -237,8 +241,27 @@ export function CrisisScreen({
                     value={crisis.commit}
                     placeholder="0"
                     readOnly={readOnly}
-                    onChange={(e) => set("commit", e.target.value.replace(/^-/, ""))}
-                    onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, onChange: (v) => set("commit", v) })}
+                    onChange={(e) => {
+                      const newVal = e.target.value.replace(/^-/, "");
+                      if (num(newVal) > num(crisis.commit || "0")) {
+                        const costDelta = (num(newVal) - num(crisis.commit || "0")) * 1e5;
+                        if (budgetRemaining !== undefined && costDelta > budgetRemaining) {
+                          onBudgetExceeded?.();
+                          return;
+                        }
+                      }
+                      set("commit", newVal);
+                    }}
+                    onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, onChange: (v) => {
+                      if (num(v) > num(crisis.commit || "0")) {
+                        const costDelta = (num(v) - num(crisis.commit || "0")) * 1e5;
+                        if (budgetRemaining !== undefined && costDelta > budgetRemaining) {
+                          onBudgetExceeded?.();
+                          return;
+                        }
+                      }
+                      set("commit", v);
+                    }})}
                     className="w-32 border border-line-2 px-2 py-1 text-right font-mono text-lg focus:outline-none focus:ring-2 focus:ring-ink"
                   />
                   <span className="text-xs uppercase tracking-widest text-dim">lakh</span>
@@ -250,7 +273,7 @@ export function CrisisScreen({
                   </div>
                 </div>
                 <div className="mt-3 text-xs text-dim font-mono">
-                  {inr(num(crisis.commit) * 1e5)} of a remaining {inr(budget.ceiling - budget.committed)}.
+                  {inr(num(crisis.commit) * 1e5)} of a remaining {budgetRemaining !== undefined ? inr(budgetRemaining + num(crisis.commit || "0") * 1e5) : inr(budget.ceiling - budget.committed)}.
                 </div>
               </>
             )}

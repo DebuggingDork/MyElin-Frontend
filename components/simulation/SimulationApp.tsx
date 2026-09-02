@@ -44,13 +44,17 @@ function cleanCompanyName(name: string): string {
 import {
   ARCHETYPES,
   DECISION_GROUPS,
+  DEPARTMENTS,
   INITIAL_STATE,
+  INNOVATION_BY_ID,
   PRIORITY_BY_ID,
   SCREEN_META,
   emptyAlloc,
   numericAlloc,
+  opexLakh,
+  capexLakh,
 } from "@/lib/simulation/constants";
-import { inr } from "@/lib/simulation/format";
+import { inr, num } from "@/lib/simulation/format";
 import {
   playProcessing,
   playQuarterClosed,
@@ -494,11 +498,23 @@ export function SimulationApp() {
     [readOnly],
   );
 
-  // Budget exhaustion check: when ceiling - committed <= 0, all inputs are blocked
-  const budgetExhausted = useMemo(
-    () => budget.ceiling - budget.committed <= 0,
-    [budget.ceiling, budget.committed],
-  );
+  // Live budget tracking: computes committed spend instantly from current React state
+  const localCommitted = useMemo(() => {
+    const opex = opexLakh(numericAlloc(alloc)) * 1e5;
+    const capex = capexLakh(numericAlloc(alloc)) * 1e5;
+    const inno = startInno.reduce((sum, id) => sum + (INNOVATION_BY_ID[id]?.cost || 0), 0);
+    const people = DEPARTMENTS.reduce((sum, d) => {
+      const hire = Math.round(num(alloc["hire_" + d.id]));
+      const fire = Math.round(num(alloc["fire_" + d.id]));
+      return sum + hire * d.hire + fire * d.sever;
+    }, 0);
+    const repay = num(alloc.repay) * 1e5;
+    const crisisCommit = num(crisis?.commit || "0") * 1e5;
+    return opex + capex + inno + people + repay + crisisCommit;
+  }, [alloc, startInno, crisis]);
+
+  const budgetRemaining = budget.ceiling - localCommitted;
+  const budgetExhausted = budgetRemaining <= 0;
 
   /**
    * The named wait, when there is one.
@@ -2049,9 +2065,9 @@ export function SimulationApp() {
                       </span>
                     )}
                     {/* Left to commit */}
-                    <span className={budget.committed > budget.ceiling ? "text-danger-soft" : "text-faint"}>
+                    <span className={budgetRemaining < 0 ? "text-danger-soft" : "text-faint"}>
                       <span className="text-dim text-xs uppercase tracking-widest mr-1">Left</span>
-                      {inr(budget.ceiling - budget.committed)}
+                      {inr(budgetRemaining)}
                     </span>
                     {/* Notes toggle */}
                     <button
@@ -2104,7 +2120,7 @@ export function SimulationApp() {
       <BudgetExhaustedModal
         open={budgetExhaustedModalOpen}
         onClose={() => setBudgetExhaustedModalOpen(false)}
-        budgetRemaining={budget.ceiling - budget.committed}
+        budgetRemaining={budgetRemaining}
       />
 
       <RewindModal
@@ -2273,8 +2289,9 @@ export function SimulationApp() {
         archId={archId}
         crisis={crisis}
         setCrisis={guardSetCrisis}
-        locked={false}
         budget={budget}
+        budgetRemaining={budgetRemaining}
+        onBudgetExceeded={handleBudgetExceeded}
         briefing={briefing}
         commitReading={commitReading}
         readOnly={readOnly}
@@ -2317,6 +2334,7 @@ export function SimulationApp() {
         ctx={ctx}
         budget={budget}
         budgetExhausted={budgetExhausted}
+        budgetRemaining={budgetRemaining}
         onBudgetExceeded={handleBudgetExceeded}
         dirs={dirs}
         inbox={messages}
@@ -2349,6 +2367,7 @@ export function SimulationApp() {
               p={projection}
               budget={budget}
               budgetExhausted={budgetExhausted}
+              budgetRemaining={budgetRemaining}
               onBudgetExceeded={handleBudgetExceeded}
               readOnly={readOnly}
             />
@@ -2364,6 +2383,7 @@ export function SimulationApp() {
                 p={projection}
                 budget={budget}
                 budgetExhausted={budgetExhausted}
+                budgetRemaining={budgetRemaining}
                 onBudgetExceeded={handleBudgetExceeded}
                 readOnly={readOnly}
               />
@@ -2384,6 +2404,7 @@ export function SimulationApp() {
               p={projection}
               budget={budget}
               budgetExhausted={budgetExhausted}
+              budgetRemaining={budgetRemaining}
               onBudgetExceeded={handleBudgetExceeded}
               readOnly={readOnly}
             />

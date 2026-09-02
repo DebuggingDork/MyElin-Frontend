@@ -34,6 +34,7 @@ function DecisionCard({
   cash,
   budget,
   budgetExhausted,
+  budgetRemaining,
   onBudgetExceeded,
   readOnly,
 }: {
@@ -43,6 +44,7 @@ function DecisionCard({
   cash: number;
   budget: Budget;
   budgetExhausted: boolean;
+  budgetRemaining: number;
   onBudgetExceeded: () => void;
   readOnly?: boolean;
 }) {
@@ -84,9 +86,8 @@ function DecisionCard({
               onChange={(e) => {
                 const newVal = e.target.value.replace(/^-/, "");
                 if (num(newVal) > total) {
-                  const proposedA = numericAlloc(spreadGroup(alloc, item, newVal));
-                  const proposedSpend = (opexLakh(proposedA) + capexLakh(proposedA)) * 1e5;
-                  if (proposedSpend > budget.ceiling) {
+                  const deltaCost = (num(newVal) - total) * 1e5;
+                  if (deltaCost > budgetRemaining) {
                     onBudgetExceeded();
                     return;
                   }
@@ -95,9 +96,8 @@ function DecisionCard({
               }}
               onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, onChange: (v) => {
                 if (num(v) > total) {
-                  const proposedA = numericAlloc(spreadGroup(alloc, item, v));
-                  const proposedSpend = (opexLakh(proposedA) + capexLakh(proposedA)) * 1e5;
-                  if (proposedSpend > budget.ceiling) {
+                  const deltaCost = (num(v) - total) * 1e5;
+                  if (deltaCost > budgetRemaining) {
                     onBudgetExceeded();
                     return;
                   }
@@ -139,6 +139,7 @@ function DetailLineRow({
   ctx,
   budget,
   budgetExhausted,
+  budgetRemaining,
   onBudgetExceeded,
   readOnly,
 }: {
@@ -149,6 +150,7 @@ function DetailLineRow({
   ctx: PreviewCtx;
   budget: Budget;
   budgetExhausted: boolean;
+  budgetRemaining: number;
   onBudgetExceeded: () => void;
   readOnly?: boolean;
 }) {
@@ -177,10 +179,8 @@ function DetailLineRow({
             onChange={(e) => {
               const newVal = e.target.value.replace(/^-/, "");
               if (num(newVal) > num(value)) {
-                const delta = num(newVal) - num(value);
-                const currentSpend = (opexLakh(numericAlloc({ ...alloc, [line.key]: value })) + capexLakh(numericAlloc({ ...alloc, [line.key]: value }))) * 1e5;
-                const proposedSpend = currentSpend + delta * 1e5;
-                if (proposedSpend > budget.ceiling) {
+                const deltaCost = (num(newVal) - num(value)) * 1e5;
+                if (deltaCost > budgetRemaining) {
                   onBudgetExceeded();
                   return;
                 }
@@ -189,10 +189,8 @@ function DetailLineRow({
             }}
             onKeyDown={(e) => spinnerKeyDown(e, { step: 0.5, min: 0, onChange: (v) => {
               if (num(v) > num(value)) {
-                const delta = num(v) - num(value);
-                const currentSpend = (opexLakh(numericAlloc({ ...alloc, [line.key]: value })) + capexLakh(numericAlloc({ ...alloc, [line.key]: value }))) * 1e5;
-                const proposedSpend = currentSpend + delta * 1e5;
-                if (proposedSpend > budget.ceiling) {
+                const deltaCost = (num(v) - num(value)) * 1e5;
+                if (deltaCost > budgetRemaining) {
                   onBudgetExceeded();
                   return;
                 }
@@ -229,6 +227,7 @@ export function DepartmentScreen({
   ctx,
   budget,
   budgetExhausted,
+  budgetRemaining,
   onBudgetExceeded,
   dirs,
   inbox,
@@ -245,6 +244,7 @@ export function DepartmentScreen({
   ctx: PreviewCtx;
   budget: Budget;
   budgetExhausted: boolean;
+  budgetRemaining: number;
   onBudgetExceeded: () => void;
   dirs: Readiness[];
   inbox: InboxMessage[];
@@ -285,7 +285,7 @@ export function DepartmentScreen({
 
       <div className="space-y-3">
         {group.items.map((item) => (
-          <DecisionCard key={item.id} item={item} alloc={alloc} setAlloc={setAlloc} cash={s.cash} budget={budget} budgetExhausted={budgetExhausted} onBudgetExceeded={onBudgetExceeded} readOnly={readOnly} />
+          <DecisionCard key={item.id} item={item} alloc={alloc} setAlloc={setAlloc} cash={s.cash} budget={budget} budgetExhausted={budgetExhausted} budgetRemaining={budgetRemaining} onBudgetExceeded={onBudgetExceeded} readOnly={readOnly} />
         ))}
       </div>
 
@@ -318,6 +318,7 @@ export function DepartmentScreen({
                 ctx={ctx}
                 budget={budget}
                 budgetExhausted={budgetExhausted}
+                budgetRemaining={budgetRemaining}
                 onBudgetExceeded={onBudgetExceeded}
                 readOnly={readOnly}
                 onChange={(val) => setAlloc({ ...alloc, [line.key]: val })}

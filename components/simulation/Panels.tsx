@@ -90,6 +90,7 @@ export function InnovationBoard({
   p,
   budget,
   budgetExhausted,
+  budgetRemaining,
   onBudgetExceeded,
   readOnly,
 }: {
@@ -99,13 +100,15 @@ export function InnovationBoard({
   p: QuarterResultShape | null;
   budget: Budget;
   budgetExhausted: boolean;
+  budgetRemaining: number;
   onBudgetExceeded: () => void;
   readOnly?: boolean;
 }) {
   const toggle = (id: string) => {
     if (startInno.indexOf(id) === -1) {
-      // Block adding new cards when budget is exhausted
-      if (budgetExhausted) {
+      // Check if this new card's cost exceeds the remaining budget
+      const costDelta = INNOVATION_BY_ID[id].cost;
+      if (costDelta > budgetRemaining) {
         onBudgetExceeded();
         return;
       }
@@ -411,6 +414,7 @@ export function PeoplePanel({
   p,
   budget,
   budgetExhausted,
+  budgetRemaining,
   onBudgetExceeded,
   readOnly,
 }: {
@@ -420,6 +424,7 @@ export function PeoplePanel({
   p: QuarterResultShape | null;
   budget: Budget;
   budgetExhausted: boolean;
+  budgetRemaining: number;
   onBudgetExceeded: () => void;
   readOnly?: boolean;
 }) {
@@ -480,16 +485,22 @@ export function PeoplePanel({
                     disabled={budgetExhausted && num(alloc["hire_" + d.id]) === 0}
                     onChange={(e) => {
                       const newVal = e.target.value;
-                      if (num(newVal) > num(alloc["hire_" + d.id]) && budgetExhausted) {
-                        onBudgetExceeded();
-                        return;
+                      if (num(newVal) > num(alloc["hire_" + d.id])) {
+                        const costDelta = (num(newVal) - num(alloc["hire_" + d.id])) * d.hire;
+                        if (costDelta > budgetRemaining) {
+                          onBudgetExceeded();
+                          return;
+                        }
                       }
                       set("hire_" + d.id, newVal);
                     }}
                     onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, onChange: (v) => {
-                      if (num(v) > num(alloc["hire_" + d.id]) && budgetExhausted) {
-                        onBudgetExceeded();
-                        return;
+                      if (num(v) > num(alloc["hire_" + d.id])) {
+                        const costDelta = (num(v) - num(alloc["hire_" + d.id])) * d.hire;
+                        if (costDelta > budgetRemaining) {
+                          onBudgetExceeded();
+                          return;
+                        }
                       }
                       set("hire_" + d.id, v);
                     }})}
@@ -518,16 +529,22 @@ export function PeoplePanel({
                     disabled={budgetExhausted && num(alloc["fire_" + d.id]) === 0}
                     onChange={(e) => {
                       const newVal = e.target.value;
-                      if (num(newVal) > num(alloc["fire_" + d.id]) && budgetExhausted) {
-                        onBudgetExceeded();
-                        return;
+                      if (num(newVal) > num(alloc["fire_" + d.id])) {
+                        const costDelta = (num(newVal) - num(alloc["fire_" + d.id])) * d.sever;
+                        if (costDelta > budgetRemaining) {
+                          onBudgetExceeded();
+                          return;
+                        }
                       }
                       set("fire_" + d.id, newVal);
                     }}
                     onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, max: Math.max(0, now - d.base), onChange: (v) => {
-                      if (num(v) > num(alloc["fire_" + d.id]) && budgetExhausted) {
-                        onBudgetExceeded();
-                        return;
+                      if (num(v) > num(alloc["fire_" + d.id])) {
+                        const costDelta = (num(v) - num(alloc["fire_" + d.id])) * d.sever;
+                        if (costDelta > budgetRemaining) {
+                          onBudgetExceeded();
+                          return;
+                        }
                       }
                       set("fire_" + d.id, v);
                     }})}
@@ -566,6 +583,7 @@ export function FinancePanel({
   p,
   budget,
   budgetExhausted,
+  budgetRemaining,
   onBudgetExceeded,
   readOnly,
 }: {
@@ -577,6 +595,7 @@ export function FinancePanel({
   p: QuarterResultShape | null;
   budget: Budget;
   budgetExhausted: boolean;
+  budgetRemaining: number;
   onBudgetExceeded: () => void;
   readOnly?: boolean;
 }) {
@@ -605,26 +624,17 @@ export function FinancePanel({
                 value={alloc.draw}
                 placeholder="0"
                 readOnly={readOnly}
-                disabled={budgetExhausted && num(alloc.draw) === 0}
                 onChange={(e) => {
                   const newVal = e.target.value.replace(/^-/, "");
-                  if (num(newVal) > num(alloc.draw) && budgetExhausted) {
-                    onBudgetExceeded();
-                    return;
-                  }
                   setAlloc({ ...alloc, draw: newVal });
                 }}
                 onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, onChange: (v) => {
-                  if (num(v) > num(alloc.draw) && budgetExhausted) {
-                    onBudgetExceeded();
-                    return;
-                  }
                   setAlloc({ ...alloc, draw: v });
                 }})}
                 className={
                   "w-28 border px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink " +
                   (overLimit ? "border-danger text-tone-bad" : "border-line-2") +
-                  ((readOnly || (budgetExhausted && num(alloc.draw) === 0)) ? " opacity-60 cursor-not-allowed" : "")
+                  (readOnly ? " opacity-60 cursor-not-allowed" : "")
                 }
               />
               <span className="text-xs uppercase tracking-widest text-dim">lakh</span>
@@ -652,16 +662,22 @@ export function FinancePanel({
                 disabled={budgetExhausted && num(alloc.repay) === 0}
                 onChange={(e) => {
                   const newVal = e.target.value;
-                  if (num(newVal) > num(alloc.repay) && budgetExhausted) {
-                    onBudgetExceeded();
-                    return;
+                  if (num(newVal) > num(alloc.repay)) {
+                    const costDelta = (num(newVal) - num(alloc.repay)) * 1e5;
+                    if (costDelta > budgetRemaining) {
+                      onBudgetExceeded();
+                      return;
+                    }
                   }
                   setAlloc({ ...alloc, repay: newVal.replace(/^-/, "") });
                 }}
                 onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, onChange: (v) => {
-                  if (num(v) > num(alloc.repay) && budgetExhausted) {
-                    onBudgetExceeded();
-                    return;
+                  if (num(v) > num(alloc.repay)) {
+                    const costDelta = (num(v) - num(alloc.repay)) * 1e5;
+                    if (costDelta > budgetRemaining) {
+                      onBudgetExceeded();
+                      return;
+                    }
                   }
                   setAlloc({ ...alloc, repay: v });
                 }})}

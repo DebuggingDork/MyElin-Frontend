@@ -62,7 +62,8 @@ export function ReviewScreen({
 }) {
   const ready = reflectionComplete(reflection);
   const crisisUnanswered = crisisLive && !crisis.strategy;
-  const blocked = crisisUnanswered || !ready || busy || readOnly;
+  const outOfBudget = budget.ceiling - budget.committed <= 0;
+  const blocked = crisisUnanswered || !ready || busy || readOnly || outOfBudget;
 
   return (
     <div className="space-y-5">
@@ -115,10 +116,9 @@ export function ReviewScreen({
         }
       />
 
-      {budget.committed > budget.ceiling && (
+      {budget.committed >= budget.ceiling && (
         <div className="border-l-4 border-danger bg-danger/10 px-4 py-3 text-sm text-tone-bad">
-          You are {inr(budget.committed - budget.ceiling)} beyond what the balance sheet supports. You can still commit —
-          the buffer takes it, and the record will show it.
+          You must have a positive budget remaining to close the quarter. You are {inr(budget.committed - budget.ceiling + (budget.committed === budget.ceiling ? 1 : 0))} beyond what is allowed. You cannot commit until you resolve the overspend (either reduce spending or draw credit).
         </div>
       )}
 
@@ -153,9 +153,11 @@ export function ReviewScreen({
         {busy && <Spinner size="md" />}
         {busy
           ? "Closing the quarter…"
-          : ready
-            ? "Close quarter " + quarter
-            : "Answer the questions above to close the quarter"}
+          : outOfBudget
+            ? "Resolve overspend to close"
+            : ready
+              ? "Close quarter " + quarter
+              : "Answer the questions above to close the quarter"}
       </button>
     </div>
   );
