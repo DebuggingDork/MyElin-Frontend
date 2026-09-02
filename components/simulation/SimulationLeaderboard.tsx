@@ -467,7 +467,7 @@ export function SimulationLeaderboardModal({
           type="button"
           onClick={onClose}
           aria-label="Close leaderboard"
-          className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-lg text-faint transition-colors hover:bg-[var(--panel)] hover:text-ink"
+          className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-dim transition-all hover:border-line hover:bg-[var(--panel)] hover:text-ink focus:border-teal focus:text-teal"
         >
           <X className="h-4 w-4" />
         </button>
