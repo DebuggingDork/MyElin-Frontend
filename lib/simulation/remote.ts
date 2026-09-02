@@ -295,7 +295,7 @@ export type RunResponse = {
   crisisQuarter: number;
   currentQuarter: number | null;
   quartersLocked: number;
-  runStatus: "active" | "completed";
+  runStatus: "active" | "distressed" | "failed" | "completed";
   state: CompanyState;
   legalMoves: string[];
   crisis: CrisisBriefing | null;
