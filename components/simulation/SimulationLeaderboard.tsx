@@ -362,7 +362,7 @@ export function SimulationLeaderboard({
   return (
     <div className="space-y-6">
       {/* header */}
-      <div className="flex items-baseline justify-between gap-3">
+      <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-[10.5px] uppercase tracking-widest text-faint">
             Simulation
