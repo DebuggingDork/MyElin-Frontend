@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, Download, ExternalLink, Loader2 } from "lucide-react";
+import { Check, Download, ExternalLink, Loader2, AlertCircle } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/types";
 import type { QuarterReportResponse } from "@/lib/api/types";
@@ -48,6 +48,9 @@ export function ReportPdfExport({ report }: { report: QuarterReportResponse }) {
   }, [companyId, report.quarter_id]);
 
   async function handleDownload() {
+    // Prevent duplicate requests
+    if (status === "working") return;
+    
     setStatus("working");
     setError(null);
 
@@ -83,26 +86,59 @@ export function ReportPdfExport({ report }: { report: QuarterReportResponse }) {
       const stored = await api.storeReportPdf(companyId, report.quarter_id, blob);
       setStoredUrl(stored.signed_url);
       setStatus("done");
+      
+      // Reset to idle after 3 seconds
+      setTimeout(() => setStatus("idle"), 3000);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Could not save a copy to storage");
-      setStatus("error");
       console.error("PDF generation failed:", err);
+      
+      // Extract user-friendly error message
+      let errorMessage = "Unable to generate the PDF. Please try again.";
+      
+      if (err instanceof ApiError) {
+        if (err.status === 422) {
+          errorMessage = "Invalid report data. Please ensure the quarter is complete.";
+          // Log validation details for debugging
+          console.error("422 Validation Error Details:", err.body);
+        } else if (err.status === 500) {
+          errorMessage = "Server error while generating PDF. Please try again.";
+        } else if (err.status === 401 || err.status === 403) {
+          errorMessage = "Authentication error. Please refresh and try again.";
+        } else if (err.status === 404) {
+          errorMessage = "PDF generation endpoint not found.";
+        } else {
+          errorMessage = err.message || errorMessage;
+        }
+      } else if (err instanceof TypeError && err.message.includes("fetch")) {
+        errorMessage = "Network error. Please check your connection and try again.";
+      }
+      
+      setError(errorMessage);
+      setStatus("error");
     }
   }
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <Action variant="outline" onClick={handleDownload} disabled={status === "working"}>
+      <Action 
+        variant="outline" 
+        onClick={handleDownload} 
+        disabled={status === "working"}
+        aria-busy={status === "working"}
+        aria-live="polite"
+      >
         {status === "working" ? (
           <Loader2 className="h-4 w-4 animate-spin" />
         ) : status === "done" ? (
           <Check className="h-4 w-4" />
+        ) : status === "error" ? (
+          <AlertCircle className="h-4 w-4" />
         ) : (
           <Download className="h-4 w-4" />
         )}
-        {status === "working" ? "Preparing PDF…" : "Download PDF"}
+        {status === "working" ? "Generating PDF…" : "Download PDF"}
       </Action>
-      {storedUrl && (
+      {storedUrl && status !== "error" && (
         <a
           href={storedUrl}
           target="_blank"
@@ -113,7 +149,12 @@ export function ReportPdfExport({ report }: { report: QuarterReportResponse }) {
           Stored copy
         </a>
       )}
-      {error && <span className="text-[12px] text-rose">{error}</span>}
+      {error && (
+        <div className="flex items-start gap-2 text-[12px] text-rose max-w-md">
+          <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+          <span>{error}</span>
+        </div>
+      )}
     </div>
   );
 }
