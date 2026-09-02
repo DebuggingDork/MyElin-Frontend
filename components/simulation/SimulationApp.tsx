@@ -2096,7 +2096,7 @@ export function SimulationApp() {
                       <button
                         onClick={() => setLeaderboardOpen(true)}
                         title="View your standings"
-                        className="px-2 py-1 text-xs uppercase tracking-widest border border-line-2 text-dim transition-all hover:border-teal hover:bg-teal/10 hover:text-teal-bright hover:shadow-[0_0_8px_rgba(36,177,177,0.3)] active:scale-95"
+                        className="px-3 py-1.5 text-xs font-semibold uppercase tracking-widest border border-teal/40 text-teal bg-teal/5 rounded transition-all hover:border-teal hover:bg-teal/15 hover:text-teal-bright hover:shadow-[0_0_16px_rgba(36,177,177,0.5)] active:scale-95 dark:border-teal/50 dark:text-teal-bright dark:bg-teal/10 dark:hover:shadow-[0_0_20px_rgba(47,189,189,0.6)]"
                       >
                         Leaderboard
                       </button>
