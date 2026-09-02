@@ -228,10 +228,42 @@ export async function authorizedFetch(path: string, init: RequestInit = {}): Pro
   return res;
 }
 
+/**
+ * Similar to authorizedFetch but for optional-auth endpoints. Sends token if available,
+ * but doesn't trigger logout on 401. Used for public endpoints that enhance content when
+ * authenticated (e.g., leaderboards showing "your position").
+ */
+export async function optionalAuthFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  const send = (token: string | null) => {
+    const headers = new Headers(init.headers);
+    if (token) headers.set("Authorization", `Bearer ${token}`);
+    else headers.delete("Authorization");
+    return fetch(`${getApiBase()}${path}`, { ...init, headers });
+  };
+
+  let token = getToken();
+  // Only try to refresh if we have a token and it's expiring - but don't fail if no token
+  if (token && isExpiringSoon(token)) {
+    const refreshed = await refreshSession();
+    if (refreshed) token = refreshed;
+  }
+
+  let res = await send(token);
+
+  // One retry with refresh if we got 401 and have a refresh token
+  if (res.status === 401 && token && getRefreshToken()) {
+    const renewed = await refreshSession();
+    if (renewed) res = await send(renewed);
+  }
+
+  // Don't trigger unauthorizedHandler - this endpoint works for both auth states
+  return res;
+}
+
 async function request<T>(
   path: string,
   init: RequestInit = {},
-  auth = true,
+  auth: boolean | "optional" = true,
 ): Promise<T> {
   const headers = new Headers(init.headers);
   // FormData sets its own Content-Type (multipart/form-data with a generated boundary) --
@@ -240,12 +272,16 @@ async function request<T>(
     headers.set("Content-Type", "application/json");
   }
 
-  // `auth` is false for register/login/forgot/reset and for the refresh call itself -- a 401
-  // there means "those credentials are wrong", not "your session expired", and must not clear
-  // a session, renew anything, or bounce the page.
-  const res = auth
-    ? await authorizedFetch(path, { ...init, headers })
-    : await fetch(`${getApiBase()}${path}`, { ...init, headers });
+  // auth modes:
+  // - true: requires auth, triggers logout on 401 (default for most endpoints)
+  // - false: no auth sent, used for register/login/forgot/reset
+  // - "optional": sends auth if available, but doesn't trigger logout on 401 (public endpoints)
+  const res =
+    auth === true
+      ? await authorizedFetch(path, { ...init, headers })
+      : auth === "optional"
+        ? await optionalAuthFetch(path, { ...init, headers })
+        : await fetch(`${getApiBase()}${path}`, { ...init, headers });
 
   if (res.status === 204) return undefined as T;
 
@@ -465,7 +501,7 @@ export const api = {
     ),
 
   getLeaderboard: (scenarioId = "nadi_wear_standard") =>
-    request<LeaderboardResponse>(`/leaderboard?scenario_id=${encodeURIComponent(scenarioId)}`),
+    request<LeaderboardResponse>(`/leaderboard?scenario_id=${encodeURIComponent(scenarioId)}`, {}, "optional"),
 
   getEndgame: (companyId: string, quarterId: string) =>
     request<EndgamePreviewResponse>(
