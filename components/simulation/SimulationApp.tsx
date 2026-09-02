@@ -1898,71 +1898,61 @@ export function SimulationApp() {
                     " py-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2"
                   }
                 >
-                  <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
-                    <div className="flex min-w-0 items-center gap-3">
-                      {/* The department trigger, in the workspace it belongs to.
+                  <div className="flex min-w-0 items-center gap-3">
+                    {/* The department trigger, in the workspace it belongs to.
 
-                      It is only here while the panel is shut. An open panel already names
-                      itself and carries its own close control, so a second control up here
-                      would be pointing at something the CEO is looking at.
+                    It is only here while the panel is shut. An open panel already names
+                    itself and carries its own close control, so a second control up here
+                    would be pointing at something the CEO is looking at.
 
-                      Two of them rather than one because they open different things: below
-                      `lg` the departments are a drawer over the document, at `lg` and up they
-                      are a rail beside it, and each reads the state of the panel it opens.
-                      Splitting them on a breakpoint class keeps both correct without reading
-                      the viewport width during render, which the server cannot do.
+                    Two of them rather than one because they open different things: below
+                    `lg` the departments are a drawer over the document, at `lg` and up they
+                    are a rail beside it, and each reads the state of the panel it opens.
+                    Splitting them on a breakpoint class keeps both correct without reading
+                    the viewport width during render, which the server cannot do.
 
-                      Both unmount rather than hide, so the row's `gap-3` closes up behind them
-                      and nothing is holding space for a button that is not there. That is also
-                      why the fade is an entry animation and not a transition -- there is no
-                      element left to transition once it is gone. */}
-                      {showNav && !navOpen && (
-                        <button
-                          type="button"
-                          onClick={openNav}
-                          aria-expanded={false}
-                          aria-label="Open departments"
-                          className="dept-trigger hidden shrink-0 items-center gap-1.5 border border-line-2 px-2 py-1 text-xs uppercase tracking-widest text-dim transition-colors hover:text-white lg:inline-flex"
-                        >
-                          <PanelLeftOpen className="h-3.5 w-3.5" />
-                          <span className="hidden sm:inline">Departments</span>
-                        </button>
-                      )}
-                      {showNav && !mobileNavOpen && (
-                        <button
-                          type="button"
-                          onClick={() => setMobileNavOpen(true)}
-                          aria-expanded={false}
-                          aria-label="Open departments"
-                          className="dept-trigger inline-flex shrink-0 items-center gap-1.5 border border-line-2 px-2 py-1 text-xs uppercase tracking-widest text-dim transition-colors hover:text-white lg:hidden"
-                        >
-                          <PanelLeftOpen className="h-3.5 w-3.5" />
-                          <span className="hidden sm:inline">Departments</span>
-                        </button>
-                      )}
-                      <CompanyNameEditor
-                        name={cleanCompanyName(companyName)}
-                        onSave={async (newName) => {
-                          setCompanyName(newName);
-                          try {
-                            await api.updateCompany(companyId, { name: newName });
-                          } catch {
-                            /* name persists locally even if server update fails */
-                          }
-                        }}
-                      />
-                      <span className="hidden text-xs uppercase tracking-widest text-dim md:inline">
-                        Chief Executive
-                      </span>
-                    </div>
-                    {/* Quick link to standings — opens the leaderboard overlay over the simulation. */}
-                    <button
-                      onClick={() => setLeaderboardOpen(true)}
-                      title="View your standings"
-                      className="shrink-0 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest border border-teal/40 text-teal bg-teal/5 rounded transition-all hover:border-teal hover:bg-teal/15 hover:text-teal-bright hover:shadow-[0_0_16px_rgba(36,177,177,0.5)] active:scale-95 dark:border-teal/50 dark:text-teal-bright dark:bg-teal/10 dark:hover:shadow-[0_0_20px_rgba(47,189,189,0.6)]"
-                    >
-                      Leaderboard
-                    </button>
+                    Both unmount rather than hide, so the row's `gap-3` closes up behind them
+                    and nothing is holding space for a button that is not there. That is also
+                    why the fade is an entry animation and not a transition -- there is no
+                    element left to transition once it is gone. */}
+                    {showNav && !navOpen && (
+                      <button
+                        type="button"
+                        onClick={openNav}
+                        aria-expanded={false}
+                        aria-label="Open departments"
+                        className="dept-trigger hidden shrink-0 items-center gap-1.5 border border-line-2 px-2 py-1 text-xs uppercase tracking-widest text-dim transition-colors hover:text-white lg:inline-flex"
+                      >
+                        <PanelLeftOpen className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline">Departments</span>
+                      </button>
+                    )}
+                    {showNav && !mobileNavOpen && (
+                      <button
+                        type="button"
+                        onClick={() => setMobileNavOpen(true)}
+                        aria-expanded={false}
+                        aria-label="Open departments"
+                        className="dept-trigger inline-flex shrink-0 items-center gap-1.5 border border-line-2 px-2 py-1 text-xs uppercase tracking-widest text-dim transition-colors hover:text-white lg:hidden"
+                      >
+                        <PanelLeftOpen className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline">Departments</span>
+                      </button>
+                    )}
+                    <CompanyNameEditor
+                      name={cleanCompanyName(companyName)}
+                      onSave={async (newName) => {
+                        setCompanyName(newName);
+                        try {
+                          await api.updateCompany(companyId, { name: newName });
+                        } catch {
+                          /* name persists locally even if server update fails */
+                        }
+                      }}
+                    />
+                    <span className="hidden text-xs uppercase tracking-widest text-dim md:inline">
+                      Chief Executive
+                    </span>
                   </div>
 
                   {showNav && (
@@ -2101,6 +2091,14 @@ export function SimulationApp() {
                         }
                       >
                         Sound {soundOn ? "on" : "off"}
+                      </button>
+                      {/* Quick link to standings — opens the leaderboard overlay over the simulation. */}
+                      <button
+                        onClick={() => setLeaderboardOpen(true)}
+                        title="View your standings"
+                        className="px-3 py-1.5 text-xs font-semibold uppercase tracking-widest border border-teal/40 text-teal bg-teal/5 rounded transition-all hover:border-teal hover:bg-teal/15 hover:text-teal-bright hover:shadow-[0_0_16px_rgba(36,177,177,0.5)] active:scale-95 dark:border-teal/50 dark:text-teal-bright dark:bg-teal/10 dark:hover:shadow-[0_0_20px_rgba(47,189,189,0.6)]"
+                      >
+                        Leaderboard
                       </button>
                     </div>
                   )}
