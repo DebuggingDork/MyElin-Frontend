@@ -206,7 +206,7 @@ function buildMetadata(companyName: string, ceoName: string): ReportMetadata {
   return {
     company_name: cleanCompanyName,
     ceo_name: ceoName,
-    source: "Simulation Run",
+    source: ceoName,
     generated_date: new Date().toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
