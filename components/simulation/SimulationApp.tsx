@@ -336,7 +336,7 @@ export function SimulationApp() {
   const [history, setHistory] = useState<QuarterResultShape[]>([]);
   const [scores, setScores] = useState<QuarterScore[]>([]);
   const [briefing, setBriefing] = useState<CrisisBriefing | null>(null);
-  const [runStatus, setRunStatus] = useState<"active" | "completed">("active");
+  const [runStatus, setRunStatus] = useState<"active" | "distressed" | "failed" | "completed">("active");
   const [rewindsUsed, setRewindsUsed] = useState(0);
 
   /* ── the plan being built ─────────────────────────────────────── */
@@ -397,7 +397,7 @@ export function SimulationApp() {
   const timer = useSimulationTimer(companyId, state.quarter);
   const readOnly = timer.paused || timer.expired;
   const timerActive =
-    (phase === "briefing" || phase === "play") && runStatus !== "completed";
+    (phase === "briefing" || phase === "play") && runStatus !== "completed" && runStatus !== "failed";
 
   /**
    * Whether the user has dismissed the "Time Limit Reached" popup.
@@ -692,7 +692,7 @@ export function SimulationApp() {
         );
 
         setPhase(
-          run.runStatus === "completed"
+          run.runStatus === "completed" || run.runStatus === "failed"
             ? "final"
             : run.quartersLocked === 0 && !started
               ? "intro"
@@ -777,7 +777,7 @@ export function SimulationApp() {
    */
   useEffect(() => {
     if (phase !== "play" && phase !== "briefing") return;
-    if (runStatus === "completed") return;
+    if (runStatus === "completed" || runStatus === "failed") return;
     // While paused (or expired) the plan is frozen and the inputs are read-only, so there is
     // nothing new to preview -- and firing one would just race the resume transition. Skipping
     // it here (and re-firing on the first render after Resume, via `readOnly` flipping false in
