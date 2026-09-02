@@ -287,6 +287,19 @@ function buildYearCreatedPage(
     };
   });
 
+  // Backend requires exactly 4 quarters - pad with placeholder data if needed
+  while (quarters.length < 4) {
+    const q = quarters.length + 1;
+    quarters.push({
+      quarter_number: q,
+      quarter_score: 0,
+      verdict: "Incomplete",
+      decision_text: "Quarter not yet completed",
+      consequence_text: "Pending quarter completion",
+      flagged: false,
+    });
+  }
+
   return {
     quarters: quarters.slice(0, 4) as [QuarterEntry, QuarterEntry, QuarterEntry, QuarterEntry],
   };
@@ -322,8 +335,39 @@ function buildProfilePage(scores: QuarterScore[]): ProfilePage {
     };
   });
 
+  // Backend requires exactly 7 dimensions - ensure we have them all
+  const requiredDimensions: Array<{name: string, type: DimensionType}> = [
+    { name: "Strategic Thinking", type: "strategic_thinking" },
+    { name: "Leadership", type: "leadership" },
+    { name: "Adaptability", type: "adaptability" },
+    { name: "Systems Thinking", type: "systems_thinking" },
+    { name: "Risk Management", type: "risk_management" },
+    { name: "Capital Allocation", type: "capital_allocation" },
+    { name: "Long-Term Thinking", type: "long_term_thinking" },
+  ];
+
+  // Fill in any missing dimensions with defaults
+  requiredDimensions.forEach(req => {
+    if (!dimensions.find(d => d.dimension === req.type)) {
+      dimensions.push({
+        dimension: req.type,
+        dimension_label: req.name,
+        score: 0,
+        evidence_summary: "Not yet assessed",
+      });
+    }
+  });
+
   return {
-    dimensions: dimensions.slice(0, 7) as any,
+    dimensions: dimensions.slice(0, 7) as [
+      DimensionScore,
+      DimensionScore,
+      DimensionScore,
+      DimensionScore,
+      DimensionScore,
+      DimensionScore,
+      DimensionScore,
+    ],
   };
 }
 
@@ -460,6 +504,17 @@ function buildAdaptabilityPage(
       adaptability_score: Number(scores[i]?.final ?? 50),
     };
   });
+
+  // Backend requires exactly 4 rows - pad with placeholder data if needed
+  while (rows.length < 4) {
+    const q = rows.length + 1;
+    rows.push({
+      quarter: q,
+      allocation_focus: "Pending",
+      changed_from_prior: false,
+      adaptability_score: 0,
+    });
+  }
 
   const changes = rows.filter(r => r.changed_from_prior).length;
   const summary = changes >= 3
