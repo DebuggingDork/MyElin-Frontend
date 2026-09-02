@@ -553,6 +553,9 @@ export const api = {
   /** Generate Decision Intelligence report PDF using backend Playwright renderer.
    *  Returns a Blob that can be downloaded or previewed. */
   generateDecisionIntelligencePdf: async (body: import("@/lib/api/report-types").DecisionIntelligenceReport): Promise<Blob> => {
+    // Debug: log the payload being sent
+    console.log("PDF Request Payload:", JSON.stringify(body, null, 2));
+    
     const res = await authorizedFetch("/reports/decision-intelligence/pdf", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -567,6 +570,12 @@ export const api = {
       } catch {
         errorBody = { detail: text };
       }
+      
+      // Debug: log 422 validation errors
+      if (res.status === 422) {
+        console.error("PDF Generation 422 Validation Error:", errorBody);
+      }
+      
       throw new ApiError(res.status, (errorBody ?? {}) as ApiErrorBody);
     }
 
