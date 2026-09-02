@@ -111,16 +111,23 @@ export function FinalScreen({
   const timeline = decisionTimeline(history, priorities);
   const sold = Boolean(eg && eg.path === "B");
 
-  // Build final report with tier classification
+  // Build final report with tier classification (requires at least 3 quarters)
   const finalReport =
     history.length >= 3
       ? buildFinalReport(history, scores, s, eg as any, ts || undefined)
       : null;
 
+  // Tier calculation requires Q1, Q2, Q3
   const tierInfo =
     history.length >= 3 && history[0] && history[1] && history[2]
       ? calculateTier(history[0], history[1], history[2], s)
       : null;
+
+  // For early exits (company failed before Q3), show what we have
+  const isEarlyExit = history.length < 3 || (eg && eg.gameOver);
+  const partialYearMessage = isEarlyExit
+    ? `The company completed ${history.length} quarter${history.length === 1 ? "" : "s"} before ${eg && eg.gameOver ? "running out of runway" : "the simulation ended"}.`
+    : null;
 
   // Build adaptation record
   const adaptationRecord = buildAdaptationRecord(history).map((rec, i) => ({
@@ -131,6 +138,34 @@ export function FinalScreen({
 
   return (
     <div className="space-y-6">
+      {/* Early Exit / Partial Year Header */}
+      {isEarlyExit && !finalReport && (
+        <div className="bg-danger/10 border border-danger/30 text-ink p-6">
+          <Eyebrow tone="text-danger">Simulation Ended Early</Eyebrow>
+          <h2 className="font-serif text-3xl mt-1 text-danger-deep">
+            {eg && eg.gameOver
+              ? "The company did not make it."
+              : "Year not completed."}
+          </h2>
+          <p className="text-sm mt-3 max-w-3xl leading-relaxed">
+            {partialYearMessage}
+          </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <div className="inline-block border border-line-2 px-3 py-1">
+              <Eyebrow tone="text-faint">Quarters completed</Eyebrow>
+              <div className="font-serif text-xl">{history.length} of 4</div>
+            </div>
+            <div className="inline-block border border-line-2 px-3 py-1">
+              <Eyebrow tone="text-faint">Composite score</Eyebrow>
+              <div className="font-serif text-xl">
+                {n1(composite)}{" "}
+                <span className="text-faint text-sm">{compositeBand}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Year-End Scorecard Header with Tier Classification */}
       {finalReport && tierInfo && (
         <div className="bg-chrome text-white p-6 border-t-4 border-t-amber">

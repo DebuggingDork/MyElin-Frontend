@@ -287,16 +287,16 @@ function buildYearCreatedPage(
     };
   });
 
-  // Backend requires exactly 4 quarters - pad with placeholder data if needed
+  // Backend requires exactly 4 quarters - pad with "Not played" if company failed early
   while (quarters.length < 4) {
     const q = quarters.length + 1;
     quarters.push({
       quarter_number: q,
       quarter_score: 0,
-      verdict: "Incomplete",
-      decision_text: "Quarter not yet completed",
-      consequence_text: "Pending quarter completion",
-      flagged: false,
+      verdict: "Not played",
+      decision_text: `Quarter ${q} was not reached — the simulation ended after Q${quarters.length - 1 || "?"}.`,
+      consequence_text: "The company did not complete a full year.",
+      flagged: true, // Flag to indicate early termination
     });
   }
 
@@ -505,23 +505,26 @@ function buildAdaptabilityPage(
     };
   });
 
-  // Backend requires exactly 4 rows - pad with placeholder data if needed
+  // Backend requires exactly 4 rows - pad with "Not played" for early exits
   while (rows.length < 4) {
     const q = rows.length + 1;
     rows.push({
       quarter: q,
-      allocation_focus: "Pending",
+      allocation_focus: "Not played",
       changed_from_prior: false,
       adaptability_score: 0,
     });
   }
 
   const changes = rows.filter(r => r.changed_from_prior).length;
-  const summary = changes >= 3
-    ? "High adaptability: pivoted strategy multiple times in response to changing conditions."
-    : changes >= 2
-      ? "Moderate adaptability: adjusted strategy when signals demanded it."
-      : "Low adaptability: maintained consistent strategy throughout the year.";
+  const playedQuarters = history.length;
+  const summary = playedQuarters < 4
+    ? `Simulation ended after ${playedQuarters} quarter${playedQuarters === 1 ? "" : "s"}. Adaptability assessment is incomplete.`
+    : changes >= 3
+      ? "High adaptability: pivoted strategy multiple times in response to changing conditions."
+      : changes >= 2
+        ? "Moderate adaptability: adjusted strategy when signals demanded it."
+        : "Low adaptability: maintained consistent strategy throughout the year.";
 
   return {
     rows: rows.slice(0, 4) as [AdaptabilityRow, AdaptabilityRow, AdaptabilityRow, AdaptabilityRow],
