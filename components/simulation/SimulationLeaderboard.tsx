@@ -367,7 +367,7 @@ export function SimulationLeaderboard({
           <p className="text-[10.5px] uppercase tracking-widest text-faint">
             Simulation
           </p>
-          <h3 className="text-[18px] font-semibold text-ink">
+          <h3 className="text-[18px] font-semibold text-ink drop-shadow-[0_0_12px_rgba(36,177,177,0.4)]">
             {scenarioTitle} · Leaderboard
           </h3>
         </div>
