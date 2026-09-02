@@ -133,10 +133,10 @@ export function FinalScreen({
     <div className="space-y-6">
       {/* Year-End Scorecard Header with Tier Classification */}
       {finalReport && tierInfo && (
-        <div className="bg-stone-900 text-white p-6 border-t-4 border-t-amber-500">
+        <div className="bg-chrome text-white p-6 border-t-4 border-t-amber">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <Eyebrow tone="text-amber-400">
+              <Eyebrow tone="text-amber">
                 Year-End Scorecard · Company Classification
               </Eyebrow>
               <div className="flex flex-wrap items-baseline gap-4 mt-2">
@@ -147,22 +147,22 @@ export function FinalScreen({
                   CEO Rating: {finalReport.ceoBand}
                 </div>
               </div>
-              <p className="text-sm text-stone-300 mt-3 max-w-3xl leading-relaxed">
+              <p className="text-sm text-dim mt-3 max-w-3xl leading-relaxed">
                 {tierInfo.reason}
               </p>
             </div>
             <div className="flex flex-col gap-2 text-right">
               <div>
-                <div className="text-xs uppercase tracking-widest text-stone-400">
+                <div className="text-xs uppercase tracking-widest text-faint">
                   Final Score
                 </div>
-                <div className="font-mono text-3xl font-bold text-amber-400">
+                <div className="font-mono text-3xl font-bold text-amber">
                   {n1(finalReport.finalScore)}
                 </div>
               </div>
               <div>
-                <div className="text-xs text-stone-400">Valuation</div>
-                <div className="font-mono text-xl text-stone-200">
+                <div className="text-xs text-faint">Valuation</div>
+                <div className="font-mono text-xl text-white">
                   {cr(finalReport.finalValuation)}
                 </div>
               </div>
