@@ -1886,226 +1886,175 @@ export function SimulationApp() {
               ref={scrollerRef}
               className="flex min-w-0 flex-1 flex-col overflow-y-auto"
             >
-              {/* Sticky: quarter, cash and what is left to commit are the figures you are deciding
-              against, so they stay on screen while the document scrolls under them. */}
+              {/* Sticky header: two rows matching the reference design.
+                  Row 1 — identity: nav trigger | company name | role label | leaderboard
+                  Row 2 — status bar (only while playing): timer | pause | rewind | quarter | cash | priority | left | notes | sound */}
               <header className="sticky top-0 z-20 shrink-0 bg-chrome text-white">
-                {/* `min-w-0` on both halves and `flex-wrap` on the row: the status cluster is the
-                widest thing in the simulation and it has to be allowed to drop to its own line
-                rather than push the title off the left edge. Nothing here is `nowrap`. */}
-                <div
-                  className={
-                    COLUMN +
-                    " py-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2"
-                  }
-                >
-                  <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
-                    <div className="flex min-w-0 items-center gap-3">
-                      {/* The department trigger, in the workspace it belongs to.
-
-                      It is only here while the panel is shut. An open panel already names
-                      itself and carries its own close control, so a second control up here
-                      would be pointing at something the CEO is looking at.
-
-                      Two of them rather than one because they open different things: below
-                      `lg` the departments are a drawer over the document, at `lg` and up they
-                      are a rail beside it, and each reads the state of the panel it opens.
-                      Splitting them on a breakpoint class keeps both correct without reading
-                      the viewport width during render, which the server cannot do.
-
-                      Both unmount rather than hide, so the row's `gap-3` closes up behind them
-                      and nothing is holding space for a button that is not there. That is also
-                      why the fade is an entry animation and not a transition -- there is no
-                      element left to transition once it is gone. */}
-                      {showNav && !navOpen && (
-                        <button
-                          type="button"
-                          onClick={openNav}
-                          aria-expanded={false}
-                          aria-label="Open departments"
-                          className="dept-trigger hidden shrink-0 items-center gap-1.5 border border-line-2 px-2 py-1 text-xs uppercase tracking-widest text-dim transition-colors hover:text-white lg:inline-flex"
-                        >
-                          <PanelLeftOpen className="h-3.5 w-3.5" />
-                          <span className="hidden sm:inline">Departments</span>
-                        </button>
-                      )}
-                      {showNav && !mobileNavOpen && (
-                        <button
-                          type="button"
-                          onClick={() => setMobileNavOpen(true)}
-                          aria-expanded={false}
-                          aria-label="Open departments"
-                          className="dept-trigger inline-flex shrink-0 items-center gap-1.5 border border-line-2 px-2 py-1 text-xs uppercase tracking-widest text-dim transition-colors hover:text-white lg:hidden"
-                        >
-                          <PanelLeftOpen className="h-3.5 w-3.5" />
-                          <span className="hidden sm:inline">Departments</span>
-                        </button>
-                      )}
-                      <CompanyNameEditor
-                        name={cleanCompanyName(companyName)}
-                        onSave={async (newName) => {
-                          setCompanyName(newName);
-                          try {
-                            await api.updateCompany(companyId, { name: newName });
-                          } catch {
-                            /* name persists locally even if server update fails */
-                          }
-                        }}
-                      />
-                      <span className="hidden text-xs uppercase tracking-widest text-dim md:inline">
-                        Chief Executive
-                      </span>
-                    </div>
-                    {/* Quick link to standings — opens the leaderboard overlay over the simulation. */}
-                    <button
-                      onClick={() => setLeaderboardOpen(true)}
-                      title="View your standings"
-                      className="shrink-0 px-2 py-1 text-xs uppercase tracking-widest border border-teal/40 text-teal transition-colors hover:border-teal hover:text-teal-bright"
-                    >
-                      Leaderboard
-                    </button>
+                {/* ── Row 1: identity ─────────────────────────────────────── */}
+                <div className={COLUMN + " flex items-center justify-between gap-3 py-2 border-b border-white/10"}>
+                  <div className="flex min-w-0 items-center gap-3">
+                    {/* Desktop rail trigger — only when the rail is shut */}
+                    {showNav && !navOpen && (
+                      <button
+                        type="button"
+                        onClick={openNav}
+                        aria-expanded={false}
+                        aria-label="Open departments"
+                        className="dept-trigger hidden shrink-0 items-center gap-1.5 border border-line-2 px-2 py-1 text-xs uppercase tracking-widest text-dim transition-colors hover:text-white lg:inline-flex"
+                      >
+                        <PanelLeftOpen className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline">Departments</span>
+                      </button>
+                    )}
+                    {/* Mobile drawer trigger */}
+                    {showNav && !mobileNavOpen && (
+                      <button
+                        type="button"
+                        onClick={() => setMobileNavOpen(true)}
+                        aria-expanded={false}
+                        aria-label="Open departments"
+                        className="dept-trigger inline-flex shrink-0 items-center gap-1.5 border border-line-2 px-2 py-1 text-xs uppercase tracking-widest text-dim transition-colors hover:text-white lg:hidden"
+                      >
+                        <PanelLeftOpen className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline">Departments</span>
+                      </button>
+                    )}
+                    <CompanyNameEditor
+                      name={cleanCompanyName(companyName)}
+                      onSave={async (newName) => {
+                        setCompanyName(newName);
+                        try {
+                          await api.updateCompany(companyId, { name: newName });
+                        } catch {
+                          /* name persists locally even if server update fails */
+                        }
+                      }}
+                    />
+                    <span className="hidden text-xs uppercase tracking-widest text-dim md:inline">
+                      Chief Executive
+                    </span>
                   </div>
-
-                  {showNav && (
-                    <div className="flex min-w-0 flex-wrap items-center gap-x-5 gap-y-1 font-mono text-sm">
-                      {timerActive && (
-                        <span
-                          className={cn(
-                            "flex items-center gap-2 border px-3 py-1.5 text-sm font-mono",
-                            timer.expired
-                              ? "border-danger/60 bg-danger/10 text-danger-soft"
-                              : timer.paused
-                                ? "border-amber/60 bg-amber/10 text-amber"
-                                : timer.remaining <= 300
-                                  ? "border-danger/60 bg-danger/10 text-danger-soft"
-                                  : "border-line-2 bg-transparent text-white",
-                          )}
-                        >
-                          <Clock className="h-3.5 w-3.5" />
-                          {timer.formatTime()}
-                        </span>
-                      )}
-                      {timerActive && !timer.expired && (
-                        <button
-                          onClick={() =>
-                            timer.paused ? timer.unpause() : timer.pause()
-                          }
-                          className={cn(
-                            "flex items-center gap-1.5 border px-2 py-1 text-xs uppercase tracking-widest transition-colors",
-                            timer.paused
-                              ? "border-amber/60 text-amber hover:bg-amber/10"
-                              : "border-line-2 text-dim hover:text-white",
-                          )}
-                          title={
-                            timer.paused
-                              ? "Resume simulation"
-                              : "Pause simulation"
-                          }
-                        >
-                          {timer.paused ? (
-                            <>
-                              <Play className="h-3 w-3" />
-                              <span className="hidden sm:inline">Resume</span>
-                            </>
-                          ) : (
-                            <>
-                              <Pause className="h-3 w-3" />
-                              <span className="hidden sm:inline">Pause</span>
-                            </>
-                          )}
-                        </button>
-                      )}
-                      {rewindsRemaining > 0 &&
-                        history.length > 0 &&
-                        phase !== "final" &&
-                        !timer.expired && (
-                          <button
-                            onClick={() => setRewindModalOpen(true)}
-                            disabled={rewindBusy}
-                            className="flex items-center gap-1.5 border border-line-2 px-2 py-1 text-xs uppercase tracking-widest text-dim transition-colors hover:text-white disabled:opacity-50"
-                            title="Rewind to a previous quarter"
-                          >
-                            <RotateCcw className="h-3 w-3" />
-                            <span className="hidden sm:inline">Rewind</span>
-                            <span className="text-[10px] ml-0.5">
-                              ({rewindsRemaining})
-                            </span>
-                          </button>
-                        )}
-                      <span>
-                        <span className="text-dim text-xs uppercase tracking-widest mr-2">
-                          Quarter
-                        </span>
-                        {state.quarter}/4
-                      </span>
-                      <span>
-                        <span className="text-dim text-xs uppercase tracking-widest mr-2">
-                          Cash
-                        </span>
-                        {inr(state.cash)}
-                        {state.pendingInvestment > 0 && (
-                          <span className="text-teal-bright ml-1">
-                            +{inr(state.pendingInvestment)} pending
-                          </span>
-                        )}
-                      </span>
-                      {priority && (
-                        <span className="text-teal-bright">
-                          <span className="text-dim text-xs uppercase tracking-widest mr-2">
-                            Priority
-                          </span>
-                          {PRIORITY_BY_ID[priority].name}
-                        </span>
-                      )}
-                      <span
-                        className={
-                          budget.committed > budget.ceiling
-                            ? "text-danger-soft"
-                            : "text-faint"
-                        }
-                      >
-                        <span className="text-dim text-xs uppercase tracking-widest mr-2">
-                          Left
-                        </span>
-                        {inr(budget.ceiling - budget.committed)}
-                      </span>
-                      <button
-                        onClick={() => setNotesOn(!notesOn)}
-                        className={
-                          "px-2 py-1 text-xs uppercase tracking-widest border transition-colors " +
-                          (notesOn
-                            ? "border-teal text-teal-bright"
-                            : "border-line-2 text-dim")
-                        }
-                      >
-                        Notes {notesOn ? "on" : "off"}
-                      </button>
-                      {/* The chime that marks a closed quarter, and the only way to silence it.
-                      A sound with no visible switch is a sound people mute the whole tab for. */}
-                      <button
-                        onClick={() => {
-                          setSoundEnabled(!soundOn);
-                          // Play it on the way on, so the switch demonstrates what it controls.
-                          if (!soundOn) playQuarterClosed();
-                        }}
-                        aria-pressed={soundOn}
-                        title={
-                          soundOn
-                            ? "Mute the quarter-close chime"
-                            : "Play a chime when a quarter closes"
-                        }
-                        className={
-                          "px-2 py-1 text-xs uppercase tracking-widest border transition-colors " +
-                          (soundOn
-                            ? "border-teal text-teal-bright"
-                            : "border-line-2 text-dim")
-                        }
-                      >
-                        Sound {soundOn ? "on" : "off"}
-                      </button>
-                    </div>
-                  )}
+                  {/* Quick link to standings */}
+                  <button
+                    onClick={() => setLeaderboardOpen(true)}
+                    title="View your standings"
+                    className="shrink-0 px-2 py-1 text-xs uppercase tracking-widest border border-teal/40 text-teal transition-colors hover:border-teal hover:text-teal-bright"
+                  >
+                    Leaderboard
+                  </button>
                 </div>
 
+                {/* ── Row 2: status bar — only rendered while playing ──────── */}
+                {showNav && (
+                  <div className={COLUMN + " flex flex-wrap items-center gap-x-4 gap-y-1 py-2 font-mono text-sm"}>
+                    {/* Timer with clock icon — inline, no border box */}
+                    {timerActive && (
+                      <span
+                        className={cn(
+                          "flex items-center gap-1.5",
+                          timer.expired
+                            ? "text-danger-soft"
+                            : timer.paused
+                              ? "text-amber"
+                              : timer.remaining <= 300
+                                ? "text-danger-soft"
+                                : "text-white",
+                        )}
+                      >
+                        <Clock className="h-3.5 w-3.5 shrink-0" />
+                        {timer.formatTime()}
+                      </span>
+                    )}
+                    {/* Pause / Resume — plain button matching reference style */}
+                    {timerActive && !timer.expired && (
+                      <button
+                        onClick={() =>
+                          timer.paused ? timer.unpause() : timer.pause()
+                        }
+                        className={cn(
+                          "flex items-center gap-1 border px-2 py-0.5 text-xs uppercase tracking-widest transition-colors",
+                          timer.paused
+                            ? "border-amber/60 text-amber hover:bg-amber/10"
+                            : "border-line-2 text-dim hover:text-white",
+                        )}
+                        title={timer.paused ? "Resume simulation" : "Pause simulation"}
+                      >
+                        {timer.paused ? (
+                          <><Play className="h-3 w-3" /><span>Resume</span></>
+                        ) : (
+                          <><Pause className="h-3 w-3" /><span>Pause</span></>
+                        )}
+                      </button>
+                    )}
+                    {/* Rewind */}
+                    {rewindsRemaining > 0 &&
+                      history.length > 0 &&
+                      phase !== "final" &&
+                      !timer.expired && (
+                        <button
+                          onClick={() => setRewindModalOpen(true)}
+                          disabled={rewindBusy}
+                          className="flex items-center gap-1 border border-line-2 px-2 py-0.5 text-xs uppercase tracking-widest text-dim transition-colors hover:text-white disabled:opacity-50"
+                          title="Rewind to a previous quarter"
+                        >
+                          <RotateCcw className="h-3 w-3" />
+                          <span>Rewind ({rewindsRemaining})</span>
+                        </button>
+                      )}
+                    {/* Quarter */}
+                    <span>
+                      <span className="text-dim text-xs uppercase tracking-widest mr-1">Quarter</span>
+                      {state.quarter}/4
+                    </span>
+                    {/* Cash */}
+                    <span>
+                      <span className="text-dim text-xs uppercase tracking-widest mr-1">Cash</span>
+                      {inr(state.cash)}
+                      {state.pendingInvestment > 0 && (
+                        <span className="text-teal-bright ml-1">
+                          +{inr(state.pendingInvestment)} pending
+                        </span>
+                      )}
+                    </span>
+                    {/* Priority — only shown once declared */}
+                    {priority && (
+                      <span className="text-teal-bright">
+                        <span className="text-dim text-xs uppercase tracking-widest mr-1">Priority</span>
+                        {PRIORITY_BY_ID[priority].name}
+                      </span>
+                    )}
+                    {/* Left to commit */}
+                    <span className={budget.committed > budget.ceiling ? "text-danger-soft" : "text-faint"}>
+                      <span className="text-dim text-xs uppercase tracking-widest mr-1">Left</span>
+                      {inr(budget.ceiling - budget.committed)}
+                    </span>
+                    {/* Notes toggle */}
+                    <button
+                      onClick={() => setNotesOn(!notesOn)}
+                      className={
+                        "px-2 py-0.5 text-xs uppercase tracking-widest border transition-colors " +
+                        (notesOn ? "border-teal text-teal-bright" : "border-line-2 text-dim")
+                      }
+                    >
+                      Notes {notesOn ? "on" : "off"}
+                    </button>
+                    {/* Sound toggle — the only way to silence the quarter-close chime */}
+                    <button
+                      onClick={() => {
+                        setSoundEnabled(!soundOn);
+                        if (!soundOn) playQuarterClosed();
+                      }}
+                      aria-pressed={soundOn}
+                      title={soundOn ? "Mute the quarter-close chime" : "Play a chime when a quarter closes"}
+                      className={
+                        "px-2 py-0.5 text-xs uppercase tracking-widest border transition-colors " +
+                        (soundOn ? "border-teal text-teal-bright" : "border-line-2 text-dim")
+                      }
+                    >
+                      Sound {soundOn ? "on" : "off"}
+                    </button>
+                  </div>
+                )}
                 {showNav && <Ticker items={ticker} />}
               </header>
 
