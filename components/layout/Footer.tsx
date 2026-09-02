@@ -78,7 +78,7 @@ export function Footer() {
 
         <div className="mt-16 flex flex-wrap items-center justify-between gap-4 border-t border-line pt-7">
           <p className="num text-[12px] text-faint flex flex-wrap items-center gap-3">
-            <span>© 2025 Myelin Labs · Built for judgment</span>
+            <span>© 2026 Myelin Labs · Built for judgment</span>
             <span className="hidden sm:inline text-line-2">|</span>
             <Link href="/privacy" className="transition-colors hover:text-dim">Privacy & Data</Link>
             <span className="hidden sm:inline text-line-2">|</span>
