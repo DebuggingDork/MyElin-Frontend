@@ -20,6 +20,7 @@ import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/types";
 import type { LeaderboardEntry, LeaderboardResponse } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -293,6 +294,7 @@ export function SimulationLeaderboard({
   scenarioId?: string;
   scenarioTitle?: string;
 }) {
+  const { user, ready } = useAuth();
   const [data, setData] = useState<LeaderboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -411,8 +413,23 @@ export function SimulationLeaderboard({
         </div>
       )}
 
-      {/* ── no-score callout for the requesting user ── */}
-      {!userEntry && !userInTop3 && (
+      {/* ── login prompt for unauthenticated users ── */}
+      {!user && ready && (
+        <div className="rounded-lg border border-teal/30 bg-teal/5 px-4 py-3 text-center">
+          <p className="text-[13px] text-ink mb-2">
+            Want to see your position on the leaderboard?
+          </p>
+          <a
+            href="/login?next=/simulations"
+            className="inline-flex items-center gap-1.5 rounded-md bg-teal px-3 py-1.5 text-[12px] font-medium text-white transition-colors hover:bg-teal/90"
+          >
+            Log in to view your rank
+          </a>
+        </div>
+      )}
+
+      {/* ── no-score callout for authenticated user without a run ── */}
+      {user && !userEntry && !userInTop3 && (
         <p className="rounded-lg border border-line bg-[var(--panel)] px-4 py-3 text-center text-[13px] text-faint">
           Complete a run to appear on this leaderboard.
         </p>
