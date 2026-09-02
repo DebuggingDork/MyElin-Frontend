@@ -364,8 +364,8 @@ export function SimulationLeaderboard({
   return (
     <div className="space-y-6">
       {/* header */}
-      <div className="flex items-center justify-between gap-3">
-        <div>
+      <div className="flex items-start justify-between gap-4 pr-8">
+        <div className="flex-1">
           <p className="text-[10.5px] uppercase tracking-widest text-faint">
             Simulation
           </p>
@@ -373,7 +373,7 @@ export function SimulationLeaderboard({
             {scenarioTitle} · Leaderboard
           </h3>
         </div>
-        <span className="num text-[13px] font-medium text-dim">
+        <span className="num text-[13px] font-medium text-ink whitespace-nowrap mt-7">
           {data.total_entries} player{data.total_entries !== 1 ? "s" : ""}
         </span>
       </div>
@@ -484,9 +484,9 @@ export function SimulationLeaderboardModal({
           type="button"
           onClick={onClose}
           aria-label="Close leaderboard"
-          className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-dim transition-all hover:border-line hover:bg-[var(--panel)] hover:text-ink focus:border-teal focus:text-teal"
+          className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-ink transition-all hover:border-line hover:bg-[var(--panel)] hover:text-teal focus:border-teal focus:text-teal"
         >
-          <X className="h-4 w-4" />
+          <X className="h-5 w-5" />
         </button>
 
         <div className="px-6 pb-8 pt-6">
