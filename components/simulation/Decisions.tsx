@@ -12,9 +12,11 @@ import {
   SCREEN_INBOX_SOURCES,
   SCREEN_META,
   SCREEN_TEACHING_NOTE,
+  capexLakh,
   groupOverridden,
   groupTotal,
   numericAlloc,
+  opexLakh,
   spreadGroup,
 } from "@/lib/simulation/constants";
 import { inr, lakh, num, spinnerKeyDown } from "@/lib/simulation/format";
@@ -81,16 +83,24 @@ function DecisionCard({
               disabled={budgetExhausted && num(total) === 0}
               onChange={(e) => {
                 const newVal = e.target.value.replace(/^-/, "");
-                if (num(newVal) > total && budget.committed >= budget.ceiling) {
-                  onBudgetExceeded();
-                  return;
+                if (num(newVal) > total) {
+                  const proposedA = numericAlloc(spreadGroup(alloc, item, newVal));
+                  const proposedSpend = (opexLakh(proposedA) + capexLakh(proposedA)) * 1e5;
+                  if (proposedSpend > budget.ceiling) {
+                    onBudgetExceeded();
+                    return;
+                  }
                 }
                 setAlloc(spreadGroup(alloc, item, newVal));
               }}
               onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, onChange: (v) => {
-                if (num(v) > total && budget.committed >= budget.ceiling) {
-                  onBudgetExceeded();
-                  return;
+                if (num(v) > total) {
+                  const proposedA = numericAlloc(spreadGroup(alloc, item, v));
+                  const proposedSpend = (opexLakh(proposedA) + capexLakh(proposedA)) * 1e5;
+                  if (proposedSpend > budget.ceiling) {
+                    onBudgetExceeded();
+                    return;
+                  }
                 }
                 setAlloc(spreadGroup(alloc, item, v));
               }})}
@@ -124,6 +134,7 @@ function DecisionCard({
 function DetailLineRow({
   line,
   value,
+  alloc,
   onChange,
   ctx,
   budget,
@@ -133,6 +144,7 @@ function DetailLineRow({
 }: {
   line: DetailLine;
   value: string;
+  alloc: Alloc;
   onChange: (v: string) => void;
   ctx: PreviewCtx;
   budget: Budget;
@@ -164,16 +176,26 @@ function DetailLineRow({
             disabled={budgetExhausted && num(value) === 0}
             onChange={(e) => {
               const newVal = e.target.value.replace(/^-/, "");
-              if (num(newVal) > num(value) && budget.committed >= budget.ceiling) {
-                onBudgetExceeded();
-                return;
+              if (num(newVal) > num(value)) {
+                const delta = num(newVal) - num(value);
+                const currentSpend = (opexLakh(numericAlloc({ ...alloc, [line.key]: value })) + capexLakh(numericAlloc({ ...alloc, [line.key]: value }))) * 1e5;
+                const proposedSpend = currentSpend + delta * 1e5;
+                if (proposedSpend > budget.ceiling) {
+                  onBudgetExceeded();
+                  return;
+                }
               }
               onChange(newVal);
             }}
             onKeyDown={(e) => spinnerKeyDown(e, { step: 0.5, min: 0, onChange: (v) => {
-              if (num(v) > num(value) && budget.committed >= budget.ceiling) {
-                onBudgetExceeded();
-                return;
+              if (num(v) > num(value)) {
+                const delta = num(v) - num(value);
+                const currentSpend = (opexLakh(numericAlloc({ ...alloc, [line.key]: value })) + capexLakh(numericAlloc({ ...alloc, [line.key]: value }))) * 1e5;
+                const proposedSpend = currentSpend + delta * 1e5;
+                if (proposedSpend > budget.ceiling) {
+                  onBudgetExceeded();
+                  return;
+                }
               }
               onChange(v);
             }})}
@@ -292,6 +314,7 @@ export function DepartmentScreen({
                 key={line.key}
                 line={line}
                 value={alloc[line.key]}
+                alloc={alloc}
                 ctx={ctx}
                 budget={budget}
                 budgetExhausted={budgetExhausted}

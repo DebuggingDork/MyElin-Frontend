@@ -605,11 +605,26 @@ export function FinancePanel({
                 value={alloc.draw}
                 placeholder="0"
                 readOnly={readOnly}
-                onChange={(e) => setAlloc({ ...alloc, draw: e.target.value.replace(/^-/, "") })}
-                onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, onChange: (v) => setAlloc({ ...alloc, draw: v }) })}
+                disabled={budgetExhausted && num(alloc.draw) === 0}
+                onChange={(e) => {
+                  const newVal = e.target.value.replace(/^-/, "");
+                  if (num(newVal) > num(alloc.draw) && budgetExhausted) {
+                    onBudgetExceeded();
+                    return;
+                  }
+                  setAlloc({ ...alloc, draw: newVal });
+                }}
+                onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, onChange: (v) => {
+                  if (num(v) > num(alloc.draw) && budgetExhausted) {
+                    onBudgetExceeded();
+                    return;
+                  }
+                  setAlloc({ ...alloc, draw: v });
+                }})}
                 className={
                   "w-28 border px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink " +
-                  (overLimit ? "border-danger text-tone-bad" : "border-line-2")
+                  (overLimit ? "border-danger text-tone-bad" : "border-line-2") +
+                  ((readOnly || (budgetExhausted && num(alloc.draw) === 0)) ? " opacity-60 cursor-not-allowed" : "")
                 }
               />
               <span className="text-xs uppercase tracking-widest text-dim">lakh</span>
