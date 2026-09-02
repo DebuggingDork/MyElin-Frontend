@@ -371,7 +371,7 @@ export function SimulationLeaderboard({
             {scenarioTitle} · Leaderboard
           </h3>
         </div>
-        <span className="num text-[12px] text-faint">
+        <span className="num text-[13px] font-medium text-dim">
           {data.total_entries} player{data.total_entries !== 1 ? "s" : ""}
         </span>
       </div>
