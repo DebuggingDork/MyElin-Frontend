@@ -74,6 +74,7 @@ export type SimulationTimerResult = {
   pauseForExit: () => void;
   reset: () => void;
   formatTime: () => string;
+  restoreFromCheckpoint: (remainingSeconds: number) => void;
 };
 
 export function useSimulationTimer(companyId: string, quarter: number): SimulationTimerResult {
@@ -319,7 +320,41 @@ export function useSimulationTimer(companyId: string, quarter: number): Simulati
     return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
   }, [remaining]);
 
+  /**
+   * Restore timer from a checkpoint captured during rewind.
+   *
+   * Rewinds to a previous quarter by restoring the exact timer state from when that quarter
+   * originally began. Calculates a new startTimestamp that makes the countdown show the
+   * checkpoint's remaining time, persists to localStorage so it survives browser refresh,
+   * and clears any pause state.
+   *
+   * This is the only way timer state changes after a rewind — the timer never "continues"
+   * from its current value when rewinding to an earlier quarter.
+   */
+  const restoreFromCheckpoint = useCallback(
+    (remainingSeconds: number) => {
+      const now = Date.now();
+      const elapsed = TOTAL_SECONDS - remainingSeconds;
+      const newStartTimestamp = now - (elapsed * 1000);
+
+      const newData: StoredTimer = {
+        startTimestamp: newStartTimestamp,
+        pausedAt: null,
+        totalPausedDuration: 0,
+        simulationStarted: true,
+      };
+
+      timerDataRef.current = newData;
+      saveTimer(companyId, newData);
+      setRemaining(remainingSeconds);
+      setPaused(false);
+      setExpired(remainingSeconds <= 0);
+      setIsExitPause(false);
+    },
+    [companyId],
+  );
+
   const elapsed = TOTAL_SECONDS - remaining;
 
-  return { remaining, paused, expired, elapsed, isExitPause, startTimer, pause, unpause, pauseForExit, reset, formatTime };
+  return { remaining, paused, expired, elapsed, isExitPause, startTimer, pause, unpause, pauseForExit, reset, formatTime, restoreFromCheckpoint };
 }

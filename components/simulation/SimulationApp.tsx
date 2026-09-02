@@ -949,6 +949,17 @@ export function SimulationApp() {
         }
         // Reload full state from server — replay architecture handles restoration
         await loadRun();
+        
+        // NEW: Restore timer from checkpoint if available
+        if (result.checkpoint) {
+          timer.restoreFromCheckpoint(result.checkpoint.timerRemaining);
+        } else {
+          // Legacy fallback: no checkpoint exists (old simulation), timer continues from current
+          console.warn(
+            `No checkpoint found for Q${targetQuarter}, timer may be inaccurate (legacy run)`
+          );
+        }
+        
         setPhase("briefing");
       } catch (err) {
         // Stop audio immediately if the API call fails — the preloader is gone but the
@@ -965,7 +976,7 @@ export function SimulationApp() {
         inFlight.current = false;
       }
     },
-    [companyId, loadRun],
+    [companyId, loadRun, timer],
   );
 
   const closeQuarter = useCallback(async () => {
@@ -986,7 +997,9 @@ export function SimulationApp() {
     // audio so playQuarterClosed() can fire a few seconds later.
     playProcessing();
     try {
-      const locked = await simulationApi.lock(companyId, plan);
+      // Capture timer value before locking to enable checkpoint creation
+      const timerRemaining = timer.remaining;
+      const locked = await simulationApi.lock(companyId, plan, timerRemaining);
       // Committed to the server, so the local draft has done its job.
       try {
         window.localStorage.removeItem(draftKey(companyId, locked.quarter));

@@ -29,6 +29,7 @@ import type {
   PriorityId,
   ProductId,
   ProductState,
+  QuarterCheckpoint,
   QuarterResultShape,
   Reflection,
   WarrantyId,
@@ -36,6 +37,7 @@ import type {
 
 /** The budget is the screens' own shape -- re-exported so the API surface stays one import. */
 export type { Budget };
+export type { QuarterCheckpoint };
 
 /* ── transport ────────────────────────────────────────────────────── */
 
@@ -207,7 +209,7 @@ const outProducts = (products: Record<ProductId, ProductState> | null) =>
     )
     : null;
 
-function toPayload(plan: QuarterPlan) {
+function toPayload(plan: QuarterPlan, timerRemaining?: number) {
   return {
     lines: outLines(plan.lines),
     warranty: plan.warranty,
@@ -224,6 +226,7 @@ function toPayload(plan: QuarterPlan) {
       strategy: plan.crisis.strategy,
       commit: plan.crisis.commit === "" ? 0 : Number(plan.crisis.commit),
     },
+    timer_remaining: timerRemaining,
   };
 }
 
@@ -313,6 +316,12 @@ export type RewindResponse = {
   deletedQuarters: number[];
   rewindsUsed: number;
   rewindsRemaining: number;
+  checkpoint?: {
+    timerRemaining: number;
+    cashBalance: number;
+    budgetCeiling: number;
+    createdAt: string;
+  } | null;
 };
 
 export type EndgameResponse = {
@@ -359,10 +368,10 @@ export const simulationApi = {
     return out;
   },
 
-  async lock(companyId: string, plan: QuarterPlan): Promise<LockResponse> {
+  async lock(companyId: string, plan: QuarterPlan, timerRemaining?: number): Promise<LockResponse> {
     const raw = await request<Record<string, unknown>>(`/companies/${companyId}/simulation/lock`, {
       method: "POST",
-      body: JSON.stringify(toPayload(plan)),
+      body: JSON.stringify(toPayload(plan, timerRemaining)),
     });
     const out = adaptKeys(raw) as unknown as LockResponse;
     out.result = adaptResult(raw.result as Record<string, unknown>);

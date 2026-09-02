@@ -49,6 +49,17 @@ export type PriorityId =
   | "risk"
   | "longterm";
 
+/**
+ * Quarter-start checkpoint: captures timer, cash, and budget ceiling when a quarter begins.
+ * Stored in opening_state JSONB for rewind restoration.
+ */
+export type QuarterCheckpoint = {
+  timerRemaining: number;    // Seconds remaining when quarter began
+  cashBalance: number;        // Cash at quarter start (for verification)
+  budgetCeiling: number;      // Available spend at quarter start
+  createdAt: string;          // ISO timestamp (for debugging)
+};
+
 export type Tone = "good" | "watch" | "bad" | "flat";
 
 export type LineKind = "opex" | "capex" | "finIn" | "finOut" | "count";
@@ -155,6 +166,8 @@ export type CompanyState = {
   crisisLog: CrisisLogEntry[];
   wcBreached: boolean;
   everInsolvent: boolean;
+  /** Quarter-start checkpoint for rewind restoration (optional, only present when captured) */
+  checkpoint?: QuarterCheckpoint;
 };
 
 export type CrisisInput = {
