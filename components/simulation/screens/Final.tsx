@@ -393,34 +393,34 @@ export function FinalScreen({
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
             <thead>
-              <tr className="border-b-2 border-stone-800">
-                <th className="text-left py-3 pr-4 text-xs uppercase tracking-widest text-stone-500 font-semibold">
+              <tr className="border-b-2 border-line">
+                <th className="text-left py-3 pr-4 text-xs uppercase tracking-widest text-faint font-semibold">
                   Quarter
                 </th>
-                <th className="text-left py-3 pr-4 text-xs uppercase tracking-widest text-stone-500 font-semibold">
+                <th className="text-left py-3 pr-4 text-xs uppercase tracking-widest text-faint font-semibold">
                   Leading Category
                 </th>
-                <th className="text-left py-3 pr-4 text-xs uppercase tracking-widest text-stone-500 font-semibold">
+                <th className="text-left py-3 pr-4 text-xs uppercase tracking-widest text-faint font-semibold">
                   Changed?
                 </th>
-                <th className="text-left py-3 text-xs uppercase tracking-widest text-stone-500 font-semibold">
+                <th className="text-left py-3 text-xs uppercase tracking-widest text-faint font-semibold">
                   Score
                 </th>
               </tr>
             </thead>
             <tbody>
               {adaptationRecord.map((a) => (
-                <tr key={a.q} className="border-b border-stone-200">
-                  <td className="py-3 pr-4 font-mono text-stone-900">Q{a.q}</td>
-                  <td className="py-3 pr-4 text-stone-700">{a.category}</td>
+                <tr key={a.q} className="border-b border-line">
+                  <td className="py-3 pr-4 font-mono text-ink">Q{a.q}</td>
+                  <td className="py-3 pr-4 text-ink">{a.category}</td>
                   <td
                     className={
-                      "py-3 pr-4 " +
+                      "py-3 pr-4 font-medium " +
                       (a.changed === null
-                        ? "text-stone-400"
+                        ? "text-dim"
                         : a.changed
-                          ? "text-teal-700 font-semibold"
-                          : "text-rose-700")
+                          ? "text-teal"
+                          : "text-rose")
                     }
                   >
                     {a.changed === null
@@ -429,7 +429,7 @@ export function FinalScreen({
                         ? "Yes"
                         : "No — repeated"}
                   </td>
-                  <td className="py-3 font-mono text-stone-900">
+                  <td className="py-3 font-mono text-ink">
                     {n1(a.score)}
                   </td>
                 </tr>
@@ -437,7 +437,7 @@ export function FinalScreen({
             </tbody>
           </table>
         </div>
-        <p className="text-sm text-stone-500 italic mt-5 max-w-2xl leading-relaxed">
+        <p className="text-sm text-dim italic mt-5 max-w-2xl leading-relaxed">
           Changing an allocation is not, by itself, evidence of adaptability —
           what matters is whether it changed in response to what the results
           were already showing.
