@@ -35,6 +35,7 @@ import {
 } from "@/lib/simulation/constants";
 import { inr, lakh, n0, n1, n2, num, pct, pw, spinnerKeyDown } from "@/lib/simulation/format";
 import { pipelineBoard } from "@/lib/simulation/insights";
+import { cn } from "@/lib/utils";
 import {
   Bar,
   Eyebrow,
@@ -47,6 +48,7 @@ import {
 } from "@/components/simulation/Kit";
 import type {
   Alloc,
+  Budget,
   CompanyState,
   Constraint,
   PayTermsId,

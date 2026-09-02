@@ -9,6 +9,7 @@
  */
 
 import { useState } from "react";
+import type { ReactElement } from "react";
 import Link from "next/link";
 import {
   BUFFER,
@@ -82,7 +83,7 @@ export function FinalScreen({
   s: CompanyState;
   onRestart: () => void;
   busy?: boolean;
-}) {
+}): ReactElement {
   const [openRecord, setOpenRecord] = useState(false);
   const last = history[history.length - 1];
 
@@ -138,8 +139,7 @@ export function FinalScreen({
 
   return (
     <div className="space-y-6">
-      {/* Early Exit / Partial Year Header */}
-      {isEarlyExit && !finalReport && (
+      {isEarlyExit && !finalReport ? (
         <div className="bg-danger/10 border border-danger/30 text-ink p-6">
           <Eyebrow tone="text-danger">Simulation Ended Early</Eyebrow>
           <h2 className="font-serif text-3xl mt-1 text-danger-deep">
@@ -164,10 +164,9 @@ export function FinalScreen({
             </div>
           </div>
         </div>
-      )}
+      ) : null}
 
-      {/* Year-End Scorecard Header with Tier Classification */}
-      {finalReport && tierInfo && (
+      {finalReport && tierInfo ? (
         <div className="bg-chrome text-white p-6 border-t-4 border-t-amber">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
@@ -204,9 +203,8 @@ export function FinalScreen({
             </div>
           </div>
         </div>
-      )}
+      ) : null}
 
-      {/* Original CEO Performance Report Header */}
       <div className="bg-chrome text-white p-6">
         <Eyebrow tone="text-danger-soft">CEO performance report</Eyebrow>
         <h2 className="font-serif text-4xl mt-1">
