@@ -370,8 +370,9 @@ export function SimulationLeaderboard({
             Simulation
           </p>
           <h3 className="text-[18px] font-semibold text-ink drop-shadow-[0_0_12px_rgba(36,177,177,0.4)]">
-            {scenarioTitle} · Leaderboard
+            {scenarioTitle}
           </h3>
+          <p className="text-[13px] text-dim mt-1">Leaderboard</p>
         </div>
         <span className="num text-[13px] font-medium text-ink whitespace-nowrap mt-7">
           {data.total_entries} player{data.total_entries !== 1 ? "s" : ""}
