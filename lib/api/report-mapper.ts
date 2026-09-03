@@ -562,11 +562,19 @@ function buildScoreExplanationPage(scores: QuarterScore[]): ScoreExplanationPage
   const negative = allModifiers.filter(m => Number(m.points) < 0);
 
   const finals = scores.map(sc => Number(sc.final));
-  const baseScore = finals.length ? finals.reduce((a, b) => a + b, 0) / finals.length : 0;
-  const modifierTotal = allModifiers.reduce((sum, m) => sum + Number(m.points), 0);
+  const finalScore = finals.length ? finals.reduce((a, b) => a + b, 0) / finals.length : 0;
+
+  // The base mechanical score is the mean of the per-quarter trait totals.  Traits are graded
+  // out of 100, so their mean is always within [0,100] as the report schema requires.  (Do not
+  // derive this as `finalScore - sum(all modifiers)` -- that mixes a mean across quarters with
+  // a sum across quarters and can push the result outside [0,100], failing backend validation.)
+  const traitTotals = scores.map(sc => Number(sc.traitTotal));
+  const baseScore = traitTotals.length
+    ? traitTotals.reduce((a, b) => a + b, 0) / traitTotals.length
+    : 0;
 
   return {
-    base_score: baseScore - modifierTotal,
+    base_score: baseScore,
     positive_modifiers: positive.map(m => ({
       label: String(m.why),
       value: Number(m.points),
@@ -577,7 +585,7 @@ function buildScoreExplanationPage(scores: QuarterScore[]): ScoreExplanationPage
       value: Number(m.points),
       is_positive: false,
     })),
-    final_score: baseScore,
+    final_score: finalScore,
     explanation: `Your base score reflects mechanical performance across seven dimensions. Modifiers adjust for strategic decisions and outcomes.`,
   };
 }
