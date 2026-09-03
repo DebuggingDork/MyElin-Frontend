@@ -243,20 +243,28 @@ export function CrisisScreen({
                     readOnly={readOnly}
                     onChange={(e) => {
                       const newVal = e.target.value.replace(/^-/, "");
-                      if (num(newVal) > num(crisis.commit || "0")) {
-                        const costDelta = (num(newVal) - num(crisis.commit || "0")) * 1e5;
+                      const currentCommit = num(crisis.commit || "0");
+                      if (num(newVal) > currentCommit) {
+                        const costDelta = (num(newVal) - currentCommit) * 1e5;
                         if (budgetRemaining !== undefined && costDelta > budgetRemaining) {
                           onBudgetExceeded?.();
+                          // Clamp to maximum affordable crisis spending
+                          const maxTotal = currentCommit + budgetRemaining / 1e5;
+                          set("commit", String(Math.floor(maxTotal)));
                           return;
                         }
                       }
                       set("commit", newVal);
                     }}
                     onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, onChange: (v) => {
-                      if (num(v) > num(crisis.commit || "0")) {
-                        const costDelta = (num(v) - num(crisis.commit || "0")) * 1e5;
+                      const currentCommit = num(crisis.commit || "0");
+                      if (num(v) > currentCommit) {
+                        const costDelta = (num(v) - currentCommit) * 1e5;
                         if (budgetRemaining !== undefined && costDelta > budgetRemaining) {
                           onBudgetExceeded?.();
+                          // Clamp to maximum affordable crisis spending
+                          const maxTotal = currentCommit + budgetRemaining / 1e5;
+                          set("commit", String(Math.floor(maxTotal)));
                           return;
                         }
                       }
