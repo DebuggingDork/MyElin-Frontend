@@ -628,6 +628,9 @@ export function FinancePanel({
   const drawn = p ? v(p, "drawn") : 0;
   const overLimit = num(alloc.draw) * 1e5 > limit + 1;
   const left = budget.ceiling - budget.committed;
+  const currentRepay = num(alloc.repay) * 1e5;
+  // Allow unlimited repay if budget ceiling is 0 (preview hasn't loaded yet)
+  const maxRepay = budget.ceiling > 0 ? currentRepay + left : 999999999;
 
   return (
     <div className="space-y-4">
@@ -681,7 +684,7 @@ export function FinancePanel({
               <input
                 type="number"
                 min="0"
-                max={budget.ceiling > 0 ? num(alloc.repay) + left / 1e5 : 999999999}
+                max={maxRepay / 1e5}
                 step="1"
                 value={alloc.repay}
                 placeholder="0"
@@ -689,29 +692,19 @@ export function FinancePanel({
                 disabled={budgetExhausted}
                 onChange={(e) => {
                   const newVal = e.target.value;
-                  const newNum = num(newVal);
-                  const currentVal = num(alloc.repay);
-                  // Hard cap: if increasing beyond current and would exceed budget, block
-                  if (newNum > currentVal) {
-                    const additionalCost = (newNum - currentVal) * 1e5;
-                    // Only check budget if ceiling is loaded (> 0)
-                    if (budget.ceiling > 0 && additionalCost > left) {
-                      onBudgetExceeded();
-                      return;
-                    }
+                  const newNum = num(newVal) * 1e5;
+                  // Hard cap at remaining budget (only if budget is loaded)
+                  if (budget.ceiling > 0 && newNum > maxRepay) {
+                    onBudgetExceeded();
+                    return;
                   }
                   setAlloc({ ...alloc, repay: newVal.replace(/^-/, "") });
                 }}
-                onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, max: budget.ceiling > 0 ? num(alloc.repay) + left / 1e5 : 999999999, onChange: (v) => {
-                  const vNum = num(v);
-                  const currentVal = num(alloc.repay);
-                  if (vNum > currentVal) {
-                    const additionalCost = (vNum - currentVal) * 1e5;
-                    // Only check budget if ceiling is loaded (> 0)
-                    if (budget.ceiling > 0 && additionalCost > left) {
-                      onBudgetExceeded();
-                      return;
-                    }
+                onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, max: maxRepay / 1e5, onChange: (v) => {
+                  const vNum = num(v) * 1e5;
+                  if (budget.ceiling > 0 && vNum > maxRepay) {
+                    onBudgetExceeded();
+                    return;
                   }
                   setAlloc({ ...alloc, repay: v });
                 }})}
