@@ -189,17 +189,21 @@ function DetailLineRow({
             onChange={(e) => {
               const newVal = e.target.value.replace(/^-/, "");
               const newNum = num(newVal);
-              // Hard cap at remaining budget
-              if (newNum > maxAllowed) {
+              // Hard cap at remaining budget - clamp to maxAllowed
+              if (budget.ceiling > 0 && newNum > maxAllowed) {
                 onBudgetExceeded();
+                // Clamp to maximum allowed value instead of rejecting
+                onChange(String(maxAllowed));
                 return;
               }
               onChange(newVal);
             }}
             onKeyDown={(e) => spinnerKeyDown(e, { step: 0.5, min: 0, max: maxAllowed, onChange: (v) => {
               const vNum = num(v);
-              if (vNum > maxAllowed) {
+              if (budget.ceiling > 0 && vNum > maxAllowed) {
                 onBudgetExceeded();
+                // Clamp to maximum allowed value
+                onChange(String(maxAllowed));
                 return;
               }
               onChange(v);
