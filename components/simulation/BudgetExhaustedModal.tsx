@@ -36,19 +36,30 @@ export function BudgetExhaustedModal({ open, onClose, budgetRemaining }: { open:
 
           <p className="text-sm text-ink leading-relaxed">
             {hasNoFunds 
-              ? "You have fully committed your available cash for this quarter."
+              ? "You have fully committed your available cash for this quarter. All allocation controls are now disabled."
               : "You don't have enough budget remaining to make this allocation."}
           </p>
 
-          <div className="bg-amber/10 border border-amber/30 px-4 py-3.5 text-sm">
-            <p className="text-ink leading-relaxed">
-              To add more resources, you must either:
-            </p>
-            <ul className="list-disc pl-5 mt-2 space-y-1 text-ink/90">
-              <li>Reduce spending in other departments</li>
-              <li>Draw down more from your credit facility (Finance tab)</li>
-            </ul>
-          </div>
+          {hasNoFunds ? (
+            <div className="bg-teal/10 border border-teal/30 px-4 py-3.5 text-sm">
+              <p className="text-ink leading-relaxed font-semibold">
+                Your only available action is to close this quarter.
+              </p>
+              <p className="text-ink/90 mt-2 leading-relaxed">
+                Navigate to the "Close the quarter" tab to review your allocations and proceed.
+              </p>
+            </div>
+          ) : (
+            <div className="bg-amber/10 border border-amber/30 px-4 py-3.5 text-sm">
+              <p className="text-ink leading-relaxed">
+                To add more resources, you must either:
+              </p>
+              <ul className="list-disc pl-5 mt-2 space-y-1 text-ink/90">
+                <li>Reduce spending in other departments</li>
+                <li>Draw down more from your credit facility (Finance tab)</li>
+              </ul>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center justify-end px-5 py-4 border-t border-line bg-raise">
