@@ -91,17 +91,21 @@ function DecisionCard({
               onChange={(e) => {
                 const newVal = e.target.value.replace(/^-/, "");
                 const newNum = num(newVal);
-                // Hard cap at remaining budget
-                if (newNum > maxAllowed) {
+                // Hard cap at remaining budget - clamp to maxAllowed
+                if (budget.ceiling > 0 && newNum > maxAllowed) {
                   onBudgetExceeded();
+                  // Clamp to maximum allowed value instead of rejecting
+                  setAlloc(spreadGroup(alloc, item, String(maxAllowed)));
                   return;
                 }
                 setAlloc(spreadGroup(alloc, item, newVal));
               }}
               onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, max: maxAllowed, onChange: (v) => {
                 const vNum = num(v);
-                if (vNum > maxAllowed) {
+                if (budget.ceiling > 0 && vNum > maxAllowed) {
                   onBudgetExceeded();
+                  // Clamp to maximum allowed value
+                  setAlloc(spreadGroup(alloc, item, String(maxAllowed)));
                   return;
                 }
                 setAlloc(spreadGroup(alloc, item, v));
