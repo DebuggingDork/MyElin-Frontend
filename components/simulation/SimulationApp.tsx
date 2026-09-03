@@ -1084,6 +1084,17 @@ export function SimulationApp() {
       // `loadRun` fetches the term sheet whenever one is outstanding, so Q3 needs no special
       // case here beyond sending the CEO to it.
       const run = await loadRun();
+      
+      // If run is distressed or failed (e.g., budget exhausted, cash ran out), end the simulation
+      // and show the final scorecard instead of opening the next quarter
+      if (run.runStatus === "distressed" || run.runStatus === "failed") {
+        setPhase("final");
+        setWorking(null);
+        inFlight.current = false;
+        setBusy(false);
+        return;
+      }
+      
       resetPlan(run.state);
       setPhase(justClosed === 3 && !run.endgamePath ? "termsheet" : "briefing");
       // Timer continues running across quarters - don't reset
