@@ -82,37 +82,31 @@ function DecisionCard({
             <input
               type="number"
               min="0"
-              max={maxAllowed}
               step="1"
               value={total === 0 ? "" : total}
               placeholder="0"
-              readOnly={readOnly || budgetExhausted}
-              disabled={budgetExhausted}
+              readOnly={readOnly}
               onChange={(e) => {
                 const newVal = e.target.value.replace(/^-/, "");
                 const newNum = num(newVal);
-                // Hard cap at remaining budget - clamp to maxAllowed
+                // Reject if exceeds budget - do NOT set the value at all
                 if (budget.ceiling > 0 && newNum > maxAllowed) {
                   onBudgetExceeded();
-                  // Clamp to maximum allowed value instead of rejecting
-                  setAlloc(spreadGroup(alloc, item, String(maxAllowed)));
-                  return;
+                  return; // Don't update state
                 }
                 setAlloc(spreadGroup(alloc, item, newVal));
               }}
-              onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, max: maxAllowed, onChange: (v) => {
+              onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, onChange: (v) => {
                 const vNum = num(v);
                 if (budget.ceiling > 0 && vNum > maxAllowed) {
                   onBudgetExceeded();
-                  // Clamp to maximum allowed value
-                  setAlloc(spreadGroup(alloc, item, String(maxAllowed)));
-                  return;
+                  return; // Don't update state
                 }
                 setAlloc(spreadGroup(alloc, item, v));
               }})}
               className={cn(
                 "w-24 border border-line-2 px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink",
-                (readOnly || budgetExhausted) && "opacity-60 cursor-not-allowed",
+                readOnly && "opacity-60 cursor-not-allowed",
               )}
             />
             <span className="text-xs uppercase tracking-widest text-dim">lakh</span>
