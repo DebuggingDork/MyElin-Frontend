@@ -89,18 +89,25 @@ function DecisionCard({
               onChange={(e) => {
                 const newVal = e.target.value.replace(/^-/, "");
                 const newNum = num(newVal);
-                // Reject if exceeds budget - do NOT set the value at all
-                if (budget.ceiling > 0 && newNum > maxAllowed) {
-                  onBudgetExceeded();
-                  return; // Don't update state
+                // Only check budget when INCREASING spend
+                if (budget.ceiling > 0 && newNum > total) {
+                  const additional = newNum - total;
+                  if (additional * 1e5 > left) {
+                    onBudgetExceeded();
+                    return; // Don't update state
+                  }
                 }
                 setAlloc(spreadGroup(alloc, item, newVal));
               }}
               onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, onChange: (v) => {
                 const vNum = num(v);
-                if (budget.ceiling > 0 && vNum > maxAllowed) {
-                  onBudgetExceeded();
-                  return; // Don't update state
+                // Only check budget when INCREASING spend
+                if (budget.ceiling > 0 && vNum > total) {
+                  const additional = vNum - total;
+                  if (additional * 1e5 > left) {
+                    onBudgetExceeded();
+                    return; // Don't update state
+                  }
                 }
                 setAlloc(spreadGroup(alloc, item, v));
               }})}
@@ -159,8 +166,6 @@ function DetailLineRow({
   const cap = line.cap ? line.cap(ctx) : null;
   const overCap = cap != null && amount > cap + 0.001;
   const left = budget.ceiling - budget.committed;
-  // Allow very large allocations if budget ceiling is 0 (preview hasn't loaded yet)
-  const maxAllowed = budget.ceiling > 0 ? amount + left : 999999;
 
   return (
     <div className="border-b border-line py-3 last:border-b-0">
@@ -181,18 +186,25 @@ function DetailLineRow({
             onChange={(e) => {
               const newVal = e.target.value.replace(/^-/, "");
               const newNum = num(newVal);
-              // Reject if exceeds budget - do NOT set the value at all
-              if (budget.ceiling > 0 && newNum > maxAllowed) {
-                onBudgetExceeded();
-                return; // Don't update state
+              // Only check budget when INCREASING spend
+              if (budget.ceiling > 0 && newNum > amount) {
+                const additional = newNum - amount;
+                if (additional * 1e5 > left) {
+                  onBudgetExceeded();
+                  return; // Don't update state
+                }
               }
               onChange(newVal);
             }}
             onKeyDown={(e) => spinnerKeyDown(e, { step: 0.5, min: 0, onChange: (v) => {
               const vNum = num(v);
-              if (budget.ceiling > 0 && vNum > maxAllowed) {
-                onBudgetExceeded();
-                return; // Don't update state
+              // Only check budget when INCREASING spend
+              if (budget.ceiling > 0 && vNum > amount) {
+                const additional = vNum - amount;
+                if (additional * 1e5 > left) {
+                  onBudgetExceeded();
+                  return; // Don't update state
+                }
               }
               onChange(v);
             }})}
