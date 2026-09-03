@@ -463,7 +463,7 @@ function ScenarioCard({
                 onClick={() => setLbOpen(true)}
                 title="View leaderboard"
                 aria-label={`${scenario.title} leaderboard`}
-                className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] uppercase tracking-widest text-teal transition-colors hover:bg-teal/10"
+                className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] uppercase tracking-widest text-ember transition-colors hover:bg-ember/20 animate-pulse shadow-[0_0_8px_rgba(255,108,55,0.4)] hover:shadow-[0_0_12px_rgba(255,108,55,0.6)]"
               >
                 <BarChart2 className="h-3 w-3 shrink-0" />
                 <span className="hidden sm:inline">Leaderboard</span>
