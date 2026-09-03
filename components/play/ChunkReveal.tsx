@@ -51,10 +51,6 @@ export function ChunkReveal({
     let i = 0;
     let timeoutId = 0;
 
-    // Start SFX immediately — before the first setTimeout fires — so audio and the
-    // appearance of the first words are simultaneous rather than offset by 60–220 ms.
-    if (enableSfx) sfx.start();
-
     function step() {
       if (skippedRef.current) return;
       const chunk = 1 + Math.floor(Math.random() * 3);
@@ -64,7 +60,11 @@ export function ChunkReveal({
         timeoutId = window.setTimeout(step, 60 + Math.random() * 160);
       }
     }
-    timeoutId = window.setTimeout(step, 60 + Math.random() * 160);
+    
+    // Start SFX and show first words immediately — perfectly synchronized
+    if (enableSfx) sfx.start();
+    step(); // Call first step immediately, no delay
+    
     return () => {
       window.clearTimeout(timeoutId);
       // Stop SFX if this effect tears down before the animation completes (text prop changed,
