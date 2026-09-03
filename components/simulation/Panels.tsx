@@ -622,8 +622,6 @@ export function FinancePanel({
   const overLimit = num(alloc.draw) * 1e5 > limit + 1;
   const left = budget.ceiling - budget.committed;
   const currentRepay = num(alloc.repay) * 1e5;
-  // Allow unlimited repay if budget ceiling is 0 (preview hasn't loaded yet)
-  const maxRepay = budget.ceiling > 0 ? currentRepay + left : 999999999;
 
   return (
     <div className="space-y-4">
@@ -684,18 +682,25 @@ export function FinancePanel({
                 onChange={(e) => {
                   const newVal = e.target.value;
                   const newNum = num(newVal) * 1e5;
-                  // Reject if exceeds budget - do NOT set the value at all
-                  if (budget.ceiling > 0 && newNum > maxRepay) {
-                    onBudgetExceeded();
-                    return; // Don't update state
+                  // Only check budget when INCREASING spend
+                  if (budget.ceiling > 0 && newNum > currentRepay) {
+                    const additional = newNum - currentRepay;
+                    if (additional > left) {
+                      onBudgetExceeded();
+                      return; // Don't update state
+                    }
                   }
                   setAlloc({ ...alloc, repay: newVal.replace(/^-/, "") });
                 }}
                 onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, onChange: (v) => {
                   const vNum = num(v) * 1e5;
-                  if (budget.ceiling > 0 && vNum > maxRepay) {
-                    onBudgetExceeded();
-                    return; // Don't update state
+                  // Only check budget when INCREASING spend
+                  if (budget.ceiling > 0 && vNum > currentRepay) {
+                    const additional = vNum - currentRepay;
+                    if (additional > left) {
+                      onBudgetExceeded();
+                      return; // Don't update state
+                    }
                   }
                   setAlloc({ ...alloc, repay: v });
                 }})}
