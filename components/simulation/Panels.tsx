@@ -709,9 +709,11 @@ export function FinancePanel({
                 onChange={(e) => {
                   const newVal = e.target.value;
                   const newNum = num(newVal) * 1e5;
-                  // Hard cap at remaining budget (only if budget is loaded)
+                  // Hard cap at remaining budget - clamp to maxRepay
                   if (budget.ceiling > 0 && newNum > maxRepay) {
                     onBudgetExceeded();
+                    // Clamp to maximum repayment possible
+                    setAlloc({ ...alloc, repay: String(maxRepay / 1e5) });
                     return;
                   }
                   setAlloc({ ...alloc, repay: newVal.replace(/^-/, "") });
@@ -720,6 +722,8 @@ export function FinancePanel({
                   const vNum = num(v) * 1e5;
                   if (budget.ceiling > 0 && vNum > maxRepay) {
                     onBudgetExceeded();
+                    // Clamp to maximum repayment possible
+                    setAlloc({ ...alloc, repay: String(maxRepay / 1e5) });
                     return;
                   }
                   setAlloc({ ...alloc, repay: v });
