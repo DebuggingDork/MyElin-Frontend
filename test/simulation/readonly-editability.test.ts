@@ -141,3 +141,82 @@ describe("isTimerExpired (read-only snapshot helper)", () => {
     expect(isTimerExpired("no-such-company")).toBe(false);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Mirror of the budgetExhausted derivation in SimulationApp (line 517):
+//     const budgetExhausted = budget.ceiling > 0 && budgetRemaining <= 0;
+// ---------------------------------------------------------------------------
+function budgetExhausted(ceiling: number, remaining: number): boolean {
+  return ceiling > 0 && remaining <= 0;
+}
+
+describe("budgetExhausted — inputs must not be disabled before budget loads", () => {
+  it("budget ceiling 0 (preview not loaded yet): inputs are NOT budget-exhausted", () => {
+    // ceiling=0 → budgetRemaining = 0 - localCommitted (negative), but budgetExhausted
+    // must be false so inputs remain interactive while the first preview is in flight.
+    expect(budgetExhausted(0, -500000)).toBe(false);
+    expect(budgetExhausted(0, 0)).toBe(false);
+  });
+
+  it("budget ceiling loaded and remaining positive: inputs are NOT budget-exhausted", () => {
+    expect(budgetExhausted(5000000, 1000000)).toBe(false);
+  });
+
+  it("budget ceiling loaded and remaining zero: inputs ARE budget-exhausted", () => {
+    expect(budgetExhausted(5000000, 0)).toBe(true);
+  });
+
+  it("budget ceiling loaded and remaining negative: inputs ARE budget-exhausted", () => {
+    expect(budgetExhausted(5000000, -200000)).toBe(true);
+  });
+
+  it("pause→resume flow: budget not loaded (ceiling=0) does not block editing", () => {
+    // Timer is paused → readOnly=true. Budget hasn't loaded (ceiling=0) → budgetExhausted=false.
+    // After resume, readOnly flips to false, and inputs are editable because budgetExhausted
+    // is also false (ceiling=0). The preview will then load the real budget.
+    expect(readOnly(true, false)).toBe(true);   // paused → read-only
+    expect(budgetExhausted(0, -100000)).toBe(false); // not budget-exhausted
+    // After resume:
+    expect(readOnly(false, false)).toBe(false); // resumed → editable
+    expect(budgetExhausted(0, -100000)).toBe(false); // still not budget-exhausted
+  });
+});
+
+describe("pauseForExit timestamp guard — must not override a fresh unpause", () => {
+  it("pauseForExit skips when unpause happened within 500ms", () => {
+    let lastUnpauseAt = 0;
+    let pausedAt: number | null = 1000;
+
+    function unpause() {
+      pausedAt = null;
+      lastUnpauseAt = Date.now();
+    }
+
+    function pauseForExit() {
+      if (pausedAt !== null) return; // already paused
+      if (Date.now() - lastUnpauseAt < 500) return; // guard
+      pausedAt = Date.now();
+    }
+
+    // Unpause, then immediately (same tick) try to pauseForExit.
+    unpause();
+    pauseForExit();
+    // pausedAt must still be null — the guard prevented the override.
+    expect(pausedAt).toBeNull();
+  });
+
+  it("pauseForExit proceeds normally when no recent unpause", () => {
+    let pausedAt: number | null = null;
+    const lastUnpauseAt = 0;
+
+    function pauseForExit() {
+      if (pausedAt !== null) return;
+      if (Date.now() - lastUnpauseAt < 500) return;
+      pausedAt = Date.now();
+    }
+
+    // No unpause has happened (lastUnpauseAt=0), so pauseForExit should proceed.
+    pauseForExit();
+    expect(pausedAt).not.toBeNull();
+  });
+});

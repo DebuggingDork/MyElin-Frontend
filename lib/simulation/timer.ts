@@ -85,6 +85,9 @@ export function useSimulationTimer(companyId: string, quarter: number): Simulati
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const timerDataRef = useRef<StoredTimer | null>(null);
   const initializedRef = useRef(false);
+  // Timestamp of the last unpause. `pauseForExit` (via visibilitychange or unmount cleanup)
+  // uses this to avoid overriding a fresh unpause that React hasn't re-rendered yet.
+  const lastUnpauseAtRef = useRef(0);
 
   // Calculate elapsed time based on stored data
   const calculateElapsed = useCallback((data: StoredTimer): number => {
@@ -250,6 +253,9 @@ export function useSimulationTimer(companyId: string, quarter: number): Simulati
     saveTimer(companyId, updatedData);
     setPaused(false);
     setIsExitPause(false);
+    // Record the unpause so pauseForExit can detect and skip a stale override
+    // that arrives before React has re-rendered with paused=false.
+    lastUnpauseAtRef.current = now;
   }, [companyId, paused, expired]);
 
   /**
@@ -263,6 +269,11 @@ export function useSimulationTimer(companyId: string, quarter: number): Simulati
   const pauseForExit = useCallback(() => {
     if (!timerDataRef.current || !timerDataRef.current.simulationStarted) return;
     if (timerDataRef.current.pausedAt !== null) return;
+    // If unpause just ran (e.g. the user clicked Resume, then switched tabs before
+    // React re-rendered), the ref already holds pausedAt=null from unpause but
+    // React state hasn't caught up yet. Treat this as already-resumed — don't
+    // re-pause, let the countdown interval take over on the next render.
+    if (Date.now() - lastUnpauseAtRef.current < 500) return;
     const updatedData: StoredTimer = {
       ...timerDataRef.current,
       pausedAt: Date.now(),

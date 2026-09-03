@@ -514,7 +514,10 @@ export function SimulationApp() {
   }, [alloc, startInno, crisis]);
 
   const budgetRemaining = budget.ceiling - localCommitted;
-  const budgetExhausted = budgetRemaining <= 0;
+  // Budget ceiling is 0 until the first preview loads, which means budgetRemaining is
+  // negative and budgetExhausted is true — disabling inputs before the CEO has even
+  // started typing. Only consider the budget exhausted when the ceiling is actually loaded.
+  const budgetExhausted = budget.ceiling > 0 && budgetRemaining <= 0;
 
   /**
    * The named wait, when there is one.
