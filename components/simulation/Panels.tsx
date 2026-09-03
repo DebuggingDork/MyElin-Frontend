@@ -488,51 +488,39 @@ export function PeoplePanel({
                   <input
                     type="number"
                     min="0"
-                    max={maxHires}
                     step="1"
                     value={alloc["hire_" + d.id]}
                     placeholder="0"
-                    readOnly={readOnly || budgetExhausted}
-                    disabled={budgetExhausted}
+                    readOnly={readOnly}
                     onChange={(e) => {
                       const newVal = e.target.value;
                       const newNum = num(newVal);
                       const currentVal = num(alloc["hire_" + d.id]);
-                      // Hard cap: if increasing beyond current and would exceed budget, clamp
+                      // Reject if exceeds budget - do NOT set the value at all
                       if (newNum > currentVal) {
                         const additionalCost = (newNum - currentVal) * d.hire;
-                        // Only check budget if ceiling is loaded (> 0)
                         if (budget.ceiling > 0 && additionalCost > left) {
                           onBudgetExceeded();
-                          // Clamp to maximum hires possible
-                          const maxAdditional = left / d.hire;
-                          const maxTotal = currentVal + maxAdditional;
-                          set("hire_" + d.id, String(Math.floor(maxTotal)));
-                          return;
+                          return; // Don't update state
                         }
                       }
                       set("hire_" + d.id, newVal);
                     }}
-                    onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, max: maxHires, onChange: (v) => {
+                    onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, onChange: (v) => {
                       const vNum = num(v);
                       const currentVal = num(alloc["hire_" + d.id]);
                       if (vNum > currentVal) {
                         const additionalCost = (vNum - currentVal) * d.hire;
-                        // Only check budget if ceiling is loaded (> 0)
                         if (budget.ceiling > 0 && additionalCost > left) {
                           onBudgetExceeded();
-                          // Clamp to maximum hires possible
-                          const maxAdditional = left / d.hire;
-                          const maxTotal = currentVal + maxAdditional;
-                          set("hire_" + d.id, String(Math.floor(maxTotal)));
-                          return;
+                          return; // Don't update state
                         }
                       }
                       set("hire_" + d.id, v);
                     }})}
                     className={cn(
                       "w-20 border border-line-2 px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink",
-                      (readOnly || budgetExhausted) && "opacity-60 cursor-not-allowed",
+                      readOnly && "opacity-60 cursor-not-allowed",
                     )}
                   />
                   <span className="text-xs font-mono text-dim">
