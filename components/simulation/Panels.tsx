@@ -677,37 +677,31 @@ export function FinancePanel({
               <input
                 type="number"
                 min="0"
-                max={maxRepay / 1e5}
                 step="1"
                 value={alloc.repay}
                 placeholder="0"
-                readOnly={readOnly || budgetExhausted}
-                disabled={budgetExhausted}
+                readOnly={readOnly}
                 onChange={(e) => {
                   const newVal = e.target.value;
                   const newNum = num(newVal) * 1e5;
-                  // Hard cap at remaining budget - clamp to maxRepay
+                  // Reject if exceeds budget - do NOT set the value at all
                   if (budget.ceiling > 0 && newNum > maxRepay) {
                     onBudgetExceeded();
-                    // Clamp to maximum repayment possible
-                    setAlloc({ ...alloc, repay: String(maxRepay / 1e5) });
-                    return;
+                    return; // Don't update state
                   }
                   setAlloc({ ...alloc, repay: newVal.replace(/^-/, "") });
                 }}
-                onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, max: maxRepay / 1e5, onChange: (v) => {
+                onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, onChange: (v) => {
                   const vNum = num(v) * 1e5;
                   if (budget.ceiling > 0 && vNum > maxRepay) {
                     onBudgetExceeded();
-                    // Clamp to maximum repayment possible
-                    setAlloc({ ...alloc, repay: String(maxRepay / 1e5) });
-                    return;
+                    return; // Don't update state
                   }
                   setAlloc({ ...alloc, repay: v });
                 }})}
                 className={cn(
                   "w-28 border border-line-2 px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink",
-                  (readOnly || budgetExhausted) && "opacity-60 cursor-not-allowed",
+                  readOnly && "opacity-60 cursor-not-allowed",
                 )}
               />
               <span className="text-xs uppercase tracking-widest text-dim">lakh</span>
