@@ -244,14 +244,12 @@ export function CrisisScreen({
                     onChange={(e) => {
                       const newVal = e.target.value.replace(/^-/, "");
                       const currentCommit = num(crisis.commit || "0");
+                      // Reject if exceeds budget - do NOT set the value at all
                       if (num(newVal) > currentCommit) {
                         const costDelta = (num(newVal) - currentCommit) * 1e5;
                         if (budgetRemaining !== undefined && costDelta > budgetRemaining) {
                           onBudgetExceeded?.();
-                          // Clamp to maximum affordable crisis spending
-                          const maxTotal = currentCommit + budgetRemaining / 1e5;
-                          set("commit", String(Math.floor(maxTotal)));
-                          return;
+                          return; // Don't update state
                         }
                       }
                       set("commit", newVal);
@@ -262,10 +260,7 @@ export function CrisisScreen({
                         const costDelta = (num(v) - currentCommit) * 1e5;
                         if (budgetRemaining !== undefined && costDelta > budgetRemaining) {
                           onBudgetExceeded?.();
-                          // Clamp to maximum affordable crisis spending
-                          const maxTotal = currentCommit + budgetRemaining / 1e5;
-                          set("commit", String(Math.floor(maxTotal)));
-                          return;
+                          return; // Don't update state
                         }
                       }
                       set("commit", v);
