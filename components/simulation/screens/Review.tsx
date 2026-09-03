@@ -62,7 +62,7 @@ export function ReviewScreen({
 }) {
   const ready = reflectionComplete(reflection);
   const crisisUnanswered = crisisLive && !crisis.strategy;
-  const outOfBudget = budget.ceiling - budget.committed <= 0;
+  const outOfBudget = budget.ceiling - budget.committed < 0;
   const blocked = crisisUnanswered || !ready || busy || readOnly || outOfBudget;
 
   return (
@@ -116,9 +116,9 @@ export function ReviewScreen({
         }
       />
 
-      {budget.committed >= budget.ceiling && (
+      {budget.committed > budget.ceiling && (
         <div className="border-l-4 border-danger bg-danger/10 px-4 py-3 text-sm text-tone-bad">
-          You must have a positive budget remaining to close the quarter. You are {inr(budget.committed - budget.ceiling + (budget.committed === budget.ceiling ? 1 : 0))} beyond what is allowed. You cannot commit until you resolve the overspend (either reduce spending or draw credit).
+          You must have a positive budget remaining to close the quarter. You are {inr(budget.committed - budget.ceiling)} beyond what is allowed. You cannot commit until you resolve the overspend (either reduce spending or draw credit).
         </div>
       )}
 
