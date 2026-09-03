@@ -539,23 +539,17 @@ export function PeoplePanel({
                     step="1"
                     value={alloc["fire_" + d.id]}
                     placeholder="0"
-                    readOnly={readOnly || budgetExhausted}
-                    disabled={budgetExhausted}
+                    readOnly={readOnly}
                     onChange={(e) => {
                       const newVal = e.target.value;
                       const newNum = num(newVal);
                       const currentVal = num(alloc["fire_" + d.id]);
-                      // Hard cap: if increasing beyond current and would exceed budget, clamp
+                      // Reject if exceeds budget - do NOT set the value at all
                       if (newNum > currentVal) {
                         const additionalCost = (newNum - currentVal) * d.sever;
-                        // Only check budget if ceiling is loaded (> 0)
                         if (budget.ceiling > 0 && additionalCost > left) {
                           onBudgetExceeded();
-                          // Clamp to maximum fires possible
-                          const maxAdditional = left / d.sever;
-                          const maxTotal = currentVal + maxAdditional;
-                          set("fire_" + d.id, String(Math.floor(maxTotal)));
-                          return;
+                          return; // Don't update state
                         }
                       }
                       set("fire_" + d.id, newVal);
@@ -565,21 +559,16 @@ export function PeoplePanel({
                       const currentVal = num(alloc["fire_" + d.id]);
                       if (vNum > currentVal) {
                         const additionalCost = (vNum - currentVal) * d.sever;
-                        // Only check budget if ceiling is loaded (> 0)
                         if (budget.ceiling > 0 && additionalCost > left) {
                           onBudgetExceeded();
-                          // Clamp to maximum fires possible
-                          const maxAdditional = left / d.sever;
-                          const maxTotal = currentVal + maxAdditional;
-                          set("fire_" + d.id, String(Math.floor(maxTotal)));
-                          return;
+                          return; // Don't update state
                         }
                       }
                       set("fire_" + d.id, v);
                     }})}
                     className={cn(
                       "w-20 border border-line-2 px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink",
-                      (readOnly || (budgetExhausted && num(alloc["fire_" + d.id]) === 0)) && "opacity-60 cursor-not-allowed",
+                      readOnly && "opacity-60 cursor-not-allowed",
                     )}
                   />
                   <span className="text-xs font-mono text-dim">
