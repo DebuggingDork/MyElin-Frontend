@@ -15,9 +15,10 @@ import { soundEnabled } from "@/lib/sound";
  * All playback failures are swallowed — the rewind must never depend on audio.
  */
 
-const REWIND_SFX_URL =
-  `${process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://cziojqsnnojdkgllrrcp.supabase.co"}` +
-  `/storage/v1/object/public/simulation-assets/audio/rewind-effect.mp3`;
+const BASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const REWIND_SFX_URL = BASE_URL
+  ? `${BASE_URL}/storage/v1/object/public/sounds/whatsapp-audio-2026-08-28.mp3`
+  : `/sounds/whatsapp-audio-2026-08-28.mp3`;
 
 const VOLUME = 0.5;
 
@@ -42,7 +43,7 @@ export function useRewindSFX() {
     if (!el) return;
     try {
       el.currentTime = 0;
-      void el.play().catch(() => {});
+      void el.play().catch(() => { });
     } catch { /* never break the rewind */ }
   }
 

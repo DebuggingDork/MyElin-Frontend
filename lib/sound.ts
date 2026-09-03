@@ -5,9 +5,9 @@
  * an audible arrival: a short struck-bar chime, two notes, about a second. It is the only
  * sound in the app on purpose -- a UI that chimes at everything trains you to ignore it.
  *
- * `/sounds/quarter-closed.wav` is a static asset, not a fetch from storage: it is 52KB, it
- * never changes per user, and a sound cue that has to wait on a signed URL is a sound cue that
- * arrives after the moment it was meant to mark.
+/**
+ * `/sounds/quarter-closed.wav` and `/sounds/processing.wav` are now fetched from the Supabase
+ * Storage bucket to keep all assets centralized.
  *
  * Autoplay: browsers only allow this after a user gesture, and closing a quarter is one -- the
  * chime is fired from that click's own task. A rejected play is swallowed rather than
@@ -15,8 +15,9 @@
  */
 
 const SOUND_KEY = "myelin.sound";
-const CHIME = "/sounds/quarter-closed.wav";
-const PROCESSING = "/sounds/processing.wav";
+const BASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const CHIME = BASE_URL ? `${BASE_URL}/storage/v1/object/public/sounds/quarter-closed.wav` : `/sounds/quarter-closed.wav`;
+const PROCESSING = BASE_URL ? `${BASE_URL}/storage/v1/object/public/sounds/processing.wav` : `/sounds/processing.wav`;
 
 /** One element, reused. Constructing an Audio per play leaks decoders on a long run. */
 let chime: HTMLAudioElement | null = null;
