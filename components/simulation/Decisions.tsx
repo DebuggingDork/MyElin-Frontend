@@ -174,38 +174,32 @@ function DetailLineRow({
           <input
             type="number"
             min="0"
-            max={maxAllowed}
             step="0.5"
             value={value}
             placeholder="0"
-            readOnly={readOnly || budgetExhausted}
-            disabled={budgetExhausted}
+            readOnly={readOnly}
             onChange={(e) => {
               const newVal = e.target.value.replace(/^-/, "");
               const newNum = num(newVal);
-              // Hard cap at remaining budget - clamp to maxAllowed
+              // Reject if exceeds budget - do NOT set the value at all
               if (budget.ceiling > 0 && newNum > maxAllowed) {
                 onBudgetExceeded();
-                // Clamp to maximum allowed value instead of rejecting
-                onChange(String(maxAllowed));
-                return;
+                return; // Don't update state
               }
               onChange(newVal);
             }}
-            onKeyDown={(e) => spinnerKeyDown(e, { step: 0.5, min: 0, max: maxAllowed, onChange: (v) => {
+            onKeyDown={(e) => spinnerKeyDown(e, { step: 0.5, min: 0, onChange: (v) => {
               const vNum = num(v);
               if (budget.ceiling > 0 && vNum > maxAllowed) {
                 onBudgetExceeded();
-                // Clamp to maximum allowed value
-                onChange(String(maxAllowed));
-                return;
+                return; // Don't update state
               }
               onChange(v);
             }})}
             className={
               "w-24 border px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink " +
               (overCap ? "border-danger text-tone-bad" : "border-line-2") +
-              ((readOnly || budgetExhausted) ? " opacity-60 cursor-not-allowed" : "")
+              (readOnly ? " opacity-60 cursor-not-allowed" : "")
             }
           />
           <span className="text-xs uppercase tracking-widest text-dim w-10">lakh</span>
