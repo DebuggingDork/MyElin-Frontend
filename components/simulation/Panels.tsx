@@ -151,7 +151,7 @@ export function InnovationBoard({
               return (
                 <button
                   key={card.id}
-                  disabled={shipped || inFlight || readOnly || budgetExhausted}
+                  disabled={shipped || inFlight || readOnly || (budgetExhausted && !picked)}
                   onClick={() => toggle(card.id)}
                   className={
                     "text-left border p-3 transition-colors duration-150 ease-out " +
