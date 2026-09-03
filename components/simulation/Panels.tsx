@@ -106,9 +106,11 @@ export function InnovationBoard({
 }) {
   const toggle = (id: string) => {
     if (startInno.indexOf(id) === -1) {
-      // Check if this new card's cost exceeds the remaining budget
-      const costDelta = INNOVATION_BY_ID[id].cost;
-      if (costDelta > budgetRemaining) {
+      // Check if adding this card would exceed budget
+      const cardCost = INNOVATION_BY_ID[id].cost;
+      const left = budget.ceiling - budget.committed;
+      // Allow if budget ceiling is 0 (preview hasn't loaded yet, e.g., after Path A signing)
+      if (budget.ceiling > 0 && cardCost > left) {
         onBudgetExceeded();
         return;
       }
@@ -149,7 +151,7 @@ export function InnovationBoard({
               return (
                 <button
                   key={card.id}
-                  disabled={shipped || inFlight || readOnly}
+                  disabled={shipped || inFlight || readOnly || budgetExhausted}
                   onClick={() => toggle(card.id)}
                   className={
                     "text-left border p-3 transition-colors duration-150 ease-out " +
@@ -429,6 +431,7 @@ export function PeoplePanel({
   readOnly?: boolean;
 }) {
   const set = (key: string, val: string) => setAlloc({ ...alloc, [key]: val.replace(/^-/, "") });
+  const left = budget.ceiling - budget.committed;
 
   return (
     <Panel
@@ -452,6 +455,13 @@ export function PeoplePanel({
           const ratio = p ? (p.staffing as Record<string, number>)[d.id] : 1;
           const needed = p ? (p.need as Record<string, number>)[d.id] : d.base;
           const tone: Tone = ratio >= 0.999 ? "good" : ratio >= 0.85 ? "watch" : "bad";
+          
+          // Calculate max hires affordable with remaining budget (hire cost in lakhs)
+          // Allow unlimited if budget ceiling is 0 (preview hasn't loaded yet)
+          const currentHireCost = hire * d.hire;
+          const maxHires = budget.ceiling > 0 
+            ? Math.floor((currentHireCost + left / 1e5) / (d.hire / 1e5)) * (d.hire / 1e5)
+            : 999999;
 
           return (
             <div key={d.id} className={"border p-3 " + (ratio >= 0.999 ? "border-line bg-raise" : TONE_CARD[tone])}>
@@ -478,26 +488,34 @@ export function PeoplePanel({
                   <input
                     type="number"
                     min="0"
+                    max={maxHires}
                     step="1"
                     value={alloc["hire_" + d.id]}
                     placeholder="0"
-                    readOnly={readOnly}
-                    disabled={budgetExhausted && num(alloc["hire_" + d.id]) === 0}
+                    readOnly={readOnly || budgetExhausted}
+                    disabled={budgetExhausted}
                     onChange={(e) => {
                       const newVal = e.target.value;
-                      if (num(newVal) > num(alloc["hire_" + d.id])) {
-                        const costDelta = (num(newVal) - num(alloc["hire_" + d.id])) * d.hire;
-                        if (costDelta > budgetRemaining) {
+                      const newNum = num(newVal);
+                      const currentVal = num(alloc["hire_" + d.id]);
+                      // Hard cap: if increasing beyond current and would exceed budget, block
+                      if (newNum > currentVal) {
+                        const additionalCost = (newNum - currentVal) * d.hire;
+                        // Only check budget if ceiling is loaded (> 0)
+                        if (budget.ceiling > 0 && additionalCost > left) {
                           onBudgetExceeded();
                           return;
                         }
                       }
                       set("hire_" + d.id, newVal);
                     }}
-                    onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, onChange: (v) => {
-                      if (num(v) > num(alloc["hire_" + d.id])) {
-                        const costDelta = (num(v) - num(alloc["hire_" + d.id])) * d.hire;
-                        if (costDelta > budgetRemaining) {
+                    onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, max: maxHires, onChange: (v) => {
+                      const vNum = num(v);
+                      const currentVal = num(alloc["hire_" + d.id]);
+                      if (vNum > currentVal) {
+                        const additionalCost = (vNum - currentVal) * d.hire;
+                        // Only check budget if ceiling is loaded (> 0)
+                        if (budget.ceiling > 0 && additionalCost > left) {
                           onBudgetExceeded();
                           return;
                         }
@@ -506,7 +524,7 @@ export function PeoplePanel({
                     }})}
                     className={cn(
                       "w-20 border border-line-2 px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink",
-                      (readOnly || (budgetExhausted && num(alloc["hire_" + d.id]) === 0)) && "opacity-60 cursor-not-allowed",
+                      (readOnly || budgetExhausted) && "opacity-60 cursor-not-allowed",
                     )}
                   />
                   <span className="text-xs font-mono text-dim">
@@ -525,13 +543,17 @@ export function PeoplePanel({
                     step="1"
                     value={alloc["fire_" + d.id]}
                     placeholder="0"
-                    readOnly={readOnly}
-                    disabled={budgetExhausted && num(alloc["fire_" + d.id]) === 0}
+                    readOnly={readOnly || budgetExhausted}
+                    disabled={budgetExhausted}
                     onChange={(e) => {
                       const newVal = e.target.value;
-                      if (num(newVal) > num(alloc["fire_" + d.id])) {
-                        const costDelta = (num(newVal) - num(alloc["fire_" + d.id])) * d.sever;
-                        if (costDelta > budgetRemaining) {
+                      const newNum = num(newVal);
+                      const currentVal = num(alloc["fire_" + d.id]);
+                      // Hard cap: if increasing beyond current and would exceed budget, block
+                      if (newNum > currentVal) {
+                        const additionalCost = (newNum - currentVal) * d.sever;
+                        // Only check budget if ceiling is loaded (> 0)
+                        if (budget.ceiling > 0 && additionalCost > left) {
                           onBudgetExceeded();
                           return;
                         }
@@ -539,9 +561,12 @@ export function PeoplePanel({
                       set("fire_" + d.id, newVal);
                     }}
                     onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, max: Math.max(0, now - d.base), onChange: (v) => {
-                      if (num(v) > num(alloc["fire_" + d.id])) {
-                        const costDelta = (num(v) - num(alloc["fire_" + d.id])) * d.sever;
-                        if (costDelta > budgetRemaining) {
+                      const vNum = num(v);
+                      const currentVal = num(alloc["fire_" + d.id]);
+                      if (vNum > currentVal) {
+                        const additionalCost = (vNum - currentVal) * d.sever;
+                        // Only check budget if ceiling is loaded (> 0)
+                        if (budget.ceiling > 0 && additionalCost > left) {
                           onBudgetExceeded();
                           return;
                         }
@@ -602,6 +627,7 @@ export function FinancePanel({
   const limit = p ? v(p, "debtLimit") : 0;
   const drawn = p ? v(p, "drawn") : 0;
   const overLimit = num(alloc.draw) * 1e5 > limit + 1;
+  const left = budget.ceiling - budget.committed;
 
   return (
     <div className="space-y-4">
@@ -655,26 +681,34 @@ export function FinancePanel({
               <input
                 type="number"
                 min="0"
+                max={budget.ceiling > 0 ? num(alloc.repay) + left / 1e5 : 999999999}
                 step="1"
                 value={alloc.repay}
                 placeholder="0"
-                readOnly={readOnly}
-                disabled={budgetExhausted && num(alloc.repay) === 0}
+                readOnly={readOnly || budgetExhausted}
+                disabled={budgetExhausted}
                 onChange={(e) => {
                   const newVal = e.target.value;
-                  if (num(newVal) > num(alloc.repay)) {
-                    const costDelta = (num(newVal) - num(alloc.repay)) * 1e5;
-                    if (costDelta > budgetRemaining) {
+                  const newNum = num(newVal);
+                  const currentVal = num(alloc.repay);
+                  // Hard cap: if increasing beyond current and would exceed budget, block
+                  if (newNum > currentVal) {
+                    const additionalCost = (newNum - currentVal) * 1e5;
+                    // Only check budget if ceiling is loaded (> 0)
+                    if (budget.ceiling > 0 && additionalCost > left) {
                       onBudgetExceeded();
                       return;
                     }
                   }
                   setAlloc({ ...alloc, repay: newVal.replace(/^-/, "") });
                 }}
-                onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, onChange: (v) => {
-                  if (num(v) > num(alloc.repay)) {
-                    const costDelta = (num(v) - num(alloc.repay)) * 1e5;
-                    if (costDelta > budgetRemaining) {
+                onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, max: budget.ceiling > 0 ? num(alloc.repay) + left / 1e5 : 999999999, onChange: (v) => {
+                  const vNum = num(v);
+                  const currentVal = num(alloc.repay);
+                  if (vNum > currentVal) {
+                    const additionalCost = (vNum - currentVal) * 1e5;
+                    // Only check budget if ceiling is loaded (> 0)
+                    if (budget.ceiling > 0 && additionalCost > left) {
                       onBudgetExceeded();
                       return;
                     }
@@ -683,7 +717,7 @@ export function FinancePanel({
                 }})}
                 className={cn(
                   "w-28 border border-line-2 px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink",
-                  (readOnly || (budgetExhausted && num(alloc.repay) === 0)) && "opacity-60 cursor-not-allowed",
+                  (readOnly || budgetExhausted) && "opacity-60 cursor-not-allowed",
                 )}
               />
               <span className="text-xs uppercase tracking-widest text-dim">lakh</span>

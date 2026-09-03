@@ -52,6 +52,10 @@ function DecisionCard({
   const total = groupTotal(A, item);
   const overridden = groupOverridden(A, item);
   const daysOfCash = cash > 0 ? Math.round(((total * 1e5) / cash) * 90) : 0;
+  const left = budget.ceiling - budget.committed;
+  // Allow very large allocations if budget ceiling is 0 (preview hasn't loaded yet)
+  // This handles the case where Path A financing hasn't been reflected in budget yet
+  const maxAllowed = budget.ceiling > 0 ? total + left : 999999;
 
   return (
     <div className="border border-line bg-raise">
@@ -78,35 +82,33 @@ function DecisionCard({
             <input
               type="number"
               min="0"
+              max={maxAllowed}
               step="1"
               value={total === 0 ? "" : total}
               placeholder="0"
-              readOnly={readOnly}
-              disabled={budgetExhausted && num(total) === 0}
+              readOnly={readOnly || budgetExhausted}
+              disabled={budgetExhausted}
               onChange={(e) => {
                 const newVal = e.target.value.replace(/^-/, "");
-                if (num(newVal) > total) {
-                  const deltaCost = (num(newVal) - total) * 1e5;
-                  if (deltaCost > budgetRemaining) {
-                    onBudgetExceeded();
-                    return;
-                  }
+                const newNum = num(newVal);
+                // Hard cap at remaining budget
+                if (newNum > maxAllowed) {
+                  onBudgetExceeded();
+                  return;
                 }
                 setAlloc(spreadGroup(alloc, item, newVal));
               }}
-              onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, onChange: (v) => {
-                if (num(v) > total) {
-                  const deltaCost = (num(v) - total) * 1e5;
-                  if (deltaCost > budgetRemaining) {
-                    onBudgetExceeded();
-                    return;
-                  }
+              onKeyDown={(e) => spinnerKeyDown(e, { step: 1, min: 0, max: maxAllowed, onChange: (v) => {
+                const vNum = num(v);
+                if (vNum > maxAllowed) {
+                  onBudgetExceeded();
+                  return;
                 }
                 setAlloc(spreadGroup(alloc, item, v));
               }})}
               className={cn(
                 "w-24 border border-line-2 px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink",
-                (readOnly || (budgetExhausted && num(total) === 0)) && "opacity-60 cursor-not-allowed",
+                (readOnly || budgetExhausted) && "opacity-60 cursor-not-allowed",
               )}
             />
             <span className="text-xs uppercase tracking-widest text-dim">lakh</span>
@@ -158,6 +160,9 @@ function DetailLineRow({
   const preview = (line.preview ? line.preview(amount, ctx) : []).filter(Boolean) as string[];
   const cap = line.cap ? line.cap(ctx) : null;
   const overCap = cap != null && amount > cap + 0.001;
+  const left = budget.ceiling - budget.committed;
+  // Allow very large allocations if budget ceiling is 0 (preview hasn't loaded yet)
+  const maxAllowed = budget.ceiling > 0 ? amount + left : 999999;
 
   return (
     <div className="border-b border-line py-3 last:border-b-0">
@@ -171,36 +176,34 @@ function DetailLineRow({
           <input
             type="number"
             min="0"
+            max={maxAllowed}
             step="0.5"
             value={value}
             placeholder="0"
-            readOnly={readOnly}
-            disabled={budgetExhausted && num(value) === 0}
+            readOnly={readOnly || budgetExhausted}
+            disabled={budgetExhausted}
             onChange={(e) => {
               const newVal = e.target.value.replace(/^-/, "");
-              if (num(newVal) > num(value)) {
-                const deltaCost = (num(newVal) - num(value)) * 1e5;
-                if (deltaCost > budgetRemaining) {
-                  onBudgetExceeded();
-                  return;
-                }
+              const newNum = num(newVal);
+              // Hard cap at remaining budget
+              if (newNum > maxAllowed) {
+                onBudgetExceeded();
+                return;
               }
               onChange(newVal);
             }}
-            onKeyDown={(e) => spinnerKeyDown(e, { step: 0.5, min: 0, onChange: (v) => {
-              if (num(v) > num(value)) {
-                const deltaCost = (num(v) - num(value)) * 1e5;
-                if (deltaCost > budgetRemaining) {
-                  onBudgetExceeded();
-                  return;
-                }
+            onKeyDown={(e) => spinnerKeyDown(e, { step: 0.5, min: 0, max: maxAllowed, onChange: (v) => {
+              const vNum = num(v);
+              if (vNum > maxAllowed) {
+                onBudgetExceeded();
+                return;
               }
               onChange(v);
             }})}
             className={
               "w-24 border px-2 py-1 text-right font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink " +
               (overCap ? "border-danger text-tone-bad" : "border-line-2") +
-              ((readOnly || (budgetExhausted && num(value) === 0)) ? " opacity-60 cursor-not-allowed" : "")
+              ((readOnly || budgetExhausted) ? " opacity-60 cursor-not-allowed" : "")
             }
           />
           <span className="text-xs uppercase tracking-widest text-dim w-10">lakh</span>
