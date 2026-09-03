@@ -498,12 +498,16 @@ export function PeoplePanel({
                       const newVal = e.target.value;
                       const newNum = num(newVal);
                       const currentVal = num(alloc["hire_" + d.id]);
-                      // Hard cap: if increasing beyond current and would exceed budget, block
+                      // Hard cap: if increasing beyond current and would exceed budget, clamp
                       if (newNum > currentVal) {
                         const additionalCost = (newNum - currentVal) * d.hire;
                         // Only check budget if ceiling is loaded (> 0)
                         if (budget.ceiling > 0 && additionalCost > left) {
                           onBudgetExceeded();
+                          // Clamp to maximum hires possible
+                          const maxAdditional = left / d.hire;
+                          const maxTotal = currentVal + maxAdditional;
+                          set("hire_" + d.id, String(Math.floor(maxTotal)));
                           return;
                         }
                       }
@@ -517,6 +521,10 @@ export function PeoplePanel({
                         // Only check budget if ceiling is loaded (> 0)
                         if (budget.ceiling > 0 && additionalCost > left) {
                           onBudgetExceeded();
+                          // Clamp to maximum hires possible
+                          const maxAdditional = left / d.hire;
+                          const maxTotal = currentVal + maxAdditional;
+                          set("hire_" + d.id, String(Math.floor(maxTotal)));
                           return;
                         }
                       }
