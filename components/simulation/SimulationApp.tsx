@@ -2079,9 +2079,21 @@ export function SimulationApp() {
                       </span>
                     )}
                     {/* Left to commit */}
-                    <span className={budgetRemaining < 0 ? "text-danger-soft" : "text-faint"}>
+                    <span 
+                      className={budgetRemaining < 0 ? "text-danger-soft" : "text-faint"}
+                      title={
+                        state.pendingInvestment > 0
+                          ? `Cash ${inr(state.cash)} + Investment ${inr(state.pendingInvestment)} + Credit ${inr(budget.drawn)} - Fixed costs - Buffer = Available ${inr(budget.ceiling)}`
+                          : `Available to allocate after fixed costs and buffer`
+                      }
+                    >
                       <span className="text-dim text-xs uppercase tracking-widest mr-1">Left</span>
                       {inr(budgetRemaining)}
+                      {state.pendingInvestment > 0 && budgetRemaining > 0 && (
+                        <span className="text-teal-bright text-[10px] ml-1">
+                          (incl. investment)
+                        </span>
+                      )}
                     </span>
                     {/* Notes toggle */}
                     <button

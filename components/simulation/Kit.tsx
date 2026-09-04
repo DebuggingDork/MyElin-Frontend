@@ -579,15 +579,44 @@ export function BudgetMeter({ budget }: { budget: Budget }) {
       />
       <div className="text-xs text-dim mt-2.5 font-mono leading-relaxed">
         {inr(budget.opex)} operating · {inr(budget.capex)} plant · {inr(budget.inno)} innovation ·{" "}
-        {inr(budget.people)} people.{" "}
-        <span className="text-faint">
-          Ceiling = cash{budget.investment > 0 ? " + signed investment" : ""} + credit, less fixed costs
-          and the {inr(BUFFER)} buffer.
-        </span>
+        {inr(budget.people)} people.
       </div>
       {budget.investment > 0 && (
-        <div className="mt-1.5 font-mono text-xs text-teal-bright">
-          Includes {inr(budget.investment)} of signed investment, banked when this quarter closes.
+        <div className="mt-2.5 p-2.5 rounded border border-teal/30 bg-teal/5">
+          <div className="text-xs font-semibold text-teal-bright mb-1.5">Budget Breakdown:</div>
+          <div className="text-xs font-mono text-ink space-y-0.5">
+            <div className="flex justify-between">
+              <span className="text-dim">Cash on hand:</span>
+              <span>{inr((budget as any).cash_available || 0)}</span>
+            </div>
+            <div className="flex justify-between text-teal-bright">
+              <span>+ Signed investment:</span>
+              <span className="font-semibold">+{inr(budget.investment)}</span>
+            </div>
+            {budget.drawn > 0 && (
+              <div className="flex justify-between">
+                <span className="text-dim">+ Credit drawn:</span>
+                <span>+{inr(budget.drawn)}</span>
+              </div>
+            )}
+            <div className="border-t border-teal/20 pt-0.5 mt-0.5 flex justify-between">
+              <span className="text-dim">Total available:</span>
+              <span className="font-semibold">{inr((budget as any).total_funds || (budget.ceiling + (budget as any).fixed_costs + (budget as any).buffer))}</span>
+            </div>
+            <div className="flex justify-between text-faint text-[11px]">
+              <span>- Fixed costs & buffer:</span>
+              <span>-{inr(((budget as any).fixed_costs || 0) + ((budget as any).buffer || BUFFER))}</span>
+            </div>
+            <div className="border-t border-teal/20 pt-0.5 mt-0.5 flex justify-between font-semibold">
+              <span>Available to allocate:</span>
+              <span className="text-teal-bright">{inr(budget.ceiling)}</span>
+            </div>
+          </div>
+        </div>
+      )}
+      {!budget.investment && (
+        <div className="text-faint text-xs mt-1.5 font-mono">
+          Ceiling = cash + credit - fixed costs - {inr(BUFFER)} buffer
         </div>
       )}
     </div>
