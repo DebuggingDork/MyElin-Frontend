@@ -86,32 +86,55 @@ export function AuthSlide({ initialMode }: { initialMode: Mode }) {
         setStep(2);
       }
     } catch (err) {
-      // 429 is the only auth failure whose own message ("email rate limit exceeded") reads as
-      // jargon rather than an instruction, so it gets replacement copy. Every other rejection
-      // now arrives with Supabase's real, already-human reason in `detail` (bad address, weak
-      // password, invalid credentials) and is shown verbatim by the branch below.
-      if (err instanceof ApiError && err.status === 429) {
-        setError(
-          "Too many attempts right now. Wait a minute and try again — if you already registered, log in instead.",
-        );
-      } else if (
-        mode === "signup" &&
-        err instanceof ApiError &&
-        (err.message?.toLowerCase().includes("already registered") ||
-          err.message?.toLowerCase().includes("already been registered") ||
-          err.message?.toLowerCase().includes("email address already") ||
-          err.message?.toLowerCase().includes("user already exists") ||
-          (err.body as Record<string, unknown>)?.error === "user_already_exists")
-      ) {
-        // This email is taken. Guide them to login rather than showing a raw API message.
-        setError(
-          "That email is already registered. Log in instead, or use a different email address.",
-        );
+      // Backend now returns user-friendly messages, so we primarily rely on those
+      // with fallbacks for common scenarios and connection issues
+      if (err instanceof ApiError) {
+        // Rate limiting - backend provides clear guidance
+        if (err.status === 429) {
+          setError(
+            err.message || 
+            "Too many attempts. Please wait a moment before trying again."
+          );
+        } 
+        // Login-specific errors with helpful guidance
+        else if (mode === "login" && err.status === 401) {
+          // Backend message already includes "no account found" or "wrong credentials"
+          setError(
+            err.message || 
+            "Incorrect email or password. New here? Create an account to get started."
+          );
+        }
+        // Signup-specific errors
+        else if (mode === "signup" && err.status === 422) {
+          const msg = err.message?.toLowerCase() || "";
+          // These checks catch both old and new backend messages
+          if (msg.includes("already registered") || msg.includes("already exists")) {
+            setError(
+              "This email is already registered. Log in instead, or use a different email address."
+            );
+          } else if (msg.includes("password") && (msg.includes("weak") || msg.includes("short") || msg.includes("8 character"))) {
+            setError(
+              "Password is too weak. Please use at least 8 characters with a mix of letters and numbers."
+            );
+          } else if (msg.includes("email") && msg.includes("invalid")) {
+            setError("Please enter a valid email address.");
+          } else {
+            setError(err.message || "Unable to create account. Please check your information.");
+          }
+        }
+        // Generic API errors - use backend message as-is (it's now user-friendly)
+        else {
+          setError(
+            err.message || 
+            (mode === "login" 
+              ? "Unable to log in. Please check your credentials and try again." 
+              : "Unable to create account. Please try again.")
+          );
+        }
       } else {
+        // Network or connection errors
         setError(
-          err instanceof ApiError
-            ? err.message || (mode === "login" ? "Login failed" : "Signup failed")
-            : "Unable to reach the API. Is the backend running?",
+          "Unable to reach the server. Please check your connection and try again."
         );
       }
     } finally {

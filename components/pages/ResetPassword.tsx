@@ -82,7 +82,7 @@ export function ResetPassword() {
       return;
     }
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError("Passwords do not match. Please try again.");
       return;
     }
     if (!accessToken) return;
@@ -91,16 +91,32 @@ export function ResetPassword() {
     try {
       await api.resetPassword({ access_token: accessToken, new_password: password });
       setDone(true);
-      setTimeout(() => router.replace("/login"), 1500);
+      setTimeout(() => router.replace("/login"), 2000);
     } catch (err) {
-      if (err instanceof ApiError && err.status === 422) {
-        setLinkError("This reset link is invalid or has expired — request a new one.");
-        setAccessToken(null);
+      if (err instanceof ApiError) {
+        if (err.status === 422) {
+          const msg = err.message?.toLowerCase() || "";
+          // Check if it's a token/link issue vs password issue
+          if (msg.includes("expired") || msg.includes("invalid") || msg.includes("reset link")) {
+            setLinkError(
+              err.message || "This reset link has expired or is invalid. Please request a new one."
+            );
+            setAccessToken(null);
+          } else if (msg.includes("password") && (msg.includes("weak") || msg.includes("short"))) {
+            setError(
+              err.message || "Password is too weak. Use at least 8 characters with a mix of letters and numbers."
+            );
+          } else {
+            setError(err.message || "Unable to update password. Please try again.");
+          }
+        } else {
+          setError(
+            err.message || "Unable to update password. Please try again or request a new reset link."
+          );
+        }
       } else {
         setError(
-          err instanceof ApiError
-            ? err.message || "Could not update your password."
-            : "Unable to reach the API. Is the backend running?",
+          "Unable to reach the server. Please check your connection and try again."
         );
       }
     } finally {
@@ -127,9 +143,14 @@ export function ResetPassword() {
           </h1>
 
           {done ? (
-            <p className="mt-8 rounded-xl border border-line bg-[var(--panel-2)] px-4 py-3 text-[13.5px] text-ink">
-              Password updated. Taking you to login…
-            </p>
+            <div className="mt-8 rounded-xl border border-emerald/30 bg-emerald/[0.07] px-4 py-4">
+              <p className="text-[13.5px] font-medium text-emerald">
+                Password updated successfully!
+              </p>
+              <p className="mt-2 text-[13px] text-ink">
+                Taking you to login where you can use your new password…
+              </p>
+            </div>
           ) : linkError ? (
             <>
               <p className="mt-8 rounded-xl border border-rose/30 bg-rose/[0.07] px-4 py-3 text-[13.5px] text-rose">

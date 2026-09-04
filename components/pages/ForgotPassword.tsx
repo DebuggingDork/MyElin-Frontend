@@ -25,11 +25,27 @@ export function ForgotPassword() {
       await api.forgotPassword({ email });
       setSent(true);
     } catch (err) {
-      setError(
-        err instanceof ApiError
-          ? err.message || "Could not send the reset email."
-          : "Unable to reach the API. Is the backend running?",
-      );
+      if (err instanceof ApiError) {
+        if (err.status === 429) {
+          setError(
+            err.message || 
+            "Too many password reset attempts. Please wait an hour before trying again."
+          );
+        } else if (err.status === 500) {
+          setError(
+            err.message || 
+            "Password reset is temporarily unavailable. Please try again later or contact support."
+          );
+        } else {
+          setError(
+            err.message || "Unable to send reset email. Please check your email address and try again."
+          );
+        }
+      } else {
+        setError(
+          "Unable to reach the server. Please check your connection and try again."
+        );
+      }
     } finally {
       setPending(false);
     }
@@ -76,10 +92,14 @@ export function ForgotPassword() {
           )}
 
           {sent ? (
-            <p className="mt-8 rounded-xl border border-line bg-[var(--panel-2)] px-4 py-3 text-[13.5px] text-ink">
-              If that email is registered, a reset link is on its way. Check the inbox and the
-              spam folder — the link opens the reset screen here and expires after an hour.
-            </p>
+            <div className="mt-8 rounded-xl border border-emerald/30 bg-emerald/[0.07] px-4 py-4">
+              <p className="text-[13.5px] font-medium text-emerald">
+                Check your email
+              </p>
+              <p className="mt-2 text-[13px] text-ink">
+                If that email is registered, a reset link is on its way. Check your inbox and spam folder. The link opens the reset page here and expires after an hour.
+              </p>
+            </div>
           ) : (
             <form onSubmit={onSubmit} className="mt-8 space-y-5">
               <div>
